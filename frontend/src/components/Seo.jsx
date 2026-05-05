@@ -1,34 +1,25 @@
-import { Helmet } from "react-helmet-async";
+import React from 'react';
+import { Helmet } from 'react-helmet-async';
 
-const siteUrl = import.meta.env.VITE_SITE_URL || "https://example.com";
+const SITE_URL = import.meta.env.VITE_SITE_URL || 'http://localhost:5173';
 
-export default function Seo({
-  title,
-  description,
-  path = "/",
-  image = "/favicon.svg",
-  schema,
-}) {
-  const canonical = new URL(path, siteUrl).toString();
-  const imageUrl = image.startsWith("http") ? image : new URL(image, siteUrl).toString();
+const Seo = ({ title, description, path = '/', image = '/favicon.svg' }) => {
+  const resolvedTitle = title ? `${title} | Dholera Portal` : 'Dholera Portal';
+  const url = `${SITE_URL.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
 
   return (
     <Helmet>
-      <title>{title}</title>
-      <meta name="description" content={description} />
-      <link rel="canonical" href={canonical} />
+      <title>{resolvedTitle}</title>
+      <meta name="description" content={description || 'Infrastructure intelligence, planning maps, and lead capture for Dholera Smart City.'} />
+      <link rel="canonical" href={url} />
+      <meta property="og:title" content={resolvedTitle} />
+      <meta property="og:description" content={description || 'Infrastructure intelligence, planning maps, and lead capture for Dholera Smart City.'} />
+      <meta property="og:url" content={url} />
       <meta property="og:type" content="website" />
-      <meta property="og:title" content={title} />
-      <meta property="og:description" content={description} />
-      <meta property="og:url" content={canonical} />
-      <meta property="og:image" content={imageUrl} />
+      <meta property="og:image" content={`${SITE_URL.replace(/\/$/, '')}${image.startsWith('/') ? image : `/${image}`}`} />
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={title} />
-      <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={imageUrl} />
-      <link rel="manifest" href="/manifest.webmanifest" />
-      {schema ? <script type="application/ld+json">{JSON.stringify(schema)}</script> : null}
     </Helmet>
   );
-}
+};
 
+export default Seo;

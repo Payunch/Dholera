@@ -4,15 +4,21 @@
     <loc>https://example.com/</loc>
   </url>
   <url>
-    <loc>https://example.com/development-feed</loc>
+    <loc>https://example.com/updates</loc>
   </url>
   <url>
-    <loc>https://example.com/project-maps</loc>
+    <loc>https://example.com/planning</loc>
   </url>
   <url>
-    <loc>https://example.com/future-growth</loc>
+    <loc>https://example.com/investment</loc>
   </url>
   <url>
     <loc>https://example.com/contact</loc>
+  </url>
+  <url>
+    <loc>https://example.com/terms-and-conditions</loc>
+  </url>
+  <url>
+    <loc>https://example.com/privacy-policy</loc>
   </url>
 </urlset>
