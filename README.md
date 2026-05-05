@@ -134,101 +134,36 @@ Static assets:
 ### 1) Backend setup
 
 ```bash
-cd /home/prs/Documents/dholera
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r backend/requirements.txt
-cp backend/.env.example backend/.env
-```
-
-Update backend environment values in `backend/.env`, especially:
-
-- `DATABASE_URL`
-- `SECRET_KEY`
-- `BACKEND_CORS_ORIGINS`
-- `DEFAULT_ADMIN_EMAIL`
-- `DEFAULT_ADMIN_PASSWORD`
-
-Run backend:
-
-```bash
-cd /home/prs/Documents/dholera/backend
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-### 2) Seed default data
-
-```bash
-cd /home/prs/Documents/dholera
-source .venv/bin/activate
 cd backend
-python scripts/seed.py
-```
-
-This creates:
-
-- default admin user (from env values)
-- sample updates
-- sample leads
-
-### 3) Frontend setup
-
-```bash
-cd /home/prs/Documents/dholera/frontend
 npm install
-cp .env.example .env
+# Seed the database with sample data (optional)
+node scripts/seed.js
+# Start the server from backend folder so backend/.env is used
+node index.js
+```
+
+The server will run on `http://localhost:3000`. The database is a local `database.sqlite` file.
+
+### 2) Frontend setup
+
+```bash
+cd frontend
+npm install
 npm run dev
 ```
 
-Default frontend URL: `http://localhost:5173`
-
-### 4) Start both services quickly
-
-Terminal 1:
-
-```bash
-cd /home/prs/Documents/dholera
-source .venv/bin/activate
-cd backend
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-Terminal 2:
-
-```bash
-cd /home/prs/Documents/dholera/frontend
-npm run dev
-```
+Default frontend URL: `http://localhost:5173` (Vite may auto-switch to `http://localhost:5174` if 5173 is busy)
 
 ## Environment variables
 
-### Backend (`backend/.env`)
-
-```env
-APP_NAME=Dholera Growth Evidence API
-API_V1_STR=/api/v1
-SECRET_KEY=change-this-in-production
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/dholera_platform
-BACKEND_CORS_ORIGINS=http://localhost:5173,https://your-vercel-domain.vercel.app
-BASE_URL=http://localhost:8000
-FRONTEND_URL=http://localhost:5173
-WHATSAPP_NUMBER=919999999999
-MAX_IMAGE_UPLOAD_MB=8
-MAX_PDF_UPLOAD_MB=15
-DEFAULT_ADMIN_NAME=Platform Admin
-DEFAULT_ADMIN_EMAIL=admin@example.com
-DEFAULT_ADMIN_PASSWORD=ChangeMe123!
-```
+The frontend expects the backend to be running on port 3000. You can configure variables in `frontend/.env`.
 
 ### Frontend (`frontend/.env`)
 
 ```env
-VITE_API_BASE_URL=http://localhost:8000/api/v1
+VITE_API_BASE_URL=http://localhost:3000/api
 VITE_SITE_URL=http://localhost:5173
 VITE_WHATSAPP_NUMBER=919999999999
-VITE_GA_ID=
-VITE_META_PIXEL_ID=
 ```
 
 ## Frontend routes
@@ -275,6 +210,11 @@ VITE_META_PIXEL_ID=
 - `POST /api/v1/admin/uploads/image`
 - `POST /api/v1/admin/uploads/pdf`
 
+### Runtime diagnostics
+
+- `GET /healthz` — basic liveness
+- `GET /healthz/runtime` — active runtime info (configured port, allowed origins, PID, uptime)
+
 ## Build and production
 
 ### Frontend
@@ -314,3 +254,119 @@ sudo /opt/lampp/lampp restart
 sudo /opt/lampp/manager-linux-x64.run
 
 cd /home/prs/Documents/dholera/backend && /home/prs/Documents/dholera/backend/.venv/bin/python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
+cd frontend
+npm run devi/v1/public/updates/{slug}`
+- `POST /api/v1/public/leads`
+- `GET /api/v1/public/sitemap-data`
+
+### Auth
+
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
+
+### Admin
+
+- `GET /api/v1/admin/dashboard`
+- `GET /api/v1/admin/meta`
+- `GET /api/v1/admin/updates`
+- `POST /api/v1/admin/updates`
+- `PUT /api/v1/admin/updates/{id}`
+- `DELETE /api/v1/admin/updates/{id}`
+- `GET /api/v1/admin/leads`
+- `PATCH /api/v1/admin/leads/{id}`
+
+### Uploads
+
+- `POST /api/v1/admin/uploads/image`
+- `POST /api/v1/admin/uploads/pdf`
+
+## Verification commands
+
+```bash
+# Verify backend
+node backend/index.js
+
+# Verify frontend
+cd frontend && npm run build
+```i/v1/admin/leads/{id}`
+
+### Uploads
+
+- `POST /api/v1/admin/uploads/image`
+- `POST /api/v1/admin/uploads/pdf`
+
+## Build and production
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run sitemap
+npm run build
+```
+
+### Backend
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+For hosting details, use:
+
+- `DEPLOYMENT.md`
+- `infra/render.backend.yaml`
+- `infra/nginx-reverse-proxy.conf`
+
+## Verification commands
+
+```bash
+python3 -m compileall backend/app backend/scripts
+cd frontend && npm run build
+```
+
+sudo /opt/lampp/lampp start
+
+sudo /opt/lampp/lampp stop
+sudo /opt/lampp/lampp restart
+sudo /opt/lampp/manager-linux-x64.run
+
+cd /home/prs/Documents/dholera/backend && /home/prs/Documents/dholera/backend/.venv/bin/python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
+cd frontend
+npm run dev
+
+
+## Remaining Functionality & Roadmap
+
+The following features are planned for future development to complete the platform's vision:
+
+### 1. Enhanced Authentication & Security
+- [ ] **Admin MFA:** Implement Multi-Factor Authentication for the admin dashboard.
+- [ ] **JWT Refresh Tokens:** Add refresh token logic to improve session longevity and security.
+- [ ] **Rate Limiting Tuning:** Fine-tune rate limits for OTP and Login routes based on production traffic patterns.
+
+### 2. Advanced Lead Management
+- [ ] **Automated WhatsApp Integration:** Transition from manual WhatsApp links to automated notifications using the WhatsApp Cloud API.
+- [ ] **Email Notifications:** Send instant email alerts to admins when a new "High Interest" lead is identified.
+- [ ] **Lead Export v2:** Enhance the Excel export to include full session timelines and document view history.
+
+### 3. Content & UX Improvements
+- [ ] **Multilingual Support:** Complete the Gujarati and Hindi translations across all pages.
+- [ ] **Search & Filtering:** Add global search across updates and maps for public users.
+- [ ] **Interactive Maps:** Replace static PDF views with interactive GIS-style map layers where possible.
+- [ ] **SEO Optimization:** Dynamic SSR (Server Side Rendering) or Prerendering for single update detail pages.
+
+### 4. Infrastructure & DevOps
+- [ ] **CI/CD Pipeline:** Automated testing and deployment via GitHub Actions.
+- [ ] **Production Database:** Migration from SQLite to PostgreSQL for better scalability.
+- [ ] **Cloud Storage:** Move uploads from local disk to AWS S3 or Google Cloud Storage.
+- [ ] **Monitoring & Logging:** Integrate a centralized logging system (e.g., ELK stack or Sentry).
+
+### 5. Media Pipeline
+- [ ] **Video Updates:** Support for YouTube/Vimeo embeds in the development updates feed.
+- [ ] **Image Optimization:** Automated compression and WebP conversion for all uploaded update images.
+# Dholera
