@@ -51,8 +51,16 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Pass through network requests
-  event.respondWith(fetch(event.request).catch(() => {
-    // Offline fallback could go here
-  }));
+  // Pass through network requests and always return a valid Response.
+  event.respondWith((async () => {
+    try {
+      return await fetch(event.request);
+    } catch (err) {
+      return new Response('Offline', {
+        status: 503,
+        statusText: 'Offline',
+        headers: { 'Content-Type': 'text/plain' }
+      });
+    }
+  })());
 });

@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      disable: process.env.NODE_ENV === 'development',
       registerType: "autoUpdate",
       manifest: {
         name: "Dholera Growth Tracker",
