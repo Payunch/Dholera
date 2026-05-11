@@ -99,6 +99,26 @@ Once the app is open on your phone:
 
 ---
 
+---
+
+## 🗺️ Roadmap & Remaining Features
+
+The following features are planned for future development to complete the platform's vision:
+
+### 1. Security & Authentication
+- [ ] **Admin MFA:** Implement Multi-Factor Authentication for the admin dashboard.
+- [ ] **JWT Refresh Tokens:** Add refresh token logic to improve session longevity.
+
+### 2. Lead & Content Management
+- [ ] **Automated WhatsApp Integration:** Transition from manual links to WhatsApp Cloud API notifications.
+- [ ] **Interactive Maps:** Replace static PDF views with interactive GIS/Leaflet map layers.
+- [ ] **Multilingual Expansion:** Complete full Gujarati and Hindi translations for all dynamic content.
+
+### 3. Infrastructure & DevOps
+- [ ] **Production Database:** Migrate from SQLite to PostgreSQL for scalability.
+- [ ] **Cloud Storage:** Complete migration of all local uploads to AWS S3 or Google Cloud Storage.
+- [ ] **CI/CD Pipeline:** Automated testing and deployment via GitHub Actions.
+
 ## ✅ Final Verification
 - [x] Redundant files (`.venv`, `cookies.txt`, `scratch_*.js`) removed.
 - [x] Project structure consolidated into `backend` and `frontend`.
