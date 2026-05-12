@@ -63,24 +63,26 @@ class ApiService {
   // Header builder for GET requests
   Future<Map<String, String>> _getFetchHeaders() async {
     final token = await getAuthToken(); // This also loads _sessionCookie if null
-    return {
+    final headers = {
       'Accept': 'application/json',
-      ...?(token != null ? {'Authorization': 'Bearer $token'} : null),
-      ...?(_sessionCookie != null ? {'cookie': _sessionCookie!} : null),
     };
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+    if (_sessionCookie != null) headers['cookie'] = _sessionCookie!;
+    return headers;
   }
 
   // Header builder for POST/PUT/DELETE requests (Includes CSRF)
   Future<Map<String, String>> _getMutationHeaders() async {
     final token = await getAuthToken(); // This also loads _sessionCookie if null
     final csrfToken = await _refreshCsrfToken();
-    return {
+    final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      ...?(token != null ? {'Authorization': 'Bearer $token'} : null),
-      ...?(_sessionCookie != null ? {'cookie': _sessionCookie!} : null),
-      ...?(csrfToken != null ? {'X-CSRF-Token': csrfToken} : null), // FIXED X-CSR-Token typo
     };
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+    if (_sessionCookie != null) headers['cookie'] = _sessionCookie!;
+    if (csrfToken != null) headers['X-CSRF-Token'] = csrfToken;
+    return headers;
   }
   
   Future<Map<String, dynamic>> login(String email, String password) async {
