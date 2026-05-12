@@ -41,6 +41,21 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
+        if (authProvider.isLoading) {
+          return const Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: Colors.orange),
+                  SizedBox(height: 20),
+                  Text('Verifying session...', style: TextStyle(color: Colors.orange)),
+                ],
+              ),
+            ),
+          );
+        }
+        
         if (authProvider.isAuthenticated) {
           return const DashboardPage();
         } else {

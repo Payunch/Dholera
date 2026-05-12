@@ -31,11 +31,25 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() => _isLoadingAnalytics = true);
     try {
       final result = await _apiService.getAnalytics();
-      setState(() => _analytics = result);
+      if (result['success'] == true) {
+        setState(() => _analytics = result['analytics']);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error loading analytics: ${result['error']}')),
+          );
+        }
+      }
     } catch (e) {
-      // Error loading analytics occurred
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unexpected error: $e')),
+        );
+      }
     } finally {
-      setState(() => _isLoadingAnalytics = false);
+      if (mounted) {
+        setState(() => _isLoadingAnalytics = false);
+      }
     }
   }
 
