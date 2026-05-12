@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
@@ -40,6 +41,8 @@ class ApiService {
       final response = await http.get(
         Uri.parse(ApiConfig.csrfTokenEndpoint),
         headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'DholeraAdminApp/1.0',
           ...?(_sessionCookie != null ? {'cookie': _sessionCookie!} : null),
         },
       ).timeout(const Duration(seconds: 10));
@@ -53,6 +56,9 @@ class ApiService {
         }
         final data = jsonDecode(response.body);
         return data['csrfToken']?.toString();
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        // Session expired, clear it so the next main request handles redirection
+        await clearAuthToken();
       }
     } catch (e) {
       // Silent failure - return null on CSRF refresh error
@@ -63,8 +69,9 @@ class ApiService {
   // Header builder for GET requests
   Future<Map<String, String>> _getFetchHeaders() async {
     final token = await getAuthToken(); // This also loads _sessionCookie if null
-    final headers = {
+    final Map<String, String> headers = {
       'Accept': 'application/json',
+      'User-Agent': 'DholeraAdminApp/1.0',
     };
     if (token != null) headers['Authorization'] = 'Bearer $token';
     if (_sessionCookie != null) headers['cookie'] = _sessionCookie!;
@@ -75,9 +82,10 @@ class ApiService {
   Future<Map<String, String>> _getMutationHeaders() async {
     final token = await getAuthToken(); // This also loads _sessionCookie if null
     final csrfToken = await _refreshCsrfToken();
-    final headers = {
+    final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'User-Agent': 'DholeraAdminApp/1.0',
     };
     if (token != null) headers['Authorization'] = 'Bearer $token';
     if (_sessionCookie != null) headers['cookie'] = _sessionCookie!;
@@ -93,14 +101,18 @@ class ApiService {
         Uri.parse(ApiConfig.loginEndpoint),
         headers: {
           'Content-Type': 'application/json',
-          ...?(csrfToken != null ? {'X-CSRF-Token': csrfToken} : null),
-          ...?(_sessionCookie != null ? {'cookie': _sessionCookie!} : null),
+          'Accept': 'application/json',
+          'User-Agent': 'DholeraAdminApp/1.0',
+          // ignore: use_null_aware_elements
+          if (csrfToken != null) 'X-CSRF-Token': csrfToken,
+          // ignore: use_null_aware_elements
+          if (_sessionCookie != null) 'cookie': _sessionCookie!,
         },
         body: jsonEncode({
-          'username': email, // Backend uses 'username'
+          'username': email,
           'password': password,
         }),
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 15));
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -109,15 +121,19 @@ class ApiService {
           _sessionCookie = response.headers['set-cookie'];
           await prefs.setString('session_cookie', _sessionCookie!);
         }
-        if (data['token'] != null) {
-          await setAuthToken(data['token'].toString());
+        
+        // Capture JWT token from response body (Backend now returns 'token')
+        final authToken = data['token'] ?? data['accessToken'];
+        if (authToken != null) {
+          await setAuthToken(authToken.toString());
         }
+        
         return {'success': true, 'user': data['user'] ?? data};
       } else {
         return _handleJsonResponse(response);
       }
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      return _handleRequestError(e);
     }
   }
 
@@ -129,7 +145,7 @@ class ApiService {
       );
       return _handleJsonResponse(response, 'data');
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      return _handleRequestError(e);
     }
   }
   
@@ -141,7 +157,7 @@ class ApiService {
       );
       return _handleJsonResponse(response, 'leads');
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      return _handleRequestError(e);
     }
   }
 
@@ -154,7 +170,7 @@ class ApiService {
       );
       return _handleJsonResponse(response);
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      return _handleRequestError(e);
     }
   }
   
@@ -163,20 +179,11 @@ class ApiService {
       final response = await http.get(
         Uri.parse(ApiConfig.analyticsEndpoint),
         headers: await _getFetchHeaders(),
-      );
-      // Fallback if the backend returns a flat object instead of nested 'analytics'
-      final res = _handleJsonResponse(response);
-      if (res['success'] == true) {
-         // if it's nested in 'analytics' or 'data', handle it, otherwise use root
-         final data = res['data'];
-         if (data is Map && data.containsKey('analytics')) {
-           return {'success': true, 'analytics': data['analytics']};
-         }
-         return {'success': true, 'analytics': data};
-      }
-      return res;
+      ).timeout(const Duration(seconds: 15));
+      
+      return _handleJsonResponse(response, 'analytics');
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      return _handleRequestError(e);
     }
   }
 
@@ -188,7 +195,7 @@ class ApiService {
       );
       return _handleJsonResponse(response, 'updates');
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      return _handleRequestError(e);
     }
   }
 
@@ -199,6 +206,8 @@ class ApiService {
       final uri = Uri.parse(ApiConfig.updatesEndpoint);
       final request = http.MultipartRequest('POST', uri);
       
+      request.headers['User-Agent'] = 'DholeraAdminApp/1.0';
+      request.headers['Accept'] = 'application/json';
       if (token != null) request.headers['Authorization'] = 'Bearer $token';
       if (_sessionCookie != null) request.headers['cookie'] = _sessionCookie!;
       if (csrfToken != null) request.headers['X-CSRF-Token'] = csrfToken;
@@ -207,23 +216,18 @@ class ApiService {
       request.fields['content'] = data['content']?.toString() ?? '';
       request.fields['category'] = data['category']?.toString() ?? 'General';
       request.fields['published'] = (data['published'] == true).toString();
+      if (data['imageUrl'] != null) request.fields['imageUrl'] = data['imageUrl'].toString();
       
-      // Support for optional direct image URL field
-      if (data['imageUrl'] != null) {
-        request.fields['imageUrl'] = data['imageUrl'].toString();
-      }
-      
-      // Support for physical file upload via path
       if (data['imagePath'] != null && data['imagePath'].toString().isNotEmpty) {
         request.files.add(await http.MultipartFile.fromPath('image', data['imagePath']));
       }
       
-      final streamedResponse = await request.send();
+      final streamedResponse = await request.send().timeout(const Duration(minutes: 2));
       final response = await http.Response.fromStream(streamedResponse);
       
       return _handleJsonResponse(response, 'update');
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      return _handleRequestError(e);
     }
   }
 
@@ -235,7 +239,7 @@ class ApiService {
       );
       return _handleJsonResponse(response);
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      return _handleRequestError(e);
     }
   }
 
@@ -247,7 +251,7 @@ class ApiService {
       );
       return _handleJsonResponse(response, 'pdfs');
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      return _handleRequestError(e);
     }
   }
 
@@ -258,6 +262,8 @@ class ApiService {
       final uri = Uri.parse('${ApiConfig.apiBaseUrl}/pdf/upload');
       final request = http.MultipartRequest('POST', uri);
       
+      request.headers['User-Agent'] = 'DholeraAdminApp/1.0';
+      request.headers['Accept'] = 'application/json';
       if (token != null) request.headers['Authorization'] = 'Bearer $token';
       if (_sessionCookie != null) request.headers['cookie'] = _sessionCookie!;
       if (csrfToken != null) request.headers['X-CSRF-Token'] = csrfToken;
@@ -270,12 +276,12 @@ class ApiService {
         request.files.add(await http.MultipartFile.fromPath('pdf', data['pdfPath']));
       }
       
-      final streamedResponse = await request.send();
+      final streamedResponse = await request.send().timeout(const Duration(minutes: 5));
       final response = await http.Response.fromStream(streamedResponse);
       
       return _handleJsonResponse(response, 'pdf');
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      return _handleRequestError(e);
     }
   }
 
@@ -288,25 +294,25 @@ class ApiService {
   Future<Map<String, dynamic>> getSettings() async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConfig.apiBaseUrl}/settings'), // RESTORED ORIGINAL
+        Uri.parse('${ApiConfig.apiBaseUrl}/settings'),
         headers: await _getFetchHeaders(),
       );
       return _handleJsonResponse(response, 'settings');
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      return _handleRequestError(e);
     }
   }
 
   Future<Map<String, dynamic>> updateSettings(Map<String, dynamic> data) async {
     try {
       final response = await http.post(
-        Uri.parse('${ApiConfig.apiBaseUrl}/settings'), // RESTORED ORIGINAL
+        Uri.parse('${ApiConfig.apiBaseUrl}/settings'),
         headers: await _getMutationHeaders(),
         body: jsonEncode(data),
       );
       return _handleJsonResponse(response);
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      return _handleRequestError(e);
     }
   }
   
@@ -316,12 +322,12 @@ class ApiService {
         Uri.parse(ApiConfig.logoutEndpoint), 
         headers: await _getMutationHeaders()
       );
-      await clearAuthToken();
-      return true;
     } catch (e) {
+      // Ignore
+    } finally {
       await clearAuthToken();
-      return false;
     }
+    return true;
   }
 
   /// Helper to handle JSON responses and provide consistent error messages
@@ -331,24 +337,18 @@ class ApiService {
     try {
       final body = response.body;
       if (body.isEmpty) {
-        return isSuccess ? {'success': true} : {'success': false, 'error': 'Empty response from server (Status: ${response.statusCode})'};
+        return isSuccess ? {'success': true} : {'success': false, 'error': 'Empty response (Status: ${response.statusCode})'};
       }
 
       final data = jsonDecode(body);
       if (isSuccess) {
-        // If we expect a specific array/data key
         if (arrayKey != null) {
-          if (data is List) {
-            return {'success': true, arrayKey: data};
-          } else if (data is Map && data.containsKey(arrayKey)) {
-            return {'success': true, arrayKey: data[arrayKey]};
-          } else if (data is Map && data.containsKey('data')) {
-            return {'success': true, arrayKey: data['data']};
-          } else if (data is Map) {
-             return {'success': true, arrayKey: data}; // fallback
-          }
+          if (data is List) return {'success': true, arrayKey: data};
+          if (data is Map && data.containsKey(arrayKey)) return {'success': true, arrayKey: data[arrayKey]};
+          if (data is Map && data.containsKey('data')) return {'success': true, arrayKey: data['data']};
+          if (data is Map && data.containsKey('analytics')) return {'success': true, arrayKey: data['analytics']};
+          return {'success': true, arrayKey: data};
         }
-        
         return {'success': true, 'data': data};
       } else {
         return {
@@ -357,22 +357,26 @@ class ApiService {
         };
       }
     } catch (e) {
-      if (isSuccess && response.body.isEmpty) {
-        return {'success': true};
-      }
+      if (isSuccess && response.body.isEmpty) return {'success': true};
       
-      // Handle non-JSON responses (HTML error pages)
       if (response.body.contains('<!DOCTYPE html>') || response.body.contains('<html')) {
-        if (response.statusCode == 404) {
-          return {'success': false, 'error': 'API endpoint not found (404).'};
-        }
-        if (response.statusCode == 401) {
-          return {'success': false, 'error': 'Unauthorized access (401).'};
-        }
-        return {'success': false, 'error': 'Server error (HTML). Status: ${response.statusCode}'};
+        if (response.statusCode == 404) return {'success': false, 'error': 'API endpoint not found (404).'};
+        if (response.statusCode == 401) return {'success': false, 'error': 'Unauthorized access (401).'};
+        return {'success': false, 'error': 'Server Error (HTML). Status: ${response.statusCode}'};
       }
       
-      return {'success': false, 'error': 'Unexpected response format (Status: ${response.statusCode})'};
+      return {'success': false, 'error': 'Format error (Status: ${response.statusCode})'};
     }
+  }
+
+  /// Centralized error handling for network issues
+  Map<String, dynamic> _handleRequestError(dynamic e) {
+    if (e is SocketException) {
+      return {
+        'success': false, 
+        'error': 'Network connection issue (reset by peer). Please ensure backend is running and reachable.'
+      };
+    }
+    return {'success': false, 'error': e.toString()};
   }
 }

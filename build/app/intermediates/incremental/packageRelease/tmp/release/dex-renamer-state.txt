@@ -1,4 +1,0 @@
-#Wed May 13 02:13:14 IST 2026
-base.0=/home/prs/Documents/Dholera/dholera/build/app/intermediates/dex/release/minifyReleaseWithR8/classes.dex
-renamed.0=classes.dex
-path.0=classes.dex

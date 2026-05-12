@@ -19,7 +19,7 @@ class _LeadsPageState extends State<LeadsPage> {
   int _currentPage = 1;
   bool _hasMore = true;
 
-  static const List<String> ALLOWED_LEAD_STATUSES = [
+  static const List<String> allowedLeadStatuses = [
     'New',
     'Contacted',
     'Converted',
@@ -262,10 +262,10 @@ class _LeadsPageState extends State<LeadsPage> {
                             children: [
                               const Text('Status', style: TextStyle(color: Colors.grey, fontSize: 12)),
                               DropdownButton<String>(
-                                value: ALLOWED_LEAD_STATUSES.contains(lead.status) ? lead.status : 'New',
+                                value: allowedLeadStatuses.contains(lead.status) ? lead.status : 'New',
                                 isExpanded: true,
                                 underline: const SizedBox(),
-                                items: ALLOWED_LEAD_STATUSES.map((String value) {
+                                items: allowedLeadStatuses.map((String value) {
                                   return DropdownMenuItem<String>(
                                     value: value,
                                     child: Text(value),
@@ -274,6 +274,7 @@ class _LeadsPageState extends State<LeadsPage> {
                                 onChanged: (String? newValue) async {
                                   if (newValue != null && newValue != lead.status) {
                                     final success = await _updateLeadStatus(lead.id, newValue);
+                                    if (!context.mounted) return;
                                     if (success) {
                                       Navigator.pop(context);
                                       _fetchLeads(refresh: true);
