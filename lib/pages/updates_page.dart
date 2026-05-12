@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../services/api_service.dart';
 import '../models/app_update.dart';
 
@@ -12,6 +14,7 @@ class UpdatesPage extends StatefulWidget {
 
 class _UpdatesPageState extends State<UpdatesPage> {
   final ApiService _apiService = ApiService();
+  final ImagePicker _picker = ImagePicker();
   List<AppUpdate> _updates = [];
   bool _isLoading = true;
   String? _error;
@@ -86,6 +89,9 @@ class _UpdatesPageState extends State<UpdatesPage> {
       appBar: AppBar(
         title: const Text('Property Updates'),
         backgroundColor: Colors.orange,
+        actions: [
+          IconButton(onPressed: _fetchUpdates, icon: const Icon(Icons.refresh)),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -95,12 +101,24 @@ class _UpdatesPageState extends State<UpdatesPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text('Error: $_error'),
+                      const SizedBox(height: 16),
                       ElevatedButton(onPressed: _fetchUpdates, child: const Text('Retry')),
                     ],
                   ),
                 )
               : _updates.isEmpty
-                  ? const Center(child: Text('No updates found'))
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.update_disabled, size: 64, color: Colors.grey),
+                          const SizedBox(height: 16),
+                          const Text('No updates found'),
+                          const SizedBox(height: 16),
+                          ElevatedButton(onPressed: _fetchUpdates, child: const Text('Refresh')),
+                        ],
+                      ),
+                    )
                   : RefreshIndicator(
                       onRefresh: _fetchUpdates,
                       child: ListView.builder(
@@ -132,6 +150,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreateUpdateDialog(),
         backgroundColor: Colors.orange,
+        tooltip: 'Create New Update',
         child: const Icon(Icons.add),
       ),
     );
@@ -141,6 +160,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.6,
         maxChildSize: 0.9,
@@ -152,16 +172,32 @@ class _UpdatesPageState extends State<UpdatesPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (update.imageUrl != null)
-                Image.network(update.imageUrl!, width: double.infinity, height: 200, fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => const SizedBox()),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(update.imageUrl!, width: double.infinity, height: 250, fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const SizedBox()),
+                ),
               const SizedBox(height: 16),
               Text(update.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               Text(update.category, style: TextStyle(color: Colors.orange[700], fontWeight: FontWeight.w500)),
-              const Divider(),
+              const Divider(height: 32),
               Text(update.content, style: const TextStyle(fontSize: 16, height: 1.5)),
-              const SizedBox(height: 20),
-              Text('Published: ${update.published ? "Yes" : "No"}', style: const TextStyle(color: Colors.grey)),
-              Text('Created: ${DateFormat('dd MMM yyyy, hh:mm a').format(update.createdAt)}', style: const TextStyle(color: Colors.grey)),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Text('Created: ${DateFormat('dd MMM yyyy, hh:mm a').format(update.createdAt)}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(update.published ? Icons.check_circle : Icons.unpublished, size: 14, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Text('Status: ${update.published ? "Published" : "Draft"}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
             ],
           ),
         ),
@@ -174,51 +210,85 @@ class _UpdatesPageState extends State<UpdatesPage> {
     final contentController = TextEditingController();
     final categoryController = TextEditingController(text: 'General');
     final imageUrlController = TextEditingController();
+    XFile? pickedFile;
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Create New Update'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: titleController, decoration: const InputDecoration(labelText: 'Title')),
-              TextField(controller: categoryController, decoration: const InputDecoration(labelText: 'Category')),
-              TextField(controller: contentController, decoration: const InputDecoration(labelText: 'Content'), maxLines: 3),
-              TextField(controller: imageUrlController, decoration: const InputDecoration(labelText: 'Image URL (optional)')),
-            ],
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Create New Update'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(controller: titleController, decoration: const InputDecoration(labelText: 'Title')),
+                TextField(controller: categoryController, decoration: const InputDecoration(labelText: 'Category')),
+                TextField(controller: contentController, decoration: const InputDecoration(labelText: 'Content'), maxLines: 3),
+                const SizedBox(height: 16),
+                if (pickedFile != null)
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(File(pickedFile!.path), height: 100, width: double.infinity, fit: BoxFit.cover),
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: IconButton(
+                          icon: const Icon(Icons.cancel, color: Colors.red),
+                          onPressed: () => setDialogState(() => pickedFile = null),
+                        ),
+                      )
+                    ],
+                  )
+                else
+                  TextField(controller: imageUrlController, decoration: const InputDecoration(labelText: 'Image URL (optional)')),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  onPressed: () async {
+                    final XFile? photo = await _picker.pickImage(source: ImageSource.gallery);
+                    if (photo != null) {
+                      setDialogState(() => pickedFile = photo);
+                    }
+                  },
+                  icon: const Icon(Icons.image),
+                  label: const Text('Pick Image from Gallery'),
+                ),
+              ],
+            ),
           ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              if (titleController.text.isEmpty || contentController.text.isEmpty) {
-                ScaffoldMessenger.of(dialogContext).showSnackBar(const SnackBar(content: Text('Title and Content are required')));
-                return;
-              }
-              
-              final result = await _apiService.createUpdate({
-                'title': titleController.text,
-                'content': contentController.text,
-                'category': categoryController.text,
-                'imageUrl': imageUrlController.text.isEmpty ? null : imageUrlController.text,
-                'published': true,
-              });
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () async {
+                if (titleController.text.isEmpty || contentController.text.isEmpty) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(const SnackBar(content: Text('Title and Content are required')));
+                  return;
+                }
+                
+                final result = await _apiService.createUpdate({
+                  'title': titleController.text,
+                  'content': contentController.text,
+                  'category': categoryController.text,
+                  'imageUrl': pickedFile == null && imageUrlController.text.isNotEmpty ? imageUrlController.text : null,
+                  'imagePath': pickedFile?.path,
+                  'published': true,
+                });
 
-              if (!mounted) return;
-              Navigator.pop(context);
-              _fetchUpdates();
-              if (result['success'] == true) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Update created successfully')));
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${result['error']}')));
-              }
-            },
-            child: const Text('Create'),
-          ),
-        ],
+                if (!mounted) return;
+                Navigator.pop(dialogContext);
+                _fetchUpdates();
+                if (result['success'] == true) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Update created successfully')));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${result['error']}')));
+                }
+              },
+              child: const Text('Create'),
+            ),
+          ],
+        ),
       ),
     );
   }
