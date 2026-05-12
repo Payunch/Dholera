@@ -263,7 +263,9 @@ class _UpdatesPageState extends State<UpdatesPage> {
             ElevatedButton(
               onPressed: () async {
                 if (titleController.text.isEmpty || contentController.text.isEmpty) {
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(const SnackBar(content: Text('Title and Content are required')));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Title and Content are required')));
+                  }
                   return;
                 }
                 
@@ -276,9 +278,10 @@ class _UpdatesPageState extends State<UpdatesPage> {
                   'published': true,
                 });
 
-                if (!mounted) return;
+                if (!context.mounted) return;
                 Navigator.pop(dialogContext);
                 _fetchUpdates();
+                
                 if (result['success'] == true) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Update created successfully')));
                 } else {
