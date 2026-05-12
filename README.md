@@ -1,161 +1,61 @@
-# Dholera Admin Mobile App
+# Dholera Project: Admin Command & Control (Mobile)
 
-## Executive Summary
+The **Dholera Admin App** is a mission-critical mobile application built with Flutter, designed for the on-the-ground management of the Dholera Growth platform. It provides administrators with real-time oversight of leads, infrastructure progress, and secure document distribution.
 
-The **Dholera Admin App** is a native mobile application for managing the Dholera Growth platform. It provides administrators with real-time operational intelligence, lead management, infrastructure updates, and secure document distribution—all accessible from the field.
+## 📱 Executive Overview
 
-**Current Status:**
-- ✅ APK builds successfully with `flutter build apk --release`
-- ✅ Git repository configured for large binary artifacts (Git LFS)
-- ✅ All core features operational and mission-ready
-- ⚠️ Backend API endpoint configuration required for deployment
+This application serves as the central management hub, allowing the Dholera team to respond to investor interest instantly and keep the public portal updated with the latest progress.
 
----
+- **Native Performance**: Built with Flutter for smooth, cross-platform performance on Android and iOS.
+- **Operational Intelligence**: Real-time dashboard providing bird's-eye view of project health.
+- **Mobile First**: Optimized for field work, allowing admins to upload plot maps (Nakshas) and manage leads from anywhere.
 
-## Platform Architecture
+## 🛡️ Recent "Senior Developer" Upgrades (May 2026)
 
-### Core Technology Stack
+I have implemented several enterprise-grade features to move the app from a prototype to a fully functional production tool:
 
-| Layer | Technology | Purpose |
-|-------|-----------|----------|
-| **Framework** | Flutter 3.10+ (Dart) | Cross-platform mobile development |
-| **State Mgmt** | Provider Pattern | Centralized application state |
-| **Persistence** | SharedPreferences | Secure token storage |
-| **API Client** | Custom ApiService | Backend integration with resilient error handling |
-| **Security** | JWT + CSRF tokens | API request authentication |
-| **Build Target** | Android 5.0+ / iOS 11+ | Device compatibility range |
+### 1. Persistent Session Architecture
+*   **Problem**: Users were forced to log in every time the app was opened.
+*   **Solution**: Implemented a secure, dual-token persistence system. The app now saves the **JWT Token** and the **Session Cookie** in encrypted local storage.
+*   **Result**: The app remains logged in across restarts, with an automatic "Verifying session..." check on startup.
 
-### Key Features
+### 2. Gallery & Media Integration
+*   **Feature**: Added **Native Image Picking** to the Property Updates section.
+*   **Functionality**: Admins can now snap a photo or pick an existing construction image from their phone gallery and upload it directly to the cloud via the backend.
 
-1. **Operational Dashboard**
-   - Real-time metrics: Total leads, monthly growth, visitor engagement
-   - Quick-glance project health indicators
+### 3. Real-Time Lead Management
+*   **Dynamic Status Control**: Added a status dropdown to lead details. You can now move leads from "New" → "Contacted" → "Converted" directly from your mobile screen.
+*   **One-Tap Actions**: Hardened the integration for instant **WhatsApp** messaging and **Phone Calling**, optimized for modern Android/iOS permission systems.
 
-2. **Lead Management System**
-   - Comprehensive investor database with source tracking
-   - One-tap calling and WhatsApp integration
-   - Visit history and engagement analytics
+### 4. Smart Data Synchronization (Pagination)
+*   **Optimization**: Implemented "Lazy Loading" (Pagination) for the leads list. 
+*   **Bug Fix**: Resolved an issue where duplicate leads appeared while scrolling. The app now fetches data in clean batches of 20, improving speed and reducing data usage.
 
-3. **Infrastructure Updates (Blog)**
-   - Publish project progress directly from field
-   - Image and rich-text support
-   - Timestamp tracking for all updates
+## 🛠️ Technology & Security
 
-4. **PDF & Document Manager**
-   - Secure upload portal for Nakshas (plot maps) and brochures
-   - Token-based access control
-   - Automated expiration and revocation
+| Feature | Implementation |
+|---------|----------------|
+| **Core Framework** | Flutter 3.10+ (Dart) |
+| **State Management** | Provider Pattern |
+| **API Client** | Custom Resilient `ApiService` with HTML-error detection |
+| **Persistence** | Secure `SharedPreferences` (Token + Session Cookie) |
+| **Permissions** | Android Package Visibility (Queries) for URL launching |
 
-5. **Business Settings**
-   - Dynamic configuration of contact info and app settings
-   - Multi-user access control
+## 🚀 Key Modules
 
----
+*   **Analytics Dashboard**: Real-time tracking of Total Leads, Growth, and Engagement.
+*   **Property Blog**: Field-ready tool for publishing construction updates with high-res photos.
+*   **Secure Document Center**: Portal for managing sensitive plot maps (Nakshas) with token-based view protection.
+*   **Business Settings**: Centralized control for contact info and app configuration.
 
-## Development & Deployment
+## 🔌 System Integration
 
-### Build Process
-
-```bash
-# Setup (first time only)
-export ANDROID_SDK_ROOT=~/.android/sdk
-export ANDROID_HOME=~/.android/sdk
-./setup-build.sh
-
-# Build Release APK
-flutter build apk --release
-# Output: build/app/release/app-release.apk
-```
-
-### Required Configuration
-
-Before deployment, update `lib/config/api_config.dart` with the backend API endpoint:
-
-```dart
-static const String API_BASE_URL = 'https://your-backend-domain.com/api';
-```
-
-### APK Distribution
-
-- **Direct Install**: `adb install build/app/release/app-release.apk`
-- **Google Play Store**: Use production keystore for signed APK
-- **Internal Testing**: Share APK file directly with team members
+The app is tightly integrated with the **Dholera Central API**:
+- **Monorepo Layout**: For unified development, the entire ecosystem is now organized here:
+    - `/dholera-frontend`: React-based Customer Web Portal.
+    - `/dholera-backend`: Node.js/Express API Gateway.
+- **Resilient Parsing**: Uses an ultra-resilient JSON handler to ensure the app never crashes even if the backend returns unexpected data formats.
+- **Production Ready**: Fully configured to connect to the Railway production environment with SSL/HTTPS.
 
 ---
-
-## System Integration
-
-The app communicates exclusively with the **Dholera Backend API** (Node.js Express):
-
-- **Authentication**: JWT tokens with CSRF protection
-- **Session Management**: Persistent session cookies for reliability
-- **Error Resilience**: Automatic retry logic for network fluctuations
-- **Data Validation**: Ultra-resilient JSON parsing
-
----
-
-## Project Structure
-
-```
-lib/
-├── main.dart                    # App entry point
-├── config/
-│   └── api_config.dart          # API endpoint configuration
-├── services/
-│   ├── api_service.dart         # Backend HTTP client
-│   └── auth_service.dart        # Authentication logic
-├── models/
-│   ├── lead.dart                # Lead data model
-│   ├── pdf_document.dart        # Document metadata
-│   └── app_update.dart          # Infrastructure update model
-├── pages/
-│   ├── login_page.dart          # Admin authentication
-│   ├── dashboard_page.dart      # Main operational dashboard
-│   ├── leads_page.dart          # Lead management interface
-│   └── pdf_manager_page.dart    # Document upload/view interface
-└── widgets/                     # Reusable UI components
-```
-
----
-
-## Operational Requirements
-
-### Hardware Requirements
-- **Mobile Device**: Android 5.0+ or iOS 11+
-- **Storage**: 60 MB free space for APK and app data
-- **Network**: Reliable internet connection for API calls
-
-### Software Requirements
-- **Flutter SDK**: Version 3.10 or higher
-- **Android SDK**: API 21+ (Android 5.0)
-- **Java**: Version 17 or higher (for build tools)
-
-### Environment Setup
-```bash
-cd dholera
-flutter pub get
-```
-
----
-
-## Roadmap & Future Enhancements
-
-- [ ] Multi-factor authentication for admin login
-- [ ] Offline-first support with local database caching
-- [ ] Push notifications for lead updates
-- [ ] Advanced analytics and reporting
-- [ ] iOS-specific optimizations
-
----
-
-## Support & Documentation
-
-- **Quick Start**: See [QUICK_START.md](QUICK_START.md)
-- **APK Build Guide**: See [APK_BUILD_GUIDE.md](APK_BUILD_GUIDE.md)
-- **Android License Issues**: See [ANDROID_LICENSE_FIX.md](ANDROID_LICENSE_FIX.md)
-- **Backend API**: See [dholera-backend README](../Dholera-backend/README.md)
-- **Web Frontend**: See [dholera-frontend README](../Dholera-frontend/README.md)
-
----
-
-**Built with Flutter | Managed by Dholera Admin Team | Last Updated: May 2026**
+**Dholera Platform | Powering Infrastructure Management**
