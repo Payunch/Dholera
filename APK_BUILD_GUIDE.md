@@ -2,6 +2,18 @@
 
 This guide provides step-by-step instructions for building and deploying the Dholera Admin Flutter APK.
 
+## Verified Working
+
+- `flutter build apk --release` succeeds in the current repository state
+- The large `libflutter.so` binaries are tracked with Git LFS, so pushes no longer fail on GitHub's 100 MB limit
+- The build scripts in the repo remain usable for setup and packaging
+
+## Still Required
+
+- Accept Android SDK licenses on a new machine before building
+- Set the backend URL in `lib/config/api_config.dart`
+- Use a production keystore for store releases
+
 ## Prerequisites
 
 ✅ Flutter SDK installed  

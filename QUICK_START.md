@@ -2,6 +2,12 @@
 
 This guide provides everything you need to build and deploy the Dholera Admin app as an Android APK.
 
+## Verified Working
+
+- `flutter build apk --release` completes successfully in this repo
+- `git push` works after the Git LFS migration for large native build artifacts
+- `./setup-build.sh` remains the recommended first step on a fresh machine
+
 ## 📋 Quick Summary
 
 | Task | Command |
@@ -11,6 +17,12 @@ This guide provides everything you need to build and deploy the Dholera Admin ap
 | **Install** | `flutter install` |
 | **Test API Config** | Edit `lib/config/api_config.dart` |
 | **License Help** | Read `ANDROID_LICENSE_FIX.md` |
+
+## What Remains
+
+- Configure `lib/config/api_config.dart` for the target backend before real device testing
+- Install Git LFS on any new clone if you need to work with the repository history locally
+- Keep Android build outputs out of git; they are already ignored in `.gitignore`
 
 ## 🚀 Getting Started (5 minutes)
 

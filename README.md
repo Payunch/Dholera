@@ -1,6 +1,13 @@
-# Dholera Admin Flutter App
+# Dholera Admin Flutter APK
 
 A native Flutter application for managing Dholera Growth platform infrastructure data and leads on Android and iOS devices.
+
+## Current Status
+
+- ✅ Flutter release APK builds successfully with `flutter build apk --release`
+- ✅ Git push is working after migrating large Android build binaries to Git LFS
+- ✅ PDF manager, lead management, dashboard, and login flows remain part of the app
+- ⚠️ Backend API configuration still needs to point to the correct deployed server before release testing
 
 ## Features
 
@@ -86,6 +93,18 @@ flutter build apk --release
 - Keystore setup for signed releases
 - Testing and deployment instructions
 - Troubleshooting common build errors
+
+## What Is Working Now
+
+- `./setup-build.sh` completes the Android SDK/license setup on a configured machine
+- `./build-apk.sh` and `flutter build apk --release` both complete successfully
+- `git push` succeeds after the Git LFS migration for large `libflutter.so` artifacts
+
+## What Still Needs Attention
+
+- Update `lib/config/api_config.dart` for the target backend environment
+- Keep `build/` ignored so local Android build outputs do not return to git history
+- Recreate or re-clone the repository on other machines if they have the pre-LFS history
 
 ### Install & Run
 

@@ -24,4 +24,10 @@ class ApiConfig {
   
   // Analytics endpoints
   static const String analyticsEndpoint = '$apiBaseUrl/analytics';
+
+  // PDF endpoints
+  static const String pdfsEndpoint = '$apiBaseUrl/pdfs';
+  
+  // Settings endpoints
+  static const String settingsEndpoint = '$apiBaseUrl/settings';
 }
