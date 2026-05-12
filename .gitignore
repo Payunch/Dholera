@@ -1,0 +1,12 @@
+# Flutter / Dart
+.dart_tool/
+/.idea/
+/.gradle/
+/.pub-cache/
+build/
+
+# macOS
+.DS_Store
+
+# Android
+/local.properties

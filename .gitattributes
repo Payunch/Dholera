@@ -1,1 +1,2 @@
+# Track Flutter native libs with Git LFS
 build/**/libflutter.so filter=lfs diff=lfs merge=lfs -text
