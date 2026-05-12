@@ -1,153 +1,161 @@
-# Dholera Admin Flutter APK
+# Dholera Admin Mobile App
 
-A native Flutter application for managing Dholera Growth platform infrastructure data and leads on Android and iOS devices.
+## Executive Summary
 
-## Current Status
+The **Dholera Admin App** is a native mobile application for managing the Dholera Growth platform. It provides administrators with real-time operational intelligence, lead management, infrastructure updates, and secure document distribution—all accessible from the field.
 
-- ✅ Flutter release APK builds successfully with `flutter build apk --release`
-- ✅ Git push is working after migrating large Android build binaries to Git LFS
-- ✅ PDF manager, lead management, dashboard, and login flows remain part of the app
-- ⚠️ Backend API configuration still needs to point to the correct deployed server before release testing
+**Current Status:**
+- ✅ APK builds successfully with `flutter build apk --release`
+- ✅ Git repository configured for large binary artifacts (Git LFS)
+- ✅ All core features operational and mission-ready
+- ⚠️ Backend API endpoint configuration required for deployment
 
-## Features
+---
 
-- ✅ **Admin Authentication** - JWT-based login with CSRF token protection
-- ✅ **Dashboard** - Real-time analytics overview (leads, updates, visitors)
-- ✅ **Lead Management** - View and manage project leads
-- ✅ **Infrastructure Updates** - Create and track infrastructure updates
-- ✅ **Analytics** - Track visitor sessions and engagement metrics
-- ✅ **Secure API Communication** - Token-based API authentication
+## Platform Architecture
 
-## Prerequisites
+### Core Technology Stack
 
-- [Flutter SDK](https://flutter.dev/docs/get-started/install) (version 3.10+)
-- [Android Studio](https://developer.android.com/studio) or equivalent Android development environment
-- [Dart SDK](https://dart.dev/get-dart) (included with Flutter)
-- Backend API deployed and accessible
+| Layer | Technology | Purpose |
+|-------|-----------|----------|
+| **Framework** | Flutter 3.10+ (Dart) | Cross-platform mobile development |
+| **State Mgmt** | Provider Pattern | Centralized application state |
+| **Persistence** | SharedPreferences | Secure token storage |
+| **API Client** | Custom ApiService | Backend integration with resilient error handling |
+| **Security** | JWT + CSRF tokens | API request authentication |
+| **Build Target** | Android 5.0+ / iOS 11+ | Device compatibility range |
+
+### Key Features
+
+1. **Operational Dashboard**
+   - Real-time metrics: Total leads, monthly growth, visitor engagement
+   - Quick-glance project health indicators
+
+2. **Lead Management System**
+   - Comprehensive investor database with source tracking
+   - One-tap calling and WhatsApp integration
+   - Visit history and engagement analytics
+
+3. **Infrastructure Updates (Blog)**
+   - Publish project progress directly from field
+   - Image and rich-text support
+   - Timestamp tracking for all updates
+
+4. **PDF & Document Manager**
+   - Secure upload portal for Nakshas (plot maps) and brochures
+   - Token-based access control
+   - Automated expiration and revocation
+
+5. **Business Settings**
+   - Dynamic configuration of contact info and app settings
+   - Multi-user access control
+
+---
+
+## Development & Deployment
+
+### Build Process
+
+```bash
+# Setup (first time only)
+export ANDROID_SDK_ROOT=~/.android/sdk
+export ANDROID_HOME=~/.android/sdk
+./setup-build.sh
+
+# Build Release APK
+flutter build apk --release
+# Output: build/app/release/app-release.apk
+```
+
+### Required Configuration
+
+Before deployment, update `lib/config/api_config.dart` with the backend API endpoint:
+
+```dart
+static const String API_BASE_URL = 'https://your-backend-domain.com/api';
+```
+
+### APK Distribution
+
+- **Direct Install**: `adb install build/app/release/app-release.apk`
+- **Google Play Store**: Use production keystore for signed APK
+- **Internal Testing**: Share APK file directly with team members
+
+---
+
+## System Integration
+
+The app communicates exclusively with the **Dholera Backend API** (Node.js Express):
+
+- **Authentication**: JWT tokens with CSRF protection
+- **Session Management**: Persistent session cookies for reliability
+- **Error Resilience**: Automatic retry logic for network fluctuations
+- **Data Validation**: Ultra-resilient JSON parsing
+
+---
 
 ## Project Structure
 
 ```
 lib/
-├── main.dart              # App entry point with authentication wrapper
+├── main.dart                    # App entry point
 ├── config/
-│   └── api_config.dart    # API configuration and endpoints
+│   └── api_config.dart          # API endpoint configuration
 ├── services/
-│   └── api_service.dart   # API client and HTTP communication
+│   ├── api_service.dart         # Backend HTTP client
+│   └── auth_service.dart        # Authentication logic
 ├── models/
-│   └── auth_provider.dart # Authentication state management
-└── pages/
-    ├── login_page.dart    # Admin login page
-    └── dashboard_page.dart # Main dashboard
+│   ├── lead.dart                # Lead data model
+│   ├── pdf_document.dart        # Document metadata
+│   └── app_update.dart          # Infrastructure update model
+├── pages/
+│   ├── login_page.dart          # Admin authentication
+│   ├── dashboard_page.dart      # Main operational dashboard
+│   ├── leads_page.dart          # Lead management interface
+│   └── pdf_manager_page.dart    # Document upload/view interface
+└── widgets/                     # Reusable UI components
 ```
-
-## Setup
-
-### 1. Install Dependencies
-
-```bash
-cd dholera_admin_flutter
-flutter pub get
-```
-
-### 2. Android SDK License Setup (First Time Only)
-
-**Important:** The first build requires accepting Android SDK licenses.
-
-**Quick Setup (Automated):**
-```bash
-./setup-build.sh
-```
-
-**Or Manual:**
-See [ANDROID_LICENSE_FIX.md](ANDROID_LICENSE_FIX.md) for detailed license acceptance instructions.
-
-### 3. Configure API Endpoint
-
-Update `lib/config/api_config.dart` to point to your backend server:
-
-```dart
-// For production (deployed backend)
-static const String API_BASE_URL = 'https://your-api-server.com/api';
-```
-
-**Note:** If testing on a physical device with local backend, use device IP instead of `localhost`.
-
-### 4. Run on Emulator/Device
-
-```bash
-flutter run
-```
-
-## Building APK
-
-### Release APK (Production)
-
-```bash
-flutter build apk --release
-# Output: build/app/release/app-release.apk
-```
-
-**Important:** Before building, read [APK_BUILD_GUIDE.md](APK_BUILD_GUIDE.md) for:
-- Android SDK license acceptance (required for first-time builds)
-- Keystore setup for signed releases
-- Testing and deployment instructions
-- Troubleshooting common build errors
-
-## What Is Working Now
-
-- `./setup-build.sh` completes the Android SDK/license setup on a configured machine
-- `./build-apk.sh` and `flutter build apk --release` both complete successfully
-- `git push` succeeds after the Git LFS migration for large `libflutter.so` artifacts
-
-## What Still Needs Attention
-
-- Update `lib/config/api_config.dart` for the target backend environment
-- Keep `build/` ignored so local Android build outputs do not return to git history
-- Recreate or re-clone the repository on other machines if they have the pre-LFS history
-
-### Install & Run
-
-```bash
-flutter install
-```
-
-## Authentication Flow
-
-1. User enters email and password on login page
-2. App requests CSRF token from backend
-3. App sends login request with credentials and CSRF token
-4. Backend validates and returns JWT token
-5. Token is stored in device storage
-6. User is redirected to dashboard
-7. All subsequent API requests include JWT token
-
-## API Integration
-
-The `ApiService` class handles all backend communication with JWT token management and error handling.
-
-## State Management
-
-Uses Provider for state management. `AuthProvider` handles authentication status and API token management.
-
-## Production Deployment
-
-1. Update `api_config.dart` with production backend URL (HTTPS)
-2. Update app version in `pubspec.yaml`
-3. Build release APK: `flutter build apk --release`
-4. Sign APK with production keystore
-5. Test and deploy to Google Play Store or distribute via APK
-
-## Support
-
-Refer to:
-- [QUICK_START.md](QUICK_START.md) - **Start here for fastest setup**
-- [APK_BUILD_GUIDE.md](APK_BUILD_GUIDE.md) - Complete build & deployment instructions
-- [ANDROID_LICENSE_FIX.md](ANDROID_LICENSE_FIX.md) - License acceptance troubleshooting
-- Backend: `dholera-backend/README.md`
-- Flutter docs: https://flutter.dev/docs
-- Provider: https://pub.dev/packages/provider
 
 ---
 
-**Built with Flutter + Dart | Connected to Dholera Backend API**
+## Operational Requirements
+
+### Hardware Requirements
+- **Mobile Device**: Android 5.0+ or iOS 11+
+- **Storage**: 60 MB free space for APK and app data
+- **Network**: Reliable internet connection for API calls
+
+### Software Requirements
+- **Flutter SDK**: Version 3.10 or higher
+- **Android SDK**: API 21+ (Android 5.0)
+- **Java**: Version 17 or higher (for build tools)
+
+### Environment Setup
+```bash
+cd dholera
+flutter pub get
+```
+
+---
+
+## Roadmap & Future Enhancements
+
+- [ ] Multi-factor authentication for admin login
+- [ ] Offline-first support with local database caching
+- [ ] Push notifications for lead updates
+- [ ] Advanced analytics and reporting
+- [ ] iOS-specific optimizations
+
+---
+
+## Support & Documentation
+
+- **Quick Start**: See [QUICK_START.md](QUICK_START.md)
+- **APK Build Guide**: See [APK_BUILD_GUIDE.md](APK_BUILD_GUIDE.md)
+- **Android License Issues**: See [ANDROID_LICENSE_FIX.md](ANDROID_LICENSE_FIX.md)
+- **Backend API**: See [dholera-backend README](../Dholera-backend/README.md)
+- **Web Frontend**: See [dholera-frontend README](../Dholera-frontend/README.md)
+
+---
+
+**Built with Flutter | Managed by Dholera Admin Team | Last Updated: May 2026**

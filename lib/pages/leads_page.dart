@@ -19,10 +19,47 @@ class _LeadsPageState extends State<LeadsPage> {
   int _currentPage = 1;
   bool _hasMore = true;
 
+  static const List<String> ALLOWED_LEAD_STATUSES = [
+    'New',
+    'Contacted',
+    'Converted',
+    'Follow-up',
+    'Not Interested',
+    'Closed'
+  ];
+
   @override
   void initState() {
     super.initState();
     _fetchLeads();
+  }
+
+  Future<bool> _updateLeadStatus(int id, String status) async {
+    try {
+      final result = await _apiService.updateLeadStatus(id, status);
+      if (result['success'] == true) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Lead status updated to $status')),
+          );
+        }
+        return true;
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${result['error']}')),
+          );
+        }
+        return false;
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+      return false;
+    }
   }
 
   Future<void> _fetchLeads({bool refresh = false}) async {
@@ -210,7 +247,47 @@ class _LeadsPageState extends State<LeadsPage> {
                   const Divider(),
                   _detailRow(Icons.phone, 'Phone', lead.phone),
                   if (lead.email != null) _detailRow(Icons.email, 'Email', lead.email!),
-                  _detailRow(Icons.info_outline, 'Status', lead.status),
+                  
+                  // Status Selector
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.info_outline, size: 20, color: Colors.orange),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Status', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                              DropdownButton<String>(
+                                value: ALLOWED_LEAD_STATUSES.contains(lead.status) ? lead.status : 'New',
+                                isExpanded: true,
+                                underline: const SizedBox(),
+                                items: ALLOWED_LEAD_STATUSES.map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                }).toList(),
+                                onChanged: (String? newValue) async {
+                                  if (newValue != null && newValue != lead.status) {
+                                    final success = await _updateLeadStatus(lead.id, newValue);
+                                    if (success) {
+                                      Navigator.pop(context);
+                                      _fetchLeads(refresh: true);
+                                    }
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                   _detailRow(Icons.source, 'Source', lead.source),
                   _detailRow(Icons.timer, 'Time Spent', '${lead.timeSpent} seconds'),
                   _detailRow(Icons.calendar_today, 'Created At', 

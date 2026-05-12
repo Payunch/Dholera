@@ -18,9 +18,7 @@ class ApiService {
   
   Future<String?> getAuthToken() async {
     final prefs = await SharedPreferences.getInstance();
-    if (_sessionCookie == null) {
-      _sessionCookie = prefs.getString('session_cookie');
-    }
+    _sessionCookie ??= prefs.getString('session_cookie');
     return prefs.getString('auth_token');
   }
   
@@ -127,11 +125,7 @@ class ApiService {
         Uri.parse(ApiConfig.meEndpoint),
         headers: await _getFetchHeaders(),
       );
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': jsonDecode(response.body)};
-      } else {
-        return {'success': false, 'error': 'Session expired'};
-      }
+      return _handleJsonResponse(response, 'data');
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
@@ -144,6 +138,19 @@ class ApiService {
         headers: await _getFetchHeaders(),
       );
       return _handleJsonResponse(response, 'leads');
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> updateLeadStatus(int id, String status) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConfig.leadsEndpoint}/$id/status'),
+        headers: await _getMutationHeaders(),
+        body: jsonEncode({'status': status}),
+      );
+      return _handleJsonResponse(response);
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
@@ -199,6 +206,12 @@ class ApiService {
       request.fields['category'] = data['category']?.toString() ?? 'General';
       request.fields['published'] = (data['published'] == true).toString();
       
+      // Support for optional direct image URL field
+      if (data['imageUrl'] != null) {
+        request.fields['imageUrl'] = data['imageUrl'].toString();
+      }
+      
+      // Support for physical file upload via path
       if (data['imagePath'] != null && data['imagePath'].toString().isNotEmpty) {
         request.files.add(await http.MultipartFile.fromPath('image', data['imagePath']));
       }
@@ -227,7 +240,7 @@ class ApiService {
   Future<Map<String, dynamic>> getPdfs() async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConfig.apiBaseUrl}/pdf/list'), // RESTORED ORIGINAL
+        Uri.parse('${ApiConfig.apiBaseUrl}/pdf/list'),
         headers: await _getFetchHeaders(),
       );
       return _handleJsonResponse(response, 'pdfs');
@@ -240,12 +253,12 @@ class ApiService {
     try {
       final token = await getAuthToken();
       final csrfToken = await _refreshCsrfToken();
-      final uri = Uri.parse('${ApiConfig.apiBaseUrl}/pdf/upload'); // RESTORED ORIGINAL
+      final uri = Uri.parse('${ApiConfig.apiBaseUrl}/pdf/upload');
       final request = http.MultipartRequest('POST', uri);
       
       if (token != null) request.headers['Authorization'] = 'Bearer $token';
       if (_sessionCookie != null) request.headers['cookie'] = _sessionCookie!;
-      if (csrfToken != null) request.headers['X-CSRF-Token'] = csrfToken; // FIXED TYPO
+      if (csrfToken != null) request.headers['X-CSRF-Token'] = csrfToken;
       
       request.fields['title'] = data['title']?.toString() ?? '';
       request.fields['category'] = data['category']?.toString() ?? 'Brochure';
@@ -267,7 +280,7 @@ class ApiService {
   Future<String> getPdfViewUrl(int pdfId) async {
     final token = await getAuthToken();
     final baseUrl = ApiConfig.apiBaseUrl;
-    return '$baseUrl/pdf/view/$pdfId?token=$token'; // RESTORED ORIGINAL
+    return '$baseUrl/pdf/view/$pdfId?token=$token';
   }
 
   Future<Map<String, dynamic>> getSettings() async {
