@@ -58,6 +58,7 @@ dependencies:
   # Visualization
   fl_chart: ^0.71.0
   google_fonts: ^6.2.1
+  flutter_svg: ^2.0.10
 
   # File export
   path_provider: ^2.1.5
