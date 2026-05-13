@@ -197,6 +197,7 @@ class ApiService {
   Future<Map<String, dynamic>> setupPasscode({
     required String phone,
     required String passcode,
+    required String verificationToken,
   }) async {
     try {
       final headers = await _getMutationHeaders();
@@ -206,6 +207,7 @@ class ApiService {
         body: jsonEncode({
           'phone': phone,
           'passcode': passcode,
+          'verificationToken': verificationToken,
         }),
       ).timeout(const Duration(seconds: 15));
 
