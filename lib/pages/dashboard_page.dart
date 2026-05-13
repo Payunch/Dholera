@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/auth_provider.dart';
 import '../services/api_service.dart';
 import 'leads_page.dart';
+import 'user_dashboard_page.dart';
 import 'updates_page.dart';
 import 'settings_page.dart';
 import 'pdf_manager_page.dart';
@@ -233,6 +234,24 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildActionButtons() {
     return Column(
       children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const UserDashboardPage()),
+              );
+            },
+            icon: const Icon(Icons.admin_panel_settings),
+            label: const Text('User & OTP Dashboard'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.indigo,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
