@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 
@@ -148,6 +149,106 @@ class ApiService {
       return _handleRequestError(e);
     }
   }
+
+  // --- NEW USER AUTH METHODS ---
+
+  Future<Map<String, dynamic>> registerRequest({
+    required String name,
+    required String email,
+    required String phone,
+  }) async {
+    try {
+      final headers = await _getMutationHeaders();
+      final response = await http.post(
+        Uri.parse(ApiConfig.registerRequestEndpoint),
+        headers: headers,
+        body: jsonEncode({
+          'name': name,
+          'email': email,
+          'phone': phone,
+        }),
+      ).timeout(const Duration(seconds: 15));
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyRegistrationOtp({
+    required String phone,
+    required String otp,
+  }) async {
+    try {
+      final headers = await _getMutationHeaders();
+      final response = await http.post(
+        Uri.parse(ApiConfig.verifyRegistrationOtpEndpoint),
+        headers: headers,
+        body: jsonEncode({
+          'phone': phone,
+          'otp': otp,
+        }),
+      ).timeout(const Duration(seconds: 15));
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> setupPasscode({
+    required String phone,
+    required String passcode,
+  }) async {
+    try {
+      final headers = await _getMutationHeaders();
+      final response = await http.post(
+        Uri.parse(ApiConfig.setupPasscodeEndpoint),
+        headers: headers,
+        body: jsonEncode({
+          'phone': phone,
+          'passcode': passcode,
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['lead_token'] != null) {
+          await setAuthToken(data['lead_token']);
+        }
+        return {'success': true, 'data': data};
+      }
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> loginWithPasscode({
+    required String phone,
+    required String passcode,
+  }) async {
+    try {
+      final headers = await _getMutationHeaders();
+      final response = await http.post(
+        Uri.parse(ApiConfig.loginWithPasscodeEndpoint),
+        headers: headers,
+        body: jsonEncode({
+          'phone': phone,
+          'passcode': passcode,
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['lead_token'] != null) {
+          await setAuthToken(data['lead_token']);
+        }
+        return {'success': true, 'data': data};
+      }
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
   
   Future<Map<String, dynamic>> getLeads({int page = 1, int limit = 20}) async {
     try {
@@ -219,7 +320,17 @@ class ApiService {
       if (data['imageUrl'] != null) request.fields['imageUrl'] = data['imageUrl'].toString();
       
       if (data['imagePath'] != null && data['imagePath'].toString().isNotEmpty) {
-        request.files.add(await http.MultipartFile.fromPath('image', data['imagePath']));
+        final extension = data['imagePath'].toString().split('.').last.toLowerCase();
+        String mimeType = 'image/jpeg';
+        if (extension == 'png') mimeType = 'image/png';
+        if (extension == 'webp') mimeType = 'image/webp';
+        if (extension == 'svg') mimeType = 'image/svg+xml';
+
+        request.files.add(await http.MultipartFile.fromPath(
+          'image', 
+          data['imagePath'],
+          contentType: MediaType.parse(mimeType),
+        ));
       }
       
       final streamedResponse = await request.send().timeout(const Duration(minutes: 2));
@@ -273,7 +384,11 @@ class ApiService {
       request.fields['is_protected'] = (data['is_protected'] ?? true).toString();
       
       if (data['pdfPath'] != null) {
-        request.files.add(await http.MultipartFile.fromPath('pdf', data['pdfPath']));
+        request.files.add(await http.MultipartFile.fromPath(
+          'pdf', 
+          data['pdfPath'],
+          contentType: MediaType('application', 'pdf'),
+        ));
       }
       
       final streamedResponse = await request.send().timeout(const Duration(minutes: 5));
