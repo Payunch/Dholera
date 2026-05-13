@@ -7,6 +7,7 @@ import 'user_dashboard_page.dart';
 import 'updates_page.dart';
 import 'settings_page.dart';
 import 'pdf_manager_page.dart';
+import 'analytics_overview_page.dart';
 
 /// Admin Dashboard Page
 class DashboardPage extends StatefulWidget {
@@ -234,6 +235,24 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildActionButtons() {
     return Column(
       children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AnalyticsOverviewPage()),
+              );
+            },
+            icon: const Icon(Icons.analytics),
+            label: const Text('Analytics Overview'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F4C81),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
