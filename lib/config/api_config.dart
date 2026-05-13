@@ -19,6 +19,12 @@ class ApiConfig {
   static const String leadsEndpoint = '$apiBaseUrl/leads';
   static const String leadDetailEndpoint = '$apiBaseUrl/leads';
   
+  // New User Auth flow
+  static const String registerRequestEndpoint = '$apiBaseUrl/leads/register-request';
+  static const String verifyRegistrationOtpEndpoint = '$apiBaseUrl/leads/verify-registration-otp';
+  static const String setupPasscodeEndpoint = '$apiBaseUrl/leads/setup-passcode';
+  static const String loginWithPasscodeEndpoint = '$apiBaseUrl/leads/login-with-passcode';
+  
   // Updates endpoints
   static const String updatesEndpoint = '$apiBaseUrl/updates';
   
