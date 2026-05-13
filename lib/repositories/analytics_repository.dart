@@ -1,50 +1,37 @@
-import 'dart:math';
 import '../../models/analytics/analytics_models.dart';
+import '../services/api_service.dart';
 
 class AnalyticsRepository {
+  final ApiService _apiService = ApiService();
+
   Future<AnalyticsSummary> getAnalytics({
     required DateTime start,
     required DateTime end,
   }) async {
-    // In a real app, you would call:
-    // final response = await http.get('api/analytics?start=${start}&end=${end}');
-    
-    await Future.delayed(const Duration(milliseconds: 800));
+    final response = await _apiService.getDetailedAnalytics(start, end);
 
-    final List<AnalyticsMetric> metrics = [];
-    final random = Random();
-    int totalLeads = 0;
-    int totalUpdates = 0;
-    int totalVisitors = 0;
-
-    for (int i = 0; i <= end.difference(start).inDays; i++) {
-      final date = start.add(Duration(days: i));
-      final leads = random.nextInt(20) + 5;
-      final updates = (leads * (random.nextDouble() * 0.4 + 0.1)).round();
-      final visitors = leads * (random.nextInt(5) + 3);
-
-      metrics.add(AnalyticsMetric(
-        date: date,
-        leads: leads,
-        updates: updates,
-        visitors: visitors,
-      ));
-
-      totalLeads += leads;
-      totalUpdates += updates;
-      totalVisitors += visitors;
+    if (response['success'] != true || response['analytics'] == null) {
+      throw Exception(response['error'] ?? 'Failed to load detailed analytics');
     }
 
-    final topDays = List<AnalyticsMetric>.from(metrics)
-      ..sort((a, b) => b.leads.compareTo(a.leads));
+    final data = response['analytics'];
+    
+    final List<AnalyticsMetric> metrics = (data['dailyMetrics'] as List)
+        .map((m) => AnalyticsMetric.fromJson(m))
+        .toList();
+
+    final List<AnalyticsMetric> topDays = (data['topDays'] as List)
+        .map((m) => AnalyticsMetric.fromJson(m))
+        .toList();
 
     return AnalyticsSummary(
-      totalLeads: totalLeads,
-      totalUpdates: totalUpdates,
-      totalVisitors: totalVisitors,
-      leadTrend: 12.5,
+      totalLeads: data['totalLeads'] ?? 0,
+      totalUpdates: data['totalUpdates'] ?? 0,
+      totalVisitors: data['totalVisitors'] ?? 0,
+      leadTrend: (data['leadTrend'] ?? 0).toDouble(),
       dailyMetrics: metrics,
-      topDays: topDays.take(5).toList(),
+      topDays: topDays,
     );
   }
 }
+
