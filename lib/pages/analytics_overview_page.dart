@@ -211,7 +211,7 @@ class _AnalyticsOverviewPageState extends State<AnalyticsOverviewPage> {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: child,
@@ -235,7 +235,7 @@ class _AnalyticsOverviewPageState extends State<AnalyticsOverviewPage> {
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: AppColors.primary.withOpacity(0.1),
+                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                 child: Text('${index + 1}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(width: 16),
@@ -249,7 +249,7 @@ class _AnalyticsOverviewPageState extends State<AnalyticsOverviewPage> {
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: AppColors.accentSuccess.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(color: AppColors.accentSuccess.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
                 child: Text('${day.leads} Leads', style: const TextStyle(color: AppColors.accentSuccess, fontWeight: FontWeight.bold)),
               ),
             ],

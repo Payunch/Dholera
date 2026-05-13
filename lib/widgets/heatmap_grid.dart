@@ -42,7 +42,7 @@ class AnalyticsHeatMap extends StatelessWidget {
               message: '${metric.date.day}/${metric.date.month}: ${metric.leads} leads',
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1 + (intensity * 0.9)),
+                  color: AppColors.primary.withValues(alpha: 0.1 + (intensity * 0.9)),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Center(

@@ -53,7 +53,7 @@ class AnalyticsLineChart extends StatelessWidget {
       barWidth: 3,
       isStrokeCapRound: true,
       dotData: const FlDotData(show: false),
-      belowBarData: BarAreaData(show: true, color: color.withOpacity(0.1)),
+      belowBarData: BarAreaData(show: true, color: color.withValues(alpha: 0.1)),
     );
   }
 }
