@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:io';
 import '../services/api_service.dart';
 import '../models/pdf_document.dart';
 
@@ -73,84 +74,201 @@ class _PdfManagerPageState extends State<PdfManagerPage> {
   }
 
   Future<void> _pickAndUploadPdf() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
-    );
-
-    if (result != null && result.files.single.path != null) {
-      final uploadData = await _showUploadDialog();
-      if (uploadData == null) return;
-
-      setState(() => _isLoading = true);
-
-      try {
-        final response = await _apiService.uploadPdf({
-          'title': uploadData['title'],
-          'category': uploadData['category'],
-          'is_protected': true,
-          'pdfPath': result.files.single.path,
-        });
-
-        if (response['success'] == true) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('PDF uploaded successfully')),
-            );
-          }
-          _fetchPdfs();
-        } else {
-          setState(() {
-            _error = response['error'];
-            _isLoading = false;
-          });
-        }
-      } catch (e) {
-        setState(() {
-          _error = e.toString();
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<Map<String, String>?> _showUploadDialog() async {
     String title = '';
     String category = 'Naksha';
-    final categories = ['Naksha', 'DP Map', 'Brochure', 'Legal', 'General'];
+    bool isProtected = true;
+    File? selectedFile;
+    bool submitting = false;
+    final categories = ['Naksha', 'DP Map', 'Brochure', 'Legal', 'General', 'Policy', 'Survey'];
 
-    return showDialog<Map<String, String>>(
+    await showDialog<void>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: const Text('Upload PDF Details'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  onChanged: (value) => title = value,
-                  decoration: const InputDecoration(labelText: 'Title', hintText: "e.g. Plot No 5 Naksha"),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: category,
-                  decoration: const InputDecoration(labelText: 'Category'),
-                  items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-                  onChanged: (value) => setDialogState(() => category = value!),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-              TextButton(
-                onPressed: () => Navigator.pop(context, {'title': title, 'category': category}),
-                child: const Text('Upload'),
-              ),
-            ],
+      barrierDismissible: !submitting,
+      builder: (dialogContext) {
+        final isCompact = MediaQuery.of(dialogContext).size.width < 720;
+
+        Future<void> pickPdf(StateSetter setDialogState) async {
+          final result = await FilePicker.platform.pickFiles(
+            type: FileType.custom,
+            allowedExtensions: ['pdf'],
           );
+          if (result != null && result.files.single.path != null) {
+            setDialogState(() => selectedFile = File(result.files.single.path!));
+          }
         }
-      ),
+
+        Future<void> submit(StateSetter setDialogState) async {
+          if (title.trim().isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Title is required')));
+            return;
+          }
+          if (selectedFile == null) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please choose a PDF file')));
+            return;
+          }
+
+          setDialogState(() => submitting = true);
+          try {
+            final response = await _apiService.uploadPdf({
+              'title': title.trim(),
+              'category': category,
+              'is_protected': isProtected,
+              'pdfPath': selectedFile!.path,
+            });
+
+            if (!context.mounted) return;
+            if (response['success'] == true) {
+              Navigator.pop(dialogContext);
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PDF uploaded successfully')));
+              _fetchPdfs();
+            } else {
+              setDialogState(() => submitting = false);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${response['error']}')));
+            }
+          } catch (e) {
+            setDialogState(() => submitting = false);
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+          }
+        }
+
+        return Dialog(
+          insetPadding: isCompact ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          clipBehavior: Clip.antiAlias,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: isCompact ? double.infinity : 760,
+              maxHeight: isCompact ? double.infinity : MediaQuery.of(dialogContext).size.height * 0.9,
+            ),
+            child: StatefulBuilder(
+              builder: (context, setDialogState) {
+                return Material(
+                  color: Theme.of(context).colorScheme.surface,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 12, 12),
+                        child: Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Upload PDF',
+                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: submitting ? null : () => Navigator.pop(dialogContext),
+                              icon: const Icon(Icons.close),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextField(
+                                onChanged: (value) => title = value,
+                                decoration: const InputDecoration(
+                                  labelText: 'Title',
+                                  hintText: 'e.g. Plot No 5 Naksha',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              DropdownButtonFormField<String>(
+                                initialValue: category,
+                                decoration: const InputDecoration(
+                                  labelText: 'Category',
+                                  border: OutlineInputBorder(),
+                                ),
+                                items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                                onChanged: (value) => setDialogState(() => category = value ?? 'General'),
+                              ),
+                              const SizedBox(height: 16),
+                              SwitchListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: const Text('Protected document'),
+                                subtitle: const Text('Require a valid token before viewing'),
+                                value: isProtected,
+                                onChanged: (value) => setDialogState(() => isProtected = value),
+                              ),
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Theme.of(context).dividerColor),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      selectedFile?.path.split('/').last ?? 'No file selected',
+                                      style: const TextStyle(fontWeight: FontWeight.w600),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Text('Choose a PDF from your device and upload it to the secure document library.'),
+                                    const SizedBox(height: 12),
+                                    Wrap(
+                                      spacing: 12,
+                                      runSpacing: 12,
+                                      children: [
+                                        ElevatedButton.icon(
+                                          onPressed: submitting ? null : () => pickPdf(setDialogState),
+                                          icon: const Icon(Icons.upload_file),
+                                          label: const Text('Choose PDF'),
+                                        ),
+                                        if (selectedFile != null)
+                                          TextButton(
+                                            onPressed: submitting ? null : () => setDialogState(() => selectedFile = null),
+                                            child: const Text('Clear file'),
+                                          ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: submitting ? null : () => Navigator.pop(dialogContext),
+                                child: const Text('Cancel'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: submitting ? null : () => submit(setDialogState),
+                                child: submitting
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : const Text('Upload PDF'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 

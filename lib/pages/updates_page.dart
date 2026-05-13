@@ -211,88 +211,214 @@ class _UpdatesPageState extends State<UpdatesPage> {
     final categoryController = TextEditingController(text: 'General');
     final imageUrlController = TextEditingController();
     XFile? pickedFile;
+    bool published = true;
+    bool submitting = false;
+    final categories = ['Infrastructure', 'Industrial', 'Planning', 'Investment', 'General', 'Article', 'Announcement'];
 
     showDialog(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Create New Update'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(controller: titleController, decoration: const InputDecoration(labelText: 'Title')),
-                TextField(controller: categoryController, decoration: const InputDecoration(labelText: 'Category')),
-                TextField(controller: contentController, decoration: const InputDecoration(labelText: 'Content'), maxLines: 3),
-                const SizedBox(height: 16),
-                if (pickedFile != null)
-                  Stack(
+      barrierDismissible: !submitting,
+      builder: (dialogContext) {
+        final isCompact = MediaQuery.of(dialogContext).size.width < 700;
+
+        Future<void> pickImage(StateSetter setDialogState) async {
+          final XFile? photo = await _picker.pickImage(source: ImageSource.gallery);
+          if (photo != null) {
+            setDialogState(() => pickedFile = photo);
+          }
+        }
+
+        Future<void> submit(StateSetter setDialogState) async {
+          if (titleController.text.trim().isEmpty || contentController.text.trim().isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Title and Content are required')));
+            return;
+          }
+
+          setDialogState(() => submitting = true);
+          final result = await _apiService.createUpdate({
+            'title': titleController.text.trim(),
+            'content': contentController.text.trim(),
+            'category': categoryController.text.trim().isEmpty ? 'General' : categoryController.text.trim(),
+            'imageUrl': pickedFile == null && imageUrlController.text.trim().isNotEmpty ? imageUrlController.text.trim() : null,
+            'imagePath': pickedFile?.path,
+            'published': published,
+          });
+
+          if (!context.mounted) return;
+          if (result['success'] == true) {
+            Navigator.pop(dialogContext);
+            _fetchUpdates();
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Update created successfully')));
+          } else {
+            setDialogState(() => submitting = false);
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${result['error']}')));
+          }
+        }
+
+        return Dialog(
+          insetPadding: isCompact ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          clipBehavior: Clip.antiAlias,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: isCompact ? double.infinity : 900,
+              maxHeight: isCompact ? double.infinity : MediaQuery.of(dialogContext).size.height * 0.92,
+            ),
+            child: StatefulBuilder(
+              builder: (context, setDialogState) {
+                return Material(
+                  color: Theme.of(context).colorScheme.surface,
+                  child: Column(
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.file(File(pickedFile!.path), height: 100, width: double.infinity, fit: BoxFit.cover),
-                      ),
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: IconButton(
-                          icon: const Icon(Icons.cancel, color: Colors.red),
-                          onPressed: () => setDialogState(() => pickedFile = null),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 12, 12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Create New Update',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: submitting ? null : () => Navigator.pop(dialogContext),
+                              icon: const Icon(Icons.close),
+                            ),
+                          ],
                         ),
-                      )
+                      ),
+                      const Divider(height: 1),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextField(
+                                controller: titleController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Title',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              DropdownButtonFormField<String>(
+                                initialValue: categoryController.text,
+                                decoration: const InputDecoration(
+                                  labelText: 'Category',
+                                  border: OutlineInputBorder(),
+                                ),
+                                items: categories.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))).toList(),
+                                onChanged: (value) => setDialogState(() => categoryController.text = value ?? 'General'),
+                              ),
+                              const SizedBox(height: 16),
+                              TextField(
+                                controller: contentController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Content',
+                                  border: OutlineInputBorder(),
+                                ),
+                                maxLines: isCompact ? 10 : 16,
+                                minLines: 8,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Header Image',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  ElevatedButton.icon(
+                                    onPressed: submitting ? null : () => pickImage(setDialogState),
+                                    icon: const Icon(Icons.image),
+                                    label: const Text('Choose Image'),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: imageUrlController,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Image URL (optional)',
+                                        border: OutlineInputBorder(),
+                                      ),
+                                      enabled: pickedFile == null,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              if (pickedFile != null)
+                                Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: Theme.of(context).dividerColor),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Stack(
+                                    children: [
+                                      Image.file(
+                                        File(pickedFile!.path),
+                                        height: 220,
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                      ),
+                                      Positioned(
+                                        right: 8,
+                                        top: 8,
+                                        child: IconButton.filledTonal(
+                                          onPressed: submitting ? null : () => setDialogState(() => pickedFile = null),
+                                          icon: const Icon(Icons.close),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              const SizedBox(height: 16),
+                              SwitchListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: const Text('Published'),
+                                subtitle: const Text('Make the update visible to public users immediately'),
+                                value: published,
+                                onChanged: (value) => setDialogState(() => published = value),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: submitting ? null : () => Navigator.pop(dialogContext),
+                                child: const Text('Cancel'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: submitting ? null : () => submit(setDialogState),
+                                child: submitting
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : const Text('Create Update'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
-                  )
-                else
-                  TextField(controller: imageUrlController, decoration: const InputDecoration(labelText: 'Image URL (optional)')),
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: () async {
-                    final XFile? photo = await _picker.pickImage(source: ImageSource.gallery);
-                    if (photo != null) {
-                      setDialogState(() => pickedFile = photo);
-                    }
-                  },
-                  icon: const Icon(Icons.image),
-                  label: const Text('Pick Image from Gallery'),
-                ),
-              ],
+                  ),
+                );
+              },
             ),
           ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
-            ElevatedButton(
-              onPressed: () async {
-                if (titleController.text.isEmpty || contentController.text.isEmpty) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Title and Content are required')));
-                  }
-                  return;
-                }
-                
-                final result = await _apiService.createUpdate({
-                  'title': titleController.text,
-                  'content': contentController.text,
-                  'category': categoryController.text,
-                  'imageUrl': pickedFile == null && imageUrlController.text.isNotEmpty ? imageUrlController.text : null,
-                  'imagePath': pickedFile?.path,
-                  'published': true,
-                });
-
-                if (!context.mounted) return;
-                Navigator.pop(dialogContext);
-                _fetchUpdates();
-                
-                if (result['success'] == true) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Update created successfully')));
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${result['error']}')));
-                }
-              },
-              child: const Text('Create'),
-            ),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 }

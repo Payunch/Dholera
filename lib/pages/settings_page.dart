@@ -87,27 +87,94 @@ class _SettingsPageState extends State<SettingsPage> {
     String newKey = '';
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add New Setting Field'),
-        content: TextField(
-          decoration: const InputDecoration(labelText: 'Setting Name (e.g. whatsapp_number)'),
-          onChanged: (value) => newKey = value.trim().toLowerCase().replaceAll(' ', '_'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () {
-              if (newKey.isNotEmpty) {
-                setState(() {
-                  _controllers[newKey] = TextEditingController();
-                });
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Add'),
+      builder: (dialogContext) {
+        final isCompact = MediaQuery.of(dialogContext).size.width < 600;
+
+        return Dialog(
+          insetPadding: isCompact ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: isCompact ? double.infinity : 520,
+              maxHeight: isCompact ? double.infinity : MediaQuery.of(dialogContext).size.height * 0.65,
+            ),
+            child: Material(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 12, 12),
+                    child: Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Add New Setting Field',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextField(
+                            autofocus: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Setting Name (e.g. whatsapp_number)',
+                              border: OutlineInputBorder(),
+                            ),
+                            onChanged: (value) => newKey = value.trim().toLowerCase().replaceAll(' ', '_'),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Add a new dynamic config field for contact details, links, or platform settings.',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (newKey.isNotEmpty) {
+                                setState(() {
+                                  _controllers[newKey] = TextEditingController();
+                                });
+                                Navigator.pop(dialogContext);
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+                            child: const Text('Add'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
