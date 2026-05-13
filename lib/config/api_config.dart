@@ -30,6 +30,7 @@ class ApiConfig {
   
   // Analytics endpoints
   static const String analyticsEndpoint = '$apiBaseUrl/analytics';
+  static const String detailedAnalyticsEndpoint = '$apiBaseUrl/analytics/detailed';
 
   // PDF endpoints
   static const String pdfsEndpoint = '$apiBaseUrl/pdfs';

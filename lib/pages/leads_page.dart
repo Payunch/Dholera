@@ -3,6 +3,9 @@ import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 import '../models/lead.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class LeadsPage extends StatefulWidget {
   const LeadsPage({super.key});
@@ -15,6 +18,7 @@ class _LeadsPageState extends State<LeadsPage> {
   final ApiService _apiService = ApiService();
   List<Lead> _leads = [];
   bool _isLoading = true;
+  bool _isExporting = false;
   String? _error;
   int _currentPage = 1;
   bool _hasMore = true;
@@ -34,7 +38,41 @@ class _LeadsPageState extends State<LeadsPage> {
     _fetchLeads();
   }
 
+  Future<void> _exportLeads() async {
+    setState(() => _isExporting = true);
+    try {
+      final response = await _apiService.downloadExcelExportRaw();
+      
+      if (response.statusCode == 200) {
+        final directory = await getApplicationDocumentsDirectory();
+        final filePath = '${directory.path}/leads_export_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+        final file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Export ready for sharing')),
+          );
+        }
+        await Share.shareXFiles([XFile(filePath)], text: 'Dholera Leads Export');
+      } else {
+        throw Exception('Failed to download export');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Export failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isExporting = false);
+      }
+    }
+  }
+
   Future<bool> _updateLeadStatus(int id, String status) async {
+
     try {
       final result = await _apiService.updateLeadStatus(id, status);
       if (result['success'] == true) {
@@ -128,6 +166,28 @@ class _LeadsPageState extends State<LeadsPage> {
       appBar: AppBar(
         title: const Text('Manage Leads'),
         backgroundColor: Colors.orange,
+        actions: [
+          if (_isExporting)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                ),
+              ),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.download),
+              tooltip: 'Export to Excel',
+              onPressed: _exportLeads,
+            ),
+        ],
       ),
       body: _isLoading && _leads.isEmpty
           ? const Center(child: CircularProgressIndicator())

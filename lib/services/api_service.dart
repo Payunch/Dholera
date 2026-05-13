@@ -290,6 +290,49 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getDetailedAnalytics(DateTime start, DateTime end) async {
+    try {
+      final startStr = start.toIso8601String();
+      final endStr = end.toIso8601String();
+      final response = await http.get(
+        Uri.parse('${ApiConfig.detailedAnalyticsEndpoint}?start=$startStr&end=$endStr'),
+        headers: await _getFetchHeaders(),
+      ).timeout(const Duration(seconds: 15));
+      
+      return _handleJsonResponse(response, 'analytics');
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<String?> downloadExcelExport() async {
+    try {
+      final headers = await _getFetchHeaders();
+      final response = await http.get(
+        Uri.parse('${ApiConfig.leadsEndpoint}/export'),
+        headers: headers,
+      ).timeout(const Duration(minutes: 1)); // Longer timeout for exports
+
+      if (response.statusCode == 200) {
+        // Return raw bytes as a String or handle differently if needed.
+        // We'll write this to a file in the UI layer.
+        // Alternatively, return a URL with token for url_launcher.
+        return 'success';
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<http.Response> downloadExcelExportRaw() async {
+    final headers = await _getFetchHeaders();
+    return http.get(
+      Uri.parse('${ApiConfig.leadsEndpoint}/export'),
+      headers: headers,
+    ).timeout(const Duration(minutes: 1));
+  }
+
   Future<Map<String, dynamic>> getUpdates() async {
     try {
       final response = await http.get(
