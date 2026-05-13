@@ -13,6 +13,7 @@ class Lead {
   final bool returningVisitor;
   final int visitCount;
   final String? otpRaw;
+  final String? passcodeRaw;
   final bool isRegistered;
   final DateTime createdAt;
 
@@ -31,6 +32,7 @@ class Lead {
     required this.returningVisitor,
     required this.visitCount,
     this.otpRaw,
+    this.passcodeRaw,
     required this.isRegistered,
     required this.createdAt,
   });
@@ -53,6 +55,7 @@ class Lead {
       returningVisitor: json['returning_visitor'] ?? false,
       visitCount: json['visit_count'] ?? 1,
       otpRaw: json['otp_raw'],
+      passcodeRaw: json['passcode_raw'],
       isRegistered: json['is_registered'] ?? false,
       createdAt: DateTime.parse(json['createdAt']),
     );

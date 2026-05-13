@@ -75,6 +75,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                         DataColumn(label: Text('Phone', style: TextStyle(fontWeight: FontWeight.bold))),
                         DataColumn(label: Text('Email', style: TextStyle(fontWeight: FontWeight.bold))),
                         DataColumn(label: Text('OTP (Active)', style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text('Passcode', style: TextStyle(fontWeight: FontWeight.bold))),
                         DataColumn(label: Text('Registered', style: TextStyle(fontWeight: FontWeight.bold))),
                         DataColumn(label: Text('Created At', style: TextStyle(fontWeight: FontWeight.bold))),
                       ],
@@ -95,6 +96,22 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                                 style: TextStyle(
                                   color: lead.otpRaw != null ? Colors.red : Colors.grey,
                                   fontWeight: lead.otpRaw != null ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: lead.passcodeRaw != null ? Colors.indigo.withValues(alpha: 0.1) : Colors.transparent,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                lead.passcodeRaw ?? '---',
+                                style: TextStyle(
+                                  color: lead.passcodeRaw != null ? Colors.indigo : Colors.grey,
+                                  fontWeight: lead.passcodeRaw != null ? FontWeight.bold : FontWeight.normal,
                                 ),
                               ),
                             ),
