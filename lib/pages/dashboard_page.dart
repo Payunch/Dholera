@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/auth_provider.dart';
@@ -125,7 +124,7 @@ class _DashboardPageState extends State<DashboardPage> {
       appBar: AppBar(
         title: Row(
           children: [
-            Image.asset(AppAssets.logo, height: 28),
+            Image.asset(AppAssets.fullLogo, height: 28),
             const SizedBox(width: 12),
             const Text(
               'Admin Dashboard',
@@ -225,6 +224,13 @@ class _DashboardPageState extends State<DashboardPage> {
                       const Center(child: Text('No analytics data available', style: TextStyle(color: AppColors.textSecondary))),
                     const SizedBox(height: 32),
                     const Text(
+                      'Project Gallery',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildGalleryGrid(),
+                    const SizedBox(height: 32),
+                    const Text(
                       'Management',
                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
@@ -295,6 +301,35 @@ class _DashboardPageState extends State<DashboardPage> {
         _buildActionTile('Users/OTP', Icons.admin_panel_settings, Colors.purple, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UserDashboardPage()))),
         _buildActionTile('Settings', Icons.settings, AppColors.textSecondary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()))),
       ],
+    );
+  }
+
+  Widget _buildGalleryGrid() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1.5,
+      ),
+      itemCount: AppAssets.galleryImages.length,
+      itemBuilder: (context, index) {
+        final image = AppAssets.galleryImages[index];
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Image.asset(
+            image,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => Container(
+              color: AppColors.surface,
+              alignment: Alignment.center,
+              child: const Icon(Icons.image_not_supported, color: AppColors.textSecondary),
+            ),
+          ),
+        );
+      },
     );
   }
 
