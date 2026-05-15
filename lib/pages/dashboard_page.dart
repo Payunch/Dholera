@@ -6,7 +6,6 @@ import '../models/auth_provider.dart';
 import '../services/api_service.dart';
 import '../config/assets.dart';
 import '../theme/app_colors.dart';
-import '../widgets/dynamic_images.dart';
 import 'leads_page.dart';
 import 'user_dashboard_page.dart';
 import 'updates_page.dart';
@@ -125,7 +124,11 @@ class _DashboardPageState extends State<DashboardPage> {
       appBar: AppBar(
         title: Row(
           children: [
-            const DholeraLogo(logoPath: AppAssets.logoFile, isFull: true, size: 32),
+            Image.asset(
+              AppAssets.fullLogoPath,
+              height: 32,
+              fit: BoxFit.contain,
+            ),
             const SizedBox(width: 12),
             const Text(
               'Admin Dashboard',
@@ -164,9 +167,9 @@ class _DashboardPageState extends State<DashboardPage> {
                     value: 'logout',
                     child: Row(
                       children: [
-                        const Icon(Icons.logout, color: Colors.red),
-                        const SizedBox(width: 8),
-                        const Text('Logout', style: TextStyle(color: Colors.red)),
+                        Icon(Icons.logout, color: Colors.red),
+                        SizedBox(width: 8),
+                        Text('Logout', style: TextStyle(color: Colors.red)),
                       ],
                     ),
                   ),
@@ -225,22 +228,11 @@ class _DashboardPageState extends State<DashboardPage> {
                       const Center(child: Text('No analytics data available', style: TextStyle(color: AppColors.textSecondary))),
                     const SizedBox(height: 32),
                     const Text(
-                      'Development Focus',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildSubImageStrip(),
-                    const SizedBox(height: 32),
-                    const Text(
                       'Management',
                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                     const SizedBox(height: 16),
                     _buildActionGrid(),
-                    const SizedBox(height: 20),
-                    const Center(
-                      child: DholeraLogo(logoPath: AppAssets.logoFile, isFull: false, size: 40),
-                    ),
                   ],
                 ),
               ),
@@ -305,18 +297,6 @@ class _DashboardPageState extends State<DashboardPage> {
         _buildActionTile('Documents', Icons.picture_as_pdf, AppColors.accentSuccess, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PdfManagerPage()))),
         _buildActionTile('Users/OTP', Icons.admin_panel_settings, Colors.purple, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UserDashboardPage()))),
         _buildActionTile('Settings', Icons.settings, AppColors.textSecondary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()))),
-      ],
-    );
-  }
-
-  Widget _buildSubImageStrip() {
-    return Row(
-      children: [
-        Expanded(child: TripleSplitImage(imagePath: AppAssets.mainImage, index: 1, height: 120)),
-        const SizedBox(width: 8),
-        Expanded(child: TripleSplitImage(imagePath: AppAssets.mainImage, index: 2, height: 120)),
-        const SizedBox(width: 8),
-        Expanded(child: TripleSplitImage(imagePath: AppAssets.mainImage, index: 3, height: 120)),
       ],
     );
   }
