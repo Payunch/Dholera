@@ -15,7 +15,7 @@ class ApiConfig {
   static const String localIp = '192.168.31.212'; 
 
   // Your production backend URL (Railway or Render)
-  static const String productionUrl = 'https://dholera-backend-epb9.onrender.com/api';
+  static const String productionUrl = 'https://api.dholeraplatform.com/api';
 
   static String get apiBaseUrl => useLocalBackend 
       ? 'http://$localIp:3000/api' 
