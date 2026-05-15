@@ -1,34 +1,16 @@
 class AppAssets {
-  // Change this value (1..3) to switch branding set, then rebuild.
-  static const int activeLogoSet = 1;
+  // Set this to 1, 2, or 3 to select which main image to use
+  static const int activeSet = 1;
 
-  static String get fullLogo => _fullLogoBySet(activeLogoSet);
-  static String get halfLogo => _halfLogoBySet(activeLogoSet);
-  static String get logo => fullLogo;
+  // Paths to the main files
+  static const String logoFile = 'assets/images/logo.png';
+  
+  static String get mainImage => 'assets/images/sub$activeSet.png';
 
-  static String _fullLogoBySet(int set) {
-    switch (set) {
-      case 2:
-        return 'assets/images/sub3.png';
-      case 3:
-        return 'assets/images/sub5.png';
-      case 1:
-      default:
-        return 'assets/images/sub1.png';
-    }
-  }
-
-  static String _halfLogoBySet(int set) {
-    switch (set) {
-      case 2:
-        return 'assets/images/sub4.png';
-      case 3:
-        return 'assets/images/sub6.png';
-      case 1:
-      default:
-        return 'assets/images/sub2.png';
-    }
-  }
+  // "Upper side is full logo, bottom size is only logo"
+  // We use these with the DholeraLogo widget to crop dynamically
+  static const String fullLogoPath = logoFile;
+  static const String iconOnlyLogoPath = logoFile;
 
   static const List<String> galleryImages = [
     'assets/images/sub1.png',
@@ -38,5 +20,6 @@ class AppAssets {
     'assets/images/sub5.png',
     'assets/images/sub6.png',
   ];
+
   static const String appName = 'Dholera Growth Platform';
 }

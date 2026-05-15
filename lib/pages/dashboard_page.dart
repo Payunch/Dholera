@@ -6,6 +6,7 @@ import '../models/auth_provider.dart';
 import '../services/api_service.dart';
 import '../config/assets.dart';
 import '../theme/app_colors.dart';
+import '../widgets/dynamic_images.dart';
 import 'leads_page.dart';
 import 'user_dashboard_page.dart';
 import 'updates_page.dart';
@@ -124,7 +125,7 @@ class _DashboardPageState extends State<DashboardPage> {
       appBar: AppBar(
         title: Row(
           children: [
-            Image.asset(AppAssets.fullLogo, height: 28),
+            const DholeraLogo(logoPath: AppAssets.logoFile, isFull: true, size: 32),
             const SizedBox(width: 12),
             const Text(
               'Admin Dashboard',
@@ -163,9 +164,9 @@ class _DashboardPageState extends State<DashboardPage> {
                     value: 'logout',
                     child: Row(
                       children: [
-                        Icon(Icons.logout, color: Colors.red),
-                        SizedBox(width: 8),
-                        Text('Logout', style: TextStyle(color: Colors.red)),
+                        const Icon(Icons.logout, color: Colors.red),
+                        const SizedBox(width: 8),
+                        const Text('Logout', style: TextStyle(color: Colors.red)),
                       ],
                     ),
                   ),
@@ -224,11 +225,11 @@ class _DashboardPageState extends State<DashboardPage> {
                       const Center(child: Text('No analytics data available', style: TextStyle(color: AppColors.textSecondary))),
                     const SizedBox(height: 32),
                     const Text(
-                      'Project Gallery',
+                      'Development Focus',
                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                     const SizedBox(height: 16),
-                    _buildGalleryGrid(),
+                    _buildSubImageStrip(),
                     const SizedBox(height: 32),
                     const Text(
                       'Management',
@@ -236,6 +237,10 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                     const SizedBox(height: 16),
                     _buildActionGrid(),
+                    const SizedBox(height: 20),
+                    const Center(
+                      child: DholeraLogo(logoPath: AppAssets.logoFile, isFull: false, size: 40),
+                    ),
                   ],
                 ),
               ),
@@ -304,36 +309,15 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildGalleryGrid() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 1.5,
-      ),
-      itemCount: AppAssets.galleryImages.length,
-      itemBuilder: (context, index) {
-        final image = AppAssets.galleryImages[index];
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            color: AppColors.surface,
-            padding: const EdgeInsets.all(8),
-            child: Image.asset(
-              image,
-              fit: BoxFit.contain,
-              errorBuilder: (_, _, _) => Container(
-                color: AppColors.surface,
-                alignment: Alignment.center,
-                child: const Icon(Icons.image_not_supported, color: AppColors.textSecondary),
-              ),
-            ),
-          ),
-        );
-      },
+  Widget _buildSubImageStrip() {
+    return Row(
+      children: [
+        Expanded(child: TripleSplitImage(imagePath: AppAssets.mainImage, index: 1, height: 120)),
+        const SizedBox(width: 8),
+        Expanded(child: TripleSplitImage(imagePath: AppAssets.mainImage, index: 2, height: 120)),
+        const SizedBox(width: 8),
+        Expanded(child: TripleSplitImage(imagePath: AppAssets.mainImage, index: 3, height: 120)),
+      ],
     );
   }
 
@@ -363,5 +347,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 }
+
 
 
