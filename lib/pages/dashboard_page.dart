@@ -125,7 +125,7 @@ class _DashboardPageState extends State<DashboardPage> {
         title: Row(
           children: [
             Image.asset(
-              AppAssets.fullLogoPath,
+              AppAssets.logoPath,
               height: 32,
               fit: BoxFit.contain,
             ),
