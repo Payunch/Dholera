@@ -1,16 +1,30 @@
 class AppAssets {
-  // Set this to 1, 2, or 3 to select which main image to use
+  // Set this to 1, 2, or 3 to select branding set.
   static const int activeSet = 1;
 
-  // Paths to the main files
-  static const String logoFile = 'assets/images/logo.png';
-  
-  static String get mainImage => 'assets/images/sub$activeSet.png';
+  static String get fullLogoPath {
+    switch (activeSet) {
+      case 2:
+        return 'assets/images/sub3.png';
+      case 3:
+        return 'assets/images/sub5.png';
+      case 1:
+      default:
+        return 'assets/images/sub1.png';
+    }
+  }
 
-  // "Upper side is full logo, bottom size is only logo"
-  // We use these with the DholeraLogo widget to crop dynamically
-  static const String fullLogoPath = logoFile;
-  static const String iconOnlyLogoPath = logoFile;
+  static String get halfLogoPath {
+    switch (activeSet) {
+      case 2:
+        return 'assets/images/sub4.png';
+      case 3:
+        return 'assets/images/sub6.png';
+      case 1:
+      default:
+        return 'assets/images/sub2.png';
+    }
+  }
 
   static const List<String> galleryImages = [
     'assets/images/sub1.png',
