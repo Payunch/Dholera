@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:intl/intl.dart';
+import 'package:file_picker/file_picker.dart';
 import '../models/auth_provider.dart';
 import '../services/api_service.dart';
 import '../config/assets.dart';
@@ -11,6 +13,7 @@ import 'updates_page.dart';
 import 'settings_page.dart';
 import 'pdf_manager_page.dart';
 import 'analytics_overview_page.dart';
+import 'user_sessions_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -23,6 +26,7 @@ class _DashboardPageState extends State<DashboardPage> {
   late ApiService _apiService;
   Map<String, dynamic>? _analytics;
   bool _isLoadingAnalytics = false;
+  DateTimeRange? _selectedDateRange;
 
   @override
   void initState() {
@@ -34,12 +38,79 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> _loadAnalytics() async {
     setState(() => _isLoadingAnalytics = true);
     try {
-      final result = await _apiService.getAnalytics();
+      final result = _selectedDateRange == null
+          ? await _apiService.getAnalytics()
+          : await _apiService.getDetailedAnalytics(_selectedDateRange!.start, _selectedDateRange!.end);
+          
       if (result['success'] == true) {
         setState(() => _analytics = result['analytics']);
       }
     } catch (e) {
       // Handle silently
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingAnalytics = false);
+      }
+    }
+  }
+
+  Future<void> _selectDateRange() async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2023),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+      initialDateRange: _selectedDateRange,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() => _selectedDateRange = picked);
+      _loadAnalytics();
+    }
+  }
+
+  Future<void> _handleImport() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['xlsx'],
+      );
+
+      if (result != null) {
+        final path = result.files.single.path;
+        if (path != null) {
+          setState(() => _isLoadingAnalytics = true);
+          final importResult = await _apiService.importLeads(path);
+          if (!mounted) return;
+          if (importResult['success'] == true) {
+            final summary = importResult['summary'];
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Imported: ${summary['created']} created, ${summary['updated']} updated')),
+            );
+            _loadAnalytics();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Import failed: ${importResult['error']}')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoadingAnalytics = false);
@@ -54,7 +125,7 @@ class _DashboardPageState extends State<DashboardPage> {
       appBar: AppBar(
         title: Row(
           children: [
-            SvgPicture.asset(AppAssets.logo, height: 28, colorFilter: const ColorFilter.mode(AppColors.primary, BlendMode.srcIn)),
+            Image.asset(AppAssets.logo, height: 28),
             const SizedBox(width: 12),
             const Text(
               'Admin Dashboard',
@@ -65,6 +136,11 @@ class _DashboardPageState extends State<DashboardPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_month, color: AppColors.primary),
+            onPressed: _selectDateRange,
+            tooltip: 'Filter by Date',
+          ),
           Consumer<AuthProvider>(
             builder: (context, authProvider, _) {
               return PopupMenuButton<String>(
@@ -110,9 +186,24 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Overview',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _selectedDateRange == null 
+                            ? 'Overview' 
+                            : '${DateFormat('MMM d').format(_selectedDateRange!.start)} - ${DateFormat('MMM d').format(_selectedDateRange!.end)}',
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                        ),
+                        if (_selectedDateRange != null)
+                          TextButton(
+                            onPressed: () {
+                              setState(() => _selectedDateRange = null);
+                              _loadAnalytics();
+                            },
+                            child: const Text('Reset', style: TextStyle(color: AppColors.primary)),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     if (_analytics != null)
@@ -124,7 +215,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         physics: const NeverScrollableScrollPhysics(),
                         childAspectRatio: 1.2,
                         children: [
-                          _buildStatCard('Total Leads', _analytics?['totalLeads']?.toString() ?? '0', AppColors.primary, Icons.people),
+                          _buildStatCard('Total Leads', _analytics?['totalLeads']?.toString() ?? '0', AppColors.primary, Icons.people, hasNew: (_analytics?['leadsToday'] ?? 0) > 0),
                           _buildStatCard('This Month', _analytics?['leadsThisMonth']?.toString() ?? '0', AppColors.accentSuccess, Icons.trending_up),
                           _buildStatCard('Updates', _analytics?['totalUpdates']?.toString() ?? '0', AppColors.accentWarning, Icons.update),
                           _buildStatCard('Visitors', _analytics?['totalVisitors']?.toString() ?? '0', AppColors.accentInfo, Icons.visibility),
@@ -146,7 +237,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, Color color, IconData icon) {
+  Widget _buildStatCard(String title, String value, Color color, IconData icon, {bool hasNew = false}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -154,19 +245,33 @@ class _DashboardPageState extends State<DashboardPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Stack(
         children: [
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: color, size: 24),
-              const Spacer(),
-              Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              Row(
+                children: [
+                  Icon(icon, color: color, size: 24),
+                  const Spacer(),
+                  Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(title, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(title, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+          if (hasNew)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                width: 10,
+                height: 10,
+                decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+              ),
+            ),
         ],
       ),
     );
@@ -183,6 +288,8 @@ class _DashboardPageState extends State<DashboardPage> {
       children: [
         _buildActionTile('Analytics', Icons.analytics, AppColors.primary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AnalyticsOverviewPage()))),
         _buildActionTile('Leads', Icons.people, AppColors.accentInfo, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeadsPage()))),
+        _buildActionTile('User Sessions', Icons.history, Colors.blueGrey, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UserSessionsPage()))),
+        _buildActionTile('Import Leads', Icons.upload_file, Colors.teal, _handleImport),
         _buildActionTile('Content', Icons.edit_document, AppColors.accentWarning, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UpdatesPage()))),
         _buildActionTile('Documents', Icons.picture_as_pdf, AppColors.accentSuccess, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PdfManagerPage()))),
         _buildActionTile('Users/OTP', Icons.admin_panel_settings, Colors.purple, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UserDashboardPage()))),
@@ -217,4 +324,5 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 }
+
 

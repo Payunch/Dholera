@@ -14,10 +14,21 @@ class ApiConfig {
   static const String logoutEndpoint = '$apiBaseUrl/auth/logout';
   static const String meEndpoint = '$apiBaseUrl/auth/me';
   static const String csrfTokenEndpoint = '$apiBaseUrl/auth/csrf-token';
+  static const String sessionsEndpoint = '$apiBaseUrl/auth/sessions';
   
   // Leads endpoints
   static const String leadsEndpoint = '$apiBaseUrl/leads';
   static const String leadDetailEndpoint = '$apiBaseUrl/leads';
+  static const String importLeadsEndpoint = '$apiBaseUrl/leads/import';
+  static const String markAsReadEndpoint = '$apiBaseUrl/leads'; // + /:id/read
+  
+  // Export/Backup endpoints
+  static const String exportLeadsEndpoint = '$apiBaseUrl/leads/export';
+  static const String exportSessionsEndpoint = '$apiBaseUrl/analytics/export/sessions';
+  static const String exportUpdatesEndpoint = '$apiBaseUrl/analytics/export/updates';
+  static const String exportPdfsEndpoint = '$apiBaseUrl/analytics/export/pdfs';
+  static const String systemBackupEndpoint = '$apiBaseUrl/leads/system/backup';
+  static const String systemRestoreEndpoint = '$apiBaseUrl/leads/system/restore';
   
   // New User Auth flow
   static const String registerRequestEndpoint = '$apiBaseUrl/leads/register-request';

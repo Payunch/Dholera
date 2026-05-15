@@ -15,6 +15,7 @@ class Lead {
   final String? otpRaw;
   final String? passcodeRaw;
   final bool isRegistered;
+  final bool isRead;
   final DateTime createdAt;
 
   Lead({
@@ -34,6 +35,7 @@ class Lead {
     this.otpRaw,
     this.passcodeRaw,
     required this.isRegistered,
+    this.isRead = false,
     required this.createdAt,
   });
 
@@ -57,6 +59,7 @@ class Lead {
       otpRaw: json['otp_raw'],
       passcodeRaw: json['passcode_raw'],
       isRegistered: json['is_registered'] ?? false,
+      isRead: json['isRead'] ?? false,
       createdAt: DateTime.parse(json['createdAt']),
     );
   }
