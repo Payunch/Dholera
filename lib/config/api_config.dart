@@ -5,47 +5,60 @@
 // - Production: https://your-api-server.com/api
 
 class ApiConfig {
-  // Production Railway Backend URL
-  static const String apiBaseUrl = 'https://dholera-backend-production.up.railway.app/api';
-  //  static const String apiBaseUrl = 'http://192.168.31.212:3000/api'; 
+  // --- CONFIGURATION ---
+  // Set this to true to use your local machine's IP (for mobile testing)
+  // Set to false to use the production URL
+  static const bool useLocalBackend = false;
+  
+  // Replace with your computer's local IP address (e.g., 192.168.1.5)
+  // You can find this by running 'ipconfig' in your terminal
+  static const String localIp = '192.168.31.212'; 
+
+  // Your production backend URL (Railway or Render)
+  static const String productionUrl = 'https://dholera-backend-epb9.onrender.com/api';
+
+  static String get apiBaseUrl => useLocalBackend 
+      ? 'http://$localIp:3000/api' 
+      : productionUrl;
+  // ---------------------
 
   // API Endpoints
-  static const String loginEndpoint = '$apiBaseUrl/auth/login';
-  static const String logoutEndpoint = '$apiBaseUrl/auth/logout';
-  static const String meEndpoint = '$apiBaseUrl/auth/me';
-  static const String csrfTokenEndpoint = '$apiBaseUrl/auth/csrf-token';
-  static const String sessionsEndpoint = '$apiBaseUrl/auth/sessions';
+  static String get loginEndpoint => '$apiBaseUrl/auth/login';
+  static String get logoutEndpoint => '$apiBaseUrl/auth/logout';
+  static String get meEndpoint => '$apiBaseUrl/auth/me';
+  static String get csrfTokenEndpoint => '$apiBaseUrl/auth/csrf-token';
+  static String get sessionsEndpoint => '$apiBaseUrl/auth/sessions';
   
   // Leads endpoints
-  static const String leadsEndpoint = '$apiBaseUrl/leads';
-  static const String leadDetailEndpoint = '$apiBaseUrl/leads';
-  static const String importLeadsEndpoint = '$apiBaseUrl/leads/import';
-  static const String markAsReadEndpoint = '$apiBaseUrl/leads'; // + /:id/read
+  static String get leadsEndpoint => '$apiBaseUrl/leads';
+  static String get leadDetailEndpoint => '$apiBaseUrl/leads';
+  static String get importLeadsEndpoint => '$apiBaseUrl/leads/import';
+  static String get markAsReadEndpoint => '$apiBaseUrl/leads'; // + /:id/read
   
   // Export/Backup endpoints
-  static const String exportLeadsEndpoint = '$apiBaseUrl/leads/export';
-  static const String exportSessionsEndpoint = '$apiBaseUrl/analytics/export/sessions';
-  static const String exportUpdatesEndpoint = '$apiBaseUrl/analytics/export/updates';
-  static const String exportPdfsEndpoint = '$apiBaseUrl/analytics/export/pdfs';
-  static const String systemBackupEndpoint = '$apiBaseUrl/leads/system/backup';
-  static const String systemRestoreEndpoint = '$apiBaseUrl/leads/system/restore';
+  static String get exportLeadsEndpoint => '$apiBaseUrl/leads/export';
+  static String get exportSessionsEndpoint => '$apiBaseUrl/analytics/export/sessions';
+  static String get exportUpdatesEndpoint => '$apiBaseUrl/analytics/export/updates';
+  static String get exportPdfsEndpoint => '$apiBaseUrl/analytics/export/pdfs';
+  static String get systemBackupEndpoint => '$apiBaseUrl/leads/system/backup';
+  static String get systemRestoreEndpoint => '$apiBaseUrl/leads/system/restore';
   
   // New User Auth flow
-  static const String registerRequestEndpoint = '$apiBaseUrl/leads/register-request';
-  static const String verifyRegistrationOtpEndpoint = '$apiBaseUrl/leads/verify-registration-otp';
-  static const String setupPasscodeEndpoint = '$apiBaseUrl/leads/setup-passcode';
-  static const String loginWithPasscodeEndpoint = '$apiBaseUrl/leads/login-with-passcode';
+  static String get registerRequestEndpoint => '$apiBaseUrl/leads/register-request';
+  static String get verifyRegistrationOtpEndpoint => '$apiBaseUrl/leads/verify-registration-otp';
+  static String get setupPasscodeEndpoint => '$apiBaseUrl/leads/setup-passcode';
+  static String get loginWithPasscodeEndpoint => '$apiBaseUrl/leads/login-with-passcode';
   
   // Updates endpoints
-  static const String updatesEndpoint = '$apiBaseUrl/updates';
+  static String get updatesEndpoint => '$apiBaseUrl/updates';
   
   // Analytics endpoints
-  static const String analyticsEndpoint = '$apiBaseUrl/analytics';
-  static const String detailedAnalyticsEndpoint = '$apiBaseUrl/analytics/detailed';
+  static String get analyticsEndpoint => '$apiBaseUrl/analytics';
+  static String get detailedAnalyticsEndpoint => '$apiBaseUrl/analytics/detailed';
 
   // PDF endpoints
-  static const String pdfsEndpoint = '$apiBaseUrl/pdfs';
+  static String get pdfsEndpoint => '$apiBaseUrl/pdfs';
   
   // Settings endpoints
-  static const String settingsEndpoint = '$apiBaseUrl/settings';
+  static String get settingsEndpoint => '$apiBaseUrl/settings';
 }
