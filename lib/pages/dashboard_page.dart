@@ -319,13 +319,17 @@ class _DashboardPageState extends State<DashboardPage> {
         final image = AppAssets.galleryImages[index];
         return ClipRRect(
           borderRadius: BorderRadius.circular(14),
-          child: Image.asset(
-            image,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => Container(
-              color: AppColors.surface,
-              alignment: Alignment.center,
-              child: const Icon(Icons.image_not_supported, color: AppColors.textSecondary),
+          child: Container(
+            color: AppColors.surface,
+            padding: const EdgeInsets.all(8),
+            child: Image.asset(
+              image,
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => Container(
+                color: AppColors.surface,
+                alignment: Alignment.center,
+                child: const Icon(Icons.image_not_supported, color: AppColors.textSecondary),
+              ),
             ),
           ),
         );
