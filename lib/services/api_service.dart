@@ -475,7 +475,94 @@ class ApiService {
       return _handleRequestError(e);
     }
   }
+
+  Future<Map<String, dynamic>> getUserSessions() async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConfig.sessionsEndpoint),
+        headers: await _getFetchHeaders(),
+      );
+      return _handleJsonResponse(response, 'sessions');
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> importLeads(String filePath) async {
+    try {
+      final token = await getAuthToken();
+      final csrfToken = await _refreshCsrfToken();
+      final uri = Uri.parse(ApiConfig.importLeadsEndpoint);
+      final request = http.MultipartRequest('POST', uri);
+      
+      request.headers['User-Agent'] = 'DholeraAdminApp/1.0';
+      request.headers['Accept'] = 'application/json';
+      if (token != null) request.headers['Authorization'] = 'Bearer $token';
+      if (_sessionCookie != null) request.headers['cookie'] = _sessionCookie!;
+      if (csrfToken != null) request.headers['X-CSRF-Token'] = csrfToken;
+      
+      request.files.add(await http.MultipartFile.fromPath(
+        'file', 
+        filePath,
+        contentType: MediaType('application', 'vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+      ));
+      
+      final streamedResponse = await request.send().timeout(const Duration(minutes: 5));
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
   
+  Future<Map<String, dynamic>> markLeadAsRead(int id) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConfig.markAsReadEndpoint}/$id/read'),
+        headers: await _getMutationHeaders(),
+      );
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<http.Response> downloadExport(String endpoint) async {
+    return await http.get(
+      Uri.parse(endpoint),
+      headers: await _getFetchHeaders(),
+    );
+  }
+
+  Future<Map<String, dynamic>> restoreSystem(String filePath) async {
+    try {
+      final token = await getAuthToken();
+      final csrfToken = await _refreshCsrfToken();
+      final uri = Uri.parse(ApiConfig.systemRestoreEndpoint);
+      final request = http.MultipartRequest('POST', uri);
+      
+      request.headers['User-Agent'] = 'DholeraAdminApp/1.0';
+      request.headers['Accept'] = 'application/json';
+      if (token != null) request.headers['Authorization'] = 'Bearer $token';
+      if (_sessionCookie != null) request.headers['cookie'] = _sessionCookie!;
+      if (csrfToken != null) request.headers['X-CSRF-Token'] = csrfToken;
+      
+      request.files.add(await http.MultipartFile.fromPath(
+        'file', 
+        filePath,
+        contentType: MediaType('application', 'json'),
+      ));
+      
+      final streamedResponse = await request.send().timeout(const Duration(minutes: 5));
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
   Future<bool> logout() async {
     try {
       await http.post(

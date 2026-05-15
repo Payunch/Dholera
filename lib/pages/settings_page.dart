@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import '../services/api_service.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -80,6 +81,56 @@ class _SettingsPageState extends State<SettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleRestore() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+
+      if (result != null) {
+        final path = result.files.single.path;
+        if (path != null) {
+          setState(() => _isLoading = true);
+          final restoreResult = await _apiService.restoreSystem(path);
+          if (restoreResult['success'] == true) {
+            final results = restoreResult['results'];
+            if (mounted) {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Restore Complete'),
+                  content: Text('Leads: ${results['leads']['created']} created, ${results['leads']['updated']} updated\n'
+                      'Updates: ${results['updates']['created']} created, ${results['updates']['updated']} updated\n'
+                      'Sessions: ${results['sessions']['created']} created'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
+                  ],
+                ),
+              );
+            }
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Restore failed: ${restoreResult['error']}')),
+              );
+            }
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -191,6 +242,7 @@ class _SettingsPageState extends State<SettingsPage> {
         title: const Text('Business Settings'),
         backgroundColor: Colors.orange,
         actions: [
+          IconButton(icon: const Icon(Icons.restore, color: Colors.white), onPressed: _handleRestore, tooltip: 'Restore from backup'),
           IconButton(icon: const Icon(Icons.add), onPressed: _addNewSetting, tooltip: 'Add new field'),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchSettings),
         ],
@@ -223,7 +275,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
                           ),
                         ],
-                      ),
+                      )
                     )
                   : Padding(
                       padding: const EdgeInsets.all(16.0),

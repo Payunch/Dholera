@@ -244,9 +244,11 @@ class _UpdatesPageState extends State<UpdatesPage> {
             'published': published,
           });
 
-          if (!context.mounted) return;
+          if (!mounted) return;
           if (result['success'] == true) {
-            Navigator.pop(dialogContext);
+            if (dialogContext.mounted) {
+              Navigator.pop(dialogContext);
+            }
             _fetchUpdates();
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Update created successfully')));
           } else {

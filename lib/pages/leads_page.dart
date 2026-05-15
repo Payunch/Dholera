@@ -6,6 +6,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../theme/app_colors.dart';
+import '../config/api_config.dart';
 
 class LeadsPage extends StatefulWidget {
   const LeadsPage({super.key});
@@ -38,23 +40,23 @@ class _LeadsPageState extends State<LeadsPage> {
     _fetchLeads();
   }
 
-  Future<void> _exportLeads() async {
+  Future<void> _exportData(String endpoint, String filename) async {
     setState(() => _isExporting = true);
     try {
-      final response = await _apiService.downloadExcelExportRaw();
+      final response = await _apiService.downloadExport(endpoint);
       
       if (response.statusCode == 200) {
         final directory = await getApplicationDocumentsDirectory();
-        final filePath = '${directory.path}/leads_export_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+        final filePath = '${directory.path}/${filename}_${DateTime.now().millisecondsSinceEpoch}.${filename.endsWith('json') ? 'json' : 'xlsx'}';
         final file = File(filePath);
         await file.writeAsBytes(response.bodyBytes);
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Export ready for sharing')),
+            SnackBar(content: Text('Export ready: $filename')),
           );
         }
-        await Share.shareXFiles([XFile(filePath)], text: 'Dholera Leads Export');
+        await Share.shareXFiles([XFile(filePath)], text: 'Dholera Export: $filename');
       } else {
         throw Exception('Failed to download export');
       }
@@ -71,8 +73,66 @@ class _LeadsPageState extends State<LeadsPage> {
     }
   }
 
-  Future<bool> _updateLeadStatus(int id, String status) async {
+  void _showExportOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text('Export Data', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+          ListTile(
+            leading: const Icon(Icons.people, color: AppColors.primary),
+            title: const Text('Export Leads'),
+            onTap: () {
+              Navigator.pop(context);
+              _exportData(ApiConfig.exportLeadsEndpoint, 'leads_export');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.history, color: Colors.blueGrey),
+            title: const Text('Export User Sessions'),
+            onTap: () {
+              Navigator.pop(context);
+              _exportData(ApiConfig.exportSessionsEndpoint, 'user_sessions');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+            title: const Text('Export PDF Metadata'),
+            onTap: () {
+              Navigator.pop(context);
+              _exportData(ApiConfig.exportPdfsEndpoint, 'pdfs_metadata');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.article, color: Colors.orange),
+            title: const Text('Export Blogs/Updates'),
+            onTap: () {
+              Navigator.pop(context);
+              _exportData(ApiConfig.exportUpdatesEndpoint, 'blogs_export');
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.backup, color: Colors.teal),
+            title: const Text('Full System Backup (JSON)'),
+            subtitle: const Text('For complete system restore'),
+            onTap: () {
+              Navigator.pop(context);
+              _exportData(ApiConfig.systemBackupEndpoint, 'dholera_full_backup.json');
+            },
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
 
+  Future<bool> _updateLeadStatus(int id, String status) async {
     try {
       final result = await _apiService.updateLeadStatus(id, status);
       if (result['success'] == true) {
@@ -137,29 +197,6 @@ class _LeadsPageState extends State<LeadsPage> {
     }
   }
 
-  Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: phoneNumber,
-    );
-    if (await canLaunchUrl(launchUri)) {
-      await launchUrl(launchUri);
-    }
-  }
-
-  Future<void> _sendWhatsApp(String phoneNumber) async {
-    // Format phone: remove non-digits, ensure country code
-    String cleanPhone = phoneNumber.replaceAll(RegExp(r'\D'), '');
-    if (!cleanPhone.startsWith('91') && cleanPhone.length == 10) {
-      cleanPhone = '91$cleanPhone';
-    }
-    
-    final Uri whatsappUri = Uri.parse("https://wa.me/$cleanPhone");
-    if (await canLaunchUrl(whatsappUri)) {
-      await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -184,9 +221,10 @@ class _LeadsPageState extends State<LeadsPage> {
           else
             IconButton(
               icon: const Icon(Icons.download),
-              tooltip: 'Export to Excel',
-              onPressed: _exportLeads,
+              tooltip: 'Export Options',
+              onPressed: _showExportOptions,
             ),
+          IconButton(onPressed: () => _fetchLeads(refresh: true), icon: const Icon(Icons.refresh)),
         ],
       ),
       body: _isLoading && _leads.isEmpty
@@ -222,13 +260,38 @@ class _LeadsPageState extends State<LeadsPage> {
                       }
 
                       final lead = _leads[index];
+                      final bool isToday = lead.createdAt.day == DateTime.now().day &&
+                          lead.createdAt.month == DateTime.now().month &&
+                          lead.createdAt.year == DateTime.now().year;
+
                       return Card(
                         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         elevation: 2,
                         child: ListTile(
-                          title: Text(
-                            lead.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          title: Row(
+                            children: [
+                              Text(
+                                lead.name,
+                                style: TextStyle(
+                                  fontWeight: lead.isRead ? FontWeight.normal : FontWeight.bold,
+                                ),
+                              ),
+                              if (isToday) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                ),
+                              ],
+                              const Spacer(),
+                              if (!lead.isRead)
+                                Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+                                ),
+                            ],
                           ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,27 +301,16 @@ class _LeadsPageState extends State<LeadsPage> {
                                 'Source: ${lead.source} | Status: ${lead.status}',
                                 style: const TextStyle(fontSize: 12),
                               ),
-                              Text(
-                                'Received: ${DateFormat('dd MMM yyyy, hh:mm a').format(lead.createdAt)}',
-                                style: const TextStyle(fontSize: 11, color: Colors.grey),
-                              ),
                             ],
                           ),
                           isThreeLine: true,
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.phone, color: Colors.green),
-                                onPressed: () => _makePhoneCall(lead.phone),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.message, color: Colors.blue),
-                                onPressed: () => _sendWhatsApp(lead.phone),
-                              ),
-                            ],
-                          ),
-                          onTap: () {
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () async {
+                            if (!lead.isRead) {
+                              await _apiService.markLeadAsRead(lead.id);
+                              _fetchLeads(refresh: true);
+                            }
+                            if (!mounted) return;
                             _showLeadDetails(lead);
                           },
                         ),
@@ -363,13 +415,13 @@ class _LeadsPageState extends State<LeadsPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ElevatedButton.icon(
-                        onPressed: () => _makePhoneCall(lead.phone),
+                        onPressed: () => launchUrl(Uri.parse('tel:${lead.phone}')),
                         icon: const Icon(Icons.phone),
                         label: const Text('Call'),
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
                       ),
                       ElevatedButton.icon(
-                        onPressed: () => _sendWhatsApp(lead.phone),
+                        onPressed: () => launchUrl(Uri.parse('https://wa.me/91${lead.phone}')),
                         icon: const Icon(Icons.message),
                         label: const Text('WhatsApp'),
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
