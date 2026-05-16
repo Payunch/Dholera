@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../services/api_service.dart';
 import '../models/app_update.dart';
+import 'blog_editor_page.dart';
 
 class UpdatesPage extends StatefulWidget {
   const UpdatesPage({super.key});
@@ -14,7 +14,6 @@ class UpdatesPage extends StatefulWidget {
 
 class _UpdatesPageState extends State<UpdatesPage> {
   final ApiService _apiService = ApiService();
-  final ImagePicker _picker = ImagePicker();
   List<AppUpdate> _updates = [];
   bool _isLoading = true;
   String? _error;
@@ -83,6 +82,19 @@ class _UpdatesPageState extends State<UpdatesPage> {
     }
   }
 
+  void _navigateToEditor([AppUpdate? update]) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BlogEditorPage(update: update),
+      ),
+    );
+
+    if (result == true) {
+      _fetchUpdates();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,9 +149,18 @@ class _UpdatesPageState extends State<UpdatesPage> {
                                 '${update.category} • ${DateFormat('dd MMM yyyy').format(update.createdAt)}',
                                 style: const TextStyle(fontSize: 12),
                               ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _deleteUpdate(update.id),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit, color: Colors.blue),
+                                    onPressed: () => _navigateToEditor(update),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () => _deleteUpdate(update.id),
+                                  ),
+                                ],
                               ),
                               onTap: () => _showUpdateDetails(update),
                             ),
@@ -148,7 +169,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
                       ),
                     ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateUpdateDialog(),
+        onPressed: () => _navigateToEditor(),
         backgroundColor: Colors.orange,
         tooltip: 'Create New Update',
         child: const Icon(Icons.add),
@@ -178,8 +199,27 @@ class _UpdatesPageState extends State<UpdatesPage> {
                       errorBuilder: (_, _, _) => const SizedBox()),
                 ),
               const SizedBox(height: 16),
-              Text(update.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              Text(update.category, style: TextStyle(color: Colors.orange[700], fontWeight: FontWeight.w500)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(update.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                        Text(update.category, style: TextStyle(color: Colors.orange[700], fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  ),
+                  IconButton.filledTonal(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _navigateToEditor(update);
+                    },
+                    icon: const Icon(Icons.edit),
+                  ),
+                ],
+              ),
               const Divider(height: 32),
               Text(update.content, style: const TextStyle(fontSize: 16, height: 1.5)),
               const SizedBox(height: 24),
@@ -198,229 +238,19 @@ class _UpdatesPageState extends State<UpdatesPage> {
                   Text('Status: ${update.published ? "Published" : "Draft"}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
                 ],
               ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.photo_size_select_actual, size: 14, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Text('Image Position: ${update.imagePosition}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
             ],
           ),
         ),
       ),
     );
   }
-
-  void _showCreateUpdateDialog() {
-    final titleController = TextEditingController();
-    final contentController = TextEditingController();
-    final categoryController = TextEditingController(text: 'General');
-    final imageUrlController = TextEditingController();
-    XFile? pickedFile;
-    bool published = true;
-    bool submitting = false;
-    final categories = ['Infrastructure', 'Industrial', 'Planning', 'Investment', 'General', 'Article', 'Announcement'];
-
-    showDialog(
-      context: context,
-      barrierDismissible: !submitting,
-      builder: (dialogContext) {
-        final isCompact = MediaQuery.of(dialogContext).size.width < 700;
-
-        Future<void> pickImage(StateSetter setDialogState) async {
-          final XFile? photo = await _picker.pickImage(source: ImageSource.gallery);
-          if (photo != null) {
-            setDialogState(() => pickedFile = photo);
-          }
-        }
-
-        Future<void> submit(StateSetter setDialogState) async {
-          if (titleController.text.trim().isEmpty || contentController.text.trim().isEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Title and Content are required')));
-            return;
-          }
-
-          setDialogState(() => submitting = true);
-          final result = await _apiService.createUpdate({
-            'title': titleController.text.trim(),
-            'content': contentController.text.trim(),
-            'category': categoryController.text.trim().isEmpty ? 'General' : categoryController.text.trim(),
-            'imageUrl': pickedFile == null && imageUrlController.text.trim().isNotEmpty ? imageUrlController.text.trim() : null,
-            'imagePath': pickedFile?.path,
-            'published': published,
-          });
-
-          if (!mounted) return;
-          if (result['success'] == true) {
-            if (dialogContext.mounted) {
-              Navigator.pop(dialogContext);
-            }
-            _fetchUpdates();
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Update created successfully')));
-          } else {
-            setDialogState(() => submitting = false);
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${result['error']}')));
-          }
-        }
-
-        return Dialog(
-          insetPadding: isCompact ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          clipBehavior: Clip.antiAlias,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: isCompact ? double.infinity : 900,
-              maxHeight: isCompact ? double.infinity : MediaQuery.of(dialogContext).size.height * 0.92,
-            ),
-            child: StatefulBuilder(
-              builder: (context, setDialogState) {
-                return Material(
-                  color: Theme.of(context).colorScheme.surface,
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 20, 12, 12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Create New Update',
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: submitting ? null : () => Navigator.pop(dialogContext),
-                              icon: const Icon(Icons.close),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TextField(
-                                controller: titleController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Title',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              DropdownButtonFormField<String>(
-                                initialValue: categoryController.text,
-                                decoration: const InputDecoration(
-                                  labelText: 'Category',
-                                  border: OutlineInputBorder(),
-                                ),
-                                items: categories.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))).toList(),
-                                onChanged: (value) => setDialogState(() => categoryController.text = value ?? 'General'),
-                              ),
-                              const SizedBox(height: 16),
-                              TextField(
-                                controller: contentController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Content',
-                                  border: OutlineInputBorder(),
-                                ),
-                                maxLines: isCompact ? 10 : 16,
-                                minLines: 8,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Header Image',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  ElevatedButton.icon(
-                                    onPressed: submitting ? null : () => pickImage(setDialogState),
-                                    icon: const Icon(Icons.image),
-                                    label: const Text('Choose Image'),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: imageUrlController,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Image URL (optional)',
-                                        border: OutlineInputBorder(),
-                                      ),
-                                      enabled: pickedFile == null,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              if (pickedFile != null)
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: Theme.of(context).dividerColor),
-                                  ),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: Stack(
-                                    children: [
-                                      Image.file(
-                                        File(pickedFile!.path),
-                                        height: 220,
-                                        width: double.infinity,
-                                        fit: BoxFit.cover,
-                                      ),
-                                      Positioned(
-                                        right: 8,
-                                        top: 8,
-                                        child: IconButton.filledTonal(
-                                          onPressed: submitting ? null : () => setDialogState(() => pickedFile = null),
-                                          icon: const Icon(Icons.close),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              const SizedBox(height: 16),
-                              SwitchListTile(
-                                contentPadding: EdgeInsets.zero,
-                                title: const Text('Published'),
-                                subtitle: const Text('Make the update visible to public users immediately'),
-                                value: published,
-                                onChanged: (value) => setDialogState(() => published = value),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: submitting ? null : () => Navigator.pop(dialogContext),
-                                child: const Text('Cancel'),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: submitting ? null : () => submit(setDialogState),
-                                child: submitting
-                                    ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
-                                      )
-                                    : const Text('Create Update'),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
+

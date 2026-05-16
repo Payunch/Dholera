@@ -362,6 +362,50 @@ class ApiService {
       request.fields['content'] = data['content']?.toString() ?? '';
       request.fields['category'] = data['category']?.toString() ?? 'General';
       request.fields['published'] = (data['published'] == true).toString();
+      request.fields['imagePosition'] = data['imagePosition']?.toString() ?? 'top';
+      if (data['imageUrl'] != null) request.fields['imageUrl'] = data['imageUrl'].toString();
+      
+      if (data['imagePath'] != null && data['imagePath'].toString().isNotEmpty) {
+        final extension = data['imagePath'].toString().split('.').last.toLowerCase();
+        String mimeType = 'image/jpeg';
+        if (extension == 'png') mimeType = 'image/png';
+        if (extension == 'webp') mimeType = 'image/webp';
+        if (extension == 'svg') mimeType = 'image/svg+xml';
+
+        request.files.add(await http.MultipartFile.fromPath(
+          'image', 
+          data['imagePath'],
+          contentType: MediaType.parse(mimeType),
+        ));
+      }
+      
+      final streamedResponse = await request.send().timeout(const Duration(minutes: 2));
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      return _handleJsonResponse(response, 'update');
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> updateUpdate(int id, Map<String, dynamic> data) async {
+    try {
+      final token = await getAuthToken();
+      final csrfToken = await _refreshCsrfToken();
+      final uri = Uri.parse('${ApiConfig.updatesEndpoint}/$id');
+      final request = http.MultipartRequest('PUT', uri);
+      
+      request.headers['User-Agent'] = 'DholeraAdminApp/1.0';
+      request.headers['Accept'] = 'application/json';
+      if (token != null) request.headers['Authorization'] = 'Bearer $token';
+      if (_sessionCookie != null) request.headers['cookie'] = _sessionCookie!;
+      if (csrfToken != null) request.headers['X-CSRF-Token'] = csrfToken;
+      
+      if (data['title'] != null) request.fields['title'] = data['title'].toString();
+      if (data['content'] != null) request.fields['content'] = data['content'].toString();
+      if (data['category'] != null) request.fields['category'] = data['category'].toString();
+      if (data['published'] != null) request.fields['published'] = data['published'].toString();
+      if (data['imagePosition'] != null) request.fields['imagePosition'] = data['imagePosition'].toString();
       if (data['imageUrl'] != null) request.fields['imageUrl'] = data['imageUrl'].toString();
       
       if (data['imagePath'] != null && data['imagePath'].toString().isNotEmpty) {
