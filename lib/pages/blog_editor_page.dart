@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 import '../models/app_update.dart';
 import '../services/api_service.dart';
-import '../theme/app_colors.dart';
 
 class BlogEditorPage extends StatefulWidget {
   final AppUpdate? update;
@@ -180,7 +179,7 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _category,
+              initialValue: _category,
               decoration: const InputDecoration(
                 labelText: 'Category',
                 border: OutlineInputBorder(),
@@ -219,7 +218,7 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
                 if (_pickedFile != null || _existingImageUrl != null)
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _imagePosition,
+                      initialValue: _imagePosition,
                       decoration: const InputDecoration(
                         labelText: 'Position',
                         border: OutlineInputBorder(),
@@ -243,7 +242,7 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
                     _pickedFile != null
                         ? Image.file(File(_pickedFile!.path), height: 150, width: double.infinity, fit: BoxFit.cover)
                         : Image.network(_existingImageUrl!, height: 150, width: double.infinity, fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.error))),
+                            errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.error))),
                     Positioned(
                       right: 4,
                       top: 4,
@@ -313,7 +312,7 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
           // Title
           Text(
             _titleController.text.isEmpty ? 'Blog Title' : _titleController.text,
-            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.black, height: 1.1),
+            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, height: 1.1),
           ),
           const SizedBox(height: 16),
           
@@ -358,7 +357,7 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
       child: _pickedFile != null
           ? Image.file(File(_pickedFile!.path), width: double.infinity, fit: BoxFit.cover)
           : Image.network(_existingImageUrl!, width: double.infinity, fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const SizedBox()),
+              errorBuilder: (context, error, stackTrace) => const SizedBox()),
     );
   }
 
