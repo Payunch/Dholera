@@ -298,13 +298,24 @@ class ApiService {
         Uri.parse('${ApiConfig.detailedAnalyticsEndpoint}?start=$startStr&end=$endStr'),
         headers: await _getFetchHeaders(),
       ).timeout(const Duration(seconds: 15));
-      
+
       return _handleJsonResponse(response, 'analytics');
     } catch (e) {
       return _handleRequestError(e);
     }
   }
 
+  Future<Map<String, dynamic>> getBiOverview() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.apiBaseUrl}/bi/overview'),
+        headers: await _getFetchHeaders(),
+      );
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
   Future<String?> downloadExcelExport() async {
     try {
       final headers = await _getFetchHeaders();

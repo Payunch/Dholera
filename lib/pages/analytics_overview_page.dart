@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/analytics/analytics_models.dart';
 import '../repositories/analytics_repository.dart';
 import '../theme/app_colors.dart';
@@ -21,17 +22,44 @@ class _AnalyticsOverviewPageState extends State<AnalyticsOverviewPage> {
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 30));
   DateTime _endDate = DateTime.now();
   late Future<AnalyticsSummary> _analyticsFuture;
+  Map<String, dynamic>? _biData;
+  bool _loadingBI = true;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _loadBIData();
   }
 
   void _loadData() {
     setState(() {
       _analyticsFuture = _repository.getAnalytics(start: _startDate, end: _endDate);
     });
+  }
+
+  Future<void> _loadBIData() async {
+    try {
+      final bi = await _repository.getBiOverview();
+      setState(() {
+        _biData = bi;
+        _loadingBI = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading BI data: $e');
+      setState(() => _loadingBI = false);
+    }
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open $url')),
+        );
+      }
+    }
   }
 
   void _onFilterChanged(String filter) {
@@ -68,6 +96,13 @@ class _AnalyticsOverviewPageState extends State<AnalyticsOverviewPage> {
         elevation: 0,
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh, color: AppColors.primary),
+            onPressed: () {
+              _loadData();
+              _loadBIData();
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.calendar_month, color: AppColors.primary),
             onPressed: () async {
               final range = await showDateRangePicker(
@@ -99,20 +134,29 @@ class _AnalyticsOverviewPageState extends State<AnalyticsOverviewPage> {
 
           final data = snapshot.data!;
           return RefreshIndicator(
-            onRefresh: () async => _loadData(),
+            onRefresh: () async {
+              _loadData();
+              await _loadBIData();
+            },
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildFilterBar(),
+                  _buildSectionTitle('Business Intelligence (Revenue)'),
+                  _buildBIGrid(),
                   const SizedBox(height: 24),
+                  _buildSectionTitle('Marketing Hub (External)'),
+                  _buildMarketingHub(),
+                  const SizedBox(height: 24),
+                  _buildSectionTitle('Lead Generation Trends'),
+                  _buildFilterBar(),
+                  const SizedBox(height: 16),
                   _buildStatGrid(data),
                   const SizedBox(height: 24),
-                  _buildSectionTitle('Lead Generation Trend'),
+                  _buildSectionTitle('Performance Visualization'),
                   _buildCard(AnalyticsBarChart(metrics: data.dailyMetrics)),
                   const SizedBox(height: 24),
-                  _buildSectionTitle('Comparison Trend (Leads vs Visitors vs Updates)'),
                   _buildCard(AnalyticsLineChart(metrics: data.dailyMetrics)),
                   const SizedBox(height: 24),
                   _buildCard(AnalyticsHeatMap(metrics: data.dailyMetrics)),
@@ -126,6 +170,101 @@ class _AnalyticsOverviewPageState extends State<AnalyticsOverviewPage> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildBIGrid() {
+    if (_loadingBI) {
+      return const Center(child: LinearProgressIndicator());
+    }
+    
+    final summary = _biData?['summary'];
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+      childAspectRatio: 1.4,
+      children: [
+        _buildBICard(
+          'Total Revenue', 
+          '₹${summary?['totalRevenueINR'] ?? 0}', 
+          Icons.payments, 
+          Colors.green
+        ),
+        _buildBICard(
+          'PDF Sales (30d)', 
+          '${summary?['purchases30d'] ?? 0}', 
+          Icons.shopping_cart, 
+          Colors.orange
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBICard(String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 4),
+          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+          Text(title, style: TextStyle(fontSize: 11, color: color.withValues(alpha: 0.8))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMarketingHub() {
+    return _buildCard(
+      Column(
+        children: [
+          _buildHubItem(
+            'Google Search Console', 
+            'Search performance and keywords', 
+            Icons.search, 
+            'https://search.google.com/search-console'
+          ),
+          const Divider(),
+          _buildHubItem(
+            'Google Analytics (GA4)', 
+            'Real-time traffic and user behavior', 
+            Icons.query_stats, 
+            'https://analytics.google.com/'
+          ),
+          const Divider(),
+          _buildHubItem(
+            'Microsoft Clarity', 
+            'Session recordings and heatmaps', 
+            Icons.play_circle_outline, 
+            'https://clarity.microsoft.com/'
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHubItem(String title, String subtitle, IconData icon, String url) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+        child: Icon(icon, color: AppColors.primary),
+      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+      trailing: const Icon(Icons.open_in_new, size: 18),
+      onTap: () => _launchUrl(url),
     );
   }
 

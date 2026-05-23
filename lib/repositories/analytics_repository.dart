@@ -33,5 +33,13 @@ class AnalyticsRepository {
       topDays: topDays,
     );
   }
+
+  Future<Map<String, dynamic>> getBiOverview() async {
+    final response = await _apiService.getBiOverview();
+    if (response['success'] != true) {
+      throw Exception(response['error'] ?? 'Failed to load BI overview');
+    }
+    return response['data'];
+  }
 }
 
