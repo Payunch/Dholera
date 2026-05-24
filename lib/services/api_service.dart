@@ -143,7 +143,7 @@ class ApiService {
       final response = await http.get(
         Uri.parse(ApiConfig.meEndpoint),
         headers: await _getFetchHeaders(),
-      );
+      ).timeout(const Duration(seconds: 15));
       return _handleJsonResponse(response, 'data');
     } catch (e) {
       return _handleRequestError(e);
@@ -257,7 +257,7 @@ class ApiService {
       final response = await http.get(
         Uri.parse('${ApiConfig.leadsEndpoint}?page=$page&limit=$limit'),
         headers: await _getFetchHeaders(),
-      );
+      ).timeout(const Duration(seconds: 15));
       return _handleJsonResponse(response, 'leads');
     } catch (e) {
       return _handleRequestError(e);
@@ -270,7 +270,7 @@ class ApiService {
         Uri.parse('${ApiConfig.leadsEndpoint}/$id/status'),
         headers: await _getMutationHeaders(),
         body: jsonEncode({'status': status}),
-      );
+      ).timeout(const Duration(seconds: 15));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -310,7 +310,7 @@ class ApiService {
       final response = await http.get(
         Uri.parse('${ApiConfig.apiBaseUrl}/bi/overview'),
         headers: await _getFetchHeaders(),
-      );
+      ).timeout(const Duration(seconds: 15));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -325,9 +325,6 @@ class ApiService {
       ).timeout(const Duration(minutes: 1)); // Longer timeout for exports
 
       if (response.statusCode == 200) {
-        // Return raw bytes as a String or handle differently if needed.
-        // We'll write this to a file in the UI layer.
-        // Alternatively, return a URL with token for url_launcher.
         return 'success';
       }
       return null;
@@ -349,7 +346,7 @@ class ApiService {
       final response = await http.get(
         Uri.parse('${ApiConfig.updatesEndpoint}?all=true'),
         headers: await _getFetchHeaders(),
-      );
+      ).timeout(const Duration(seconds: 15));
       return _handleJsonResponse(response, 'updates');
     } catch (e) {
       return _handleRequestError(e);
@@ -459,7 +456,7 @@ class ApiService {
       final response = await http.get(
         Uri.parse('${ApiConfig.apiBaseUrl}/pdf/list'),
         headers: await _getFetchHeaders(),
-      );
+      ).timeout(const Duration(seconds: 15));
       return _handleJsonResponse(response, 'pdfs');
     } catch (e) {
       return _handleRequestError(e);
@@ -511,7 +508,7 @@ class ApiService {
       final response = await http.get(
         Uri.parse('${ApiConfig.apiBaseUrl}/settings'),
         headers: await _getFetchHeaders(),
-      );
+      ).timeout(const Duration(seconds: 15));
       return _handleJsonResponse(response, 'settings');
     } catch (e) {
       return _handleRequestError(e);
@@ -524,7 +521,7 @@ class ApiService {
         Uri.parse('${ApiConfig.apiBaseUrl}/settings'),
         headers: await _getMutationHeaders(),
         body: jsonEncode(data),
-      );
+      ).timeout(const Duration(seconds: 15));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -536,7 +533,7 @@ class ApiService {
       final response = await http.get(
         Uri.parse(ApiConfig.sessionsEndpoint),
         headers: await _getFetchHeaders(),
-      );
+      ).timeout(const Duration(seconds: 15));
       return _handleJsonResponse(response, 'sessions');
     } catch (e) {
       return _handleRequestError(e);
@@ -576,7 +573,7 @@ class ApiService {
       final response = await http.put(
         Uri.parse('${ApiConfig.markAsReadEndpoint}/$id/read'),
         headers: await _getMutationHeaders(),
-      );
+      ).timeout(const Duration(seconds: 15));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -587,7 +584,7 @@ class ApiService {
     return await http.get(
       Uri.parse(endpoint),
       headers: await _getFetchHeaders(),
-    );
+    ).timeout(const Duration(minutes: 2));
   }
 
   Future<Map<String, dynamic>> restoreSystem(String filePath) async {
@@ -623,7 +620,7 @@ class ApiService {
       await http.post(
         Uri.parse(ApiConfig.logoutEndpoint), 
         headers: await _getMutationHeaders()
-      );
+      ).timeout(const Duration(seconds: 10));
     } catch (e) {
       // Ignore
     } finally {
@@ -664,6 +661,7 @@ class ApiService {
       if (response.body.contains('<!DOCTYPE html>') || response.body.contains('<html')) {
         if (response.statusCode == 404) return {'success': false, 'error': 'API endpoint not found (404).'};
         if (response.statusCode == 401) return {'success': false, 'error': 'Unauthorized access (401).'};
+        if (response.statusCode == 502) return {'success': false, 'error': 'Backend is starting up or temporarily unavailable (502). Please try again in a minute.'};
         return {'success': false, 'error': 'Server Error (HTML). Status: ${response.statusCode}'};
       }
       
@@ -677,6 +675,12 @@ class ApiService {
       return {
         'success': false, 
         'error': 'Network connection issue (reset by peer). Please ensure backend is running and reachable.'
+      };
+    }
+    if (e.toString().contains('TimeoutException')) {
+      return {
+        'success': false,
+        'error': 'Connection timed out (15s). The server might be busy or starting up. Please try again.'
       };
     }
     return {'success': false, 'error': e.toString()};
