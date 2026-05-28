@@ -11,7 +11,7 @@ import 'widgets/consent_dialog.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  // await Firebase.initializeApp();
   // Initialize Google Mobile Ads SDK for AdMob
   MobileAds.instance.updateRequestConfiguration(RequestConfiguration(testDeviceIds: []));
   await MobileAds.instance.initialize();
@@ -19,8 +19,8 @@ void main() async {
   await ConsentManager.init();
   // Apply analytics collection setting based on consent (if set)
   try {
-    final analyticsEnabled = ConsentManager.analyticsConsent ?? false;
-    await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(analyticsEnabled);
+    // final analyticsEnabled = ConsentManager.analyticsConsent ?? false;
+    // await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(analyticsEnabled);
   } catch (_) {}
   runApp(const MyApp());
 }
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+    // final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
     return MultiProvider(
       providers: [
@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
         ),
         home: const AuthWrapper(),
-        navigatorObservers: [FirebaseAnalyticsObserver(analytics: analytics)],
+        // navigatorObservers: [FirebaseAnalyticsObserver(analytics: analytics)],
         debugShowCheckedModeBanner: false,
       ),
     );
