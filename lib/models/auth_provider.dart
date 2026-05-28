@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../analytics.dart' as analytics;
 
 /// Auth provider for managing authentication state
 class AuthProvider extends ChangeNotifier {
@@ -59,6 +60,13 @@ class AuthProvider extends ChangeNotifier {
         _user = result['user'];
         _isAuthenticated = true;
         _error = null;
+        try {
+          // Log login event and set user id for analytics
+          analytics.logLogin(method: 'email');
+          if (_user != null && _user!['id'] != null) {
+            analytics.setUserId(_user!['id'].toString());
+          }
+        } catch (_) {}
         notifyListeners();
         return true;
       } else {

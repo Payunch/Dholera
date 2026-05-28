@@ -63,6 +63,10 @@ dependencies:
   # File export
   path_provider: ^2.1.5
   share_plus: ^10.1.4
+  # Firebase analytics
+  firebase_core: ^2.10.0
+  firebase_analytics: ^10.5.0
+  google_mobile_ads: ^8.0.0
 
 dev_dependencies:
   flutter_test:

@@ -13,6 +13,7 @@ import 'settings_page.dart';
 import 'pdf_manager_page.dart';
 import 'analytics_overview_page.dart';
 import 'user_sessions_page.dart';
+import '../widgets/ad_banner.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -179,64 +180,73 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      body: _isLoadingAnalytics
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : RefreshIndicator(
-              onRefresh: _loadAnalytics,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _selectedDateRange == null 
-                            ? 'Overview' 
-                            : '${DateFormat('MMM d').format(_selectedDateRange!.start)} - ${DateFormat('MMM d').format(_selectedDateRange!.end)}',
-                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                        ),
-                        if (_selectedDateRange != null)
-                          TextButton(
-                            onPressed: () {
-                              setState(() => _selectedDateRange = null);
-                              _loadAnalytics();
-                            },
-                            child: const Text('Reset', style: TextStyle(color: AppColors.primary)),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    if (_analytics != null)
-                      GridView.count(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        childAspectRatio: 1.2,
+      body: Column(
+        children: [
+          Expanded(
+            child: _isLoadingAnalytics
+                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                : RefreshIndicator(
+                    onRefresh: _loadAnalytics,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildStatCard('Total Leads', _analytics?['totalLeads']?.toString() ?? '0', AppColors.primary, Icons.people, hasNew: (_analytics?['leadsToday'] ?? 0) > 0),
-                          _buildStatCard('This Month', _analytics?['leadsThisMonth']?.toString() ?? '0', AppColors.accentSuccess, Icons.trending_up),
-                          _buildStatCard('Updates', _analytics?['totalUpdates']?.toString() ?? '0', AppColors.accentWarning, Icons.update),
-                          _buildStatCard('Visitors', _analytics?['totalVisitors']?.toString() ?? '0', AppColors.accentInfo, Icons.visibility),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                _selectedDateRange == null 
+                                  ? 'Overview' 
+                                  : '${DateFormat('MMM d').format(_selectedDateRange!.start)} - ${DateFormat('MMM d').format(_selectedDateRange!.end)}',
+                                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                              ),
+                              if (_selectedDateRange != null)
+                                TextButton(
+                                  onPressed: () {
+                                    setState(() => _selectedDateRange = null);
+                                    _loadAnalytics();
+                                  },
+                                  child: const Text('Reset', style: TextStyle(color: AppColors.primary)),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          if (_analytics != null)
+                            GridView.count(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              childAspectRatio: 1.2,
+                              children: [
+                                _buildStatCard('Total Leads', _analytics?['totalLeads']?.toString() ?? '0', AppColors.primary, Icons.people, hasNew: (_analytics?['leadsToday'] ?? 0) > 0),
+                                _buildStatCard('This Month', _analytics?['leadsThisMonth']?.toString() ?? '0', AppColors.accentSuccess, Icons.trending_up),
+                                _buildStatCard('Updates', _analytics?['totalUpdates']?.toString() ?? '0', AppColors.accentWarning, Icons.update),
+                                _buildStatCard('Visitors', _analytics?['totalVisitors']?.toString() ?? '0', AppColors.accentInfo, Icons.visibility),
+                              ],
+                            )
+                          else
+                            const Center(child: Text('No analytics data available', style: TextStyle(color: AppColors.textSecondary))),
+                          const SizedBox(height: 32),
+                          const Text(
+                            'Management',
+                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildActionGrid(),
                         ],
-                      )
-                    else
-                      const Center(child: Text('No analytics data available', style: TextStyle(color: AppColors.textSecondary))),
-                    const SizedBox(height: 32),
-                    const Text(
-                      'Management',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    _buildActionGrid(),
-                  ],
-                ),
-              ),
-            ),
+                  ),
+          ),
+          // AdMob banner at bottom
+          const SizedBox(height: 12),
+          const Center(child: AdBanner()),
+        ],
+      ),
     );
   }
 
