@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../consent.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
+// import 'package:firebase_analytics/firebase_analytics.dart';
 
 class ConsentDialog extends StatefulWidget {
   const ConsentDialog({super.key});
@@ -25,9 +25,10 @@ class _ConsentDialogState extends State<ConsentDialog> {
     await ConsentManager.setAdsConsent(_ads);
     // Apply analytics setting
     try {
-      await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(_analytics);
+      // await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(_analytics);
     } catch (_) {}
-    if (mounted) Navigator.of(context).pop();
+    if (!context.mounted) return;
+    Navigator.of(context).pop();
   }
 
   @override
@@ -52,7 +53,18 @@ class _ConsentDialogState extends State<ConsentDialog> {
         ],
       ),
       actions: [
-        TextButton(onPressed: () async { await ConsentManager.setAnalyticsConsent(false); await ConsentManager.setAdsConsent(false); try { await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);} catch(_){} if (mounted) Navigator.of(context).pop(); }, child: const Text('Reject All')),
+        TextButton(
+          onPressed: () async {
+            await ConsentManager.setAnalyticsConsent(false);
+            await ConsentManager.setAdsConsent(false);
+            try {
+              // await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
+            } catch (_) {}
+            if (!context.mounted) return;
+            Navigator.of(context).pop();
+          },
+          child: const Text('Reject All'),
+        ),
         ElevatedButton(onPressed: _saveAndClose, child: const Text('Save')),
       ],
     );
