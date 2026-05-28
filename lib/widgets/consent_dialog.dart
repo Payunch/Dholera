@@ -27,7 +27,7 @@ class _ConsentDialogState extends State<ConsentDialog> {
     try {
       // await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(_analytics);
     } catch (_) {}
-    if (!context.mounted) return;
+    if (!mounted) return;
     Navigator.of(context).pop();
   }
 
@@ -54,15 +54,15 @@ class _ConsentDialogState extends State<ConsentDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () async {
-            await ConsentManager.setAnalyticsConsent(false);
-            await ConsentManager.setAdsConsent(false);
-            try {
-              // await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
-            } catch (_) {}
-            if (!context.mounted) return;
-            Navigator.of(context).pop();
-          },
+        onPressed: () async {
+          await ConsentManager.setAnalyticsConsent(false);
+          await ConsentManager.setAdsConsent(false);
+          try {
+            // await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
+          } catch (_) {}
+          if (!context.mounted) return;
+          Navigator.of(context).pop();
+        },
           child: const Text('Reject All'),
         ),
         ElevatedButton(onPressed: _saveAndClose, child: const Text('Save')),
