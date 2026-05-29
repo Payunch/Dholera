@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 // import 'package:firebase_core/firebase_core.dart';
 // import 'package:firebase_analytics/firebase_analytics.dart';
@@ -13,8 +14,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // await Firebase.initializeApp();
   // Initialize Google Mobile Ads SDK for AdMob
-  MobileAds.instance.updateRequestConfiguration(RequestConfiguration(testDeviceIds: []));
-  await MobileAds.instance.initialize();
+  if (_shouldInitializeMobileAds()) {
+    MobileAds.instance.updateRequestConfiguration(RequestConfiguration(testDeviceIds: []));
+    await MobileAds.instance.initialize();
+  }
   // Initialize consent manager before app start
   await ConsentManager.init();
   // Apply analytics collection setting based on consent (if set)
@@ -23,6 +26,12 @@ void main() async {
     // await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(analyticsEnabled);
   } catch (_) {}
   runApp(const MyApp());
+}
+
+bool _shouldInitializeMobileAds() {
+  return !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
 }
 
 class MyApp extends StatelessWidget {
@@ -79,21 +88,50 @@ class AuthWrapper extends StatelessWidget {
           return Stack(
             children: [
               DashboardPage(),
-              // Show consent dialog on top if consent not set
-              if (!ConsentManager.isConsentSet())
-                Center(child: Builder(builder: (ctx) { WidgetsBinding.instance.addPostFrameCallback((_) { showDialog(context: ctx, builder: (_) => ConsentDialog(), barrierDismissible: false); }); return const SizedBox.shrink(); })),
+              if (!ConsentManager.isConsentSet()) const _ConsentPrompt(),
             ],
           );
         } else {
           return Stack(
             children: [
               LoginPage(),
-              if (!ConsentManager.isConsentSet())
-                Center(child: Builder(builder: (ctx) { WidgetsBinding.instance.addPostFrameCallback((_) { showDialog(context: ctx, builder: (_) => ConsentDialog(), barrierDismissible: false); }); return const SizedBox.shrink(); })),
+              if (!ConsentManager.isConsentSet()) const _ConsentPrompt(),
             ],
           );
         }
       },
     );
+  }
+}
+
+class _ConsentPrompt extends StatefulWidget {
+  const _ConsentPrompt();
+
+  @override
+  State<_ConsentPrompt> createState() => _ConsentPromptState();
+}
+
+class _ConsentPromptState extends State<_ConsentPrompt> {
+  bool _dialogShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || _dialogShown || ConsentManager.isConsentSet()) {
+        return;
+      }
+      _dialogShown = true;
+      await showDialog(
+        context: context,
+        builder: (_) => const ConsentDialog(),
+        barrierDismissible: false,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox.shrink();
   }
 }
