@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import '../services/api_service.dart';
@@ -17,6 +18,11 @@ class _PdfManagerPageState extends State<PdfManagerPage> {
   List<PdfDocument> _pdfs = [];
   bool _isLoading = true;
   String? _error;
+
+  String _formatUploadedAt(DateTime? uploadedAt) {
+    if (uploadedAt == null) return 'Upload time unavailable';
+    return DateFormat('dd MMM yyyy, hh:mm a').format(uploadedAt);
+  }
 
   @override
   void initState() {
@@ -309,7 +315,9 @@ class _PdfManagerPageState extends State<PdfManagerPage> {
                           child: ListTile(
                             leading: const Icon(Icons.picture_as_pdf, color: Colors.red, size: 36),
                             title: Text(pdf.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Text('Category: ${pdf.category ?? 'General'}'),
+                            subtitle: Text(
+                              'Category: ${pdf.category ?? 'General'}\nUploaded: ${_formatUploadedAt(pdf.createdAt)}',
+                            ),
                             trailing: const Icon(Icons.open_in_new, color: Colors.blue),
                             onTap: () => _viewPdf(pdf.id),
                           ),

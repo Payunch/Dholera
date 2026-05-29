@@ -17,6 +17,10 @@ class _UpdatesPageState extends State<UpdatesPage> {
   bool _isLoading = true;
   String? _error;
 
+  String _formatUploadedAt(DateTime uploadedAt) {
+    return DateFormat('dd MMM yyyy, hh:mm a').format(uploadedAt);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -145,7 +149,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
                                   : const Icon(Icons.update, size: 40, color: Colors.orange),
                               title: Text(update.title, style: const TextStyle(fontWeight: FontWeight.bold)),
                               subtitle: Text(
-                                '${update.category} • ${DateFormat('dd MMM yyyy').format(update.createdAt)}',
+                                '${update.category} • Uploaded: ${_formatUploadedAt(update.createdAt)}',
                                 style: const TextStyle(fontSize: 12),
                               ),
                               trailing: Row(
