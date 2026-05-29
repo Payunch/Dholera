@@ -127,6 +127,12 @@ class _PdfManagerPageState extends State<PdfManagerPage> {
               if (dialogContext.mounted) {
                 Navigator.pop(dialogContext);
               }
+              final uploadedPdfData = response['pdf'];
+              if (uploadedPdfData is Map<String, dynamic>) {
+                setState(() {
+                  _pdfs = [PdfDocument.fromJson(uploadedPdfData), ..._pdfs];
+                });
+              }
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PDF uploaded successfully')));
               _fetchPdfs();
             } else {
