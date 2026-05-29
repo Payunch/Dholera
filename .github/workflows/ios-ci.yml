@@ -1,0 +1,52 @@
+name: iOS CI (no-code-sign)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build-ios-no-codesign:
+    name: Build iOS (no codesign)
+    runs-on: macos-latest
+    env:
+      FLUTTER_CHANNEL: stable
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install CocoaPods
+        run: |
+          sudo gem install cocoapods
+          cd ios
+          pod install || true
+        shell: bash
+
+      - name: Inject iOS AdMob App ID (from secret)
+        env:
+          GAD_APP_ID_IOS: ${{ secrets.GAD_APP_ID_IOS }}
+        run: |
+          # Overwrite AppIDs.xcconfig so the build picks up the GADApplicationIdentifier
+          cat > ios/Runner/AppIDs.xcconfig <<EOF
+          // Injected by CI
+          GADApplicationIdentifier_release = ${GAD_APP_ID_IOS}
+          GADApplicationIdentifier_debug = ${GAD_APP_ID_IOS}
+          GADApplicationIdentifier = $(GADApplicationIdentifier_release)
+          EOF
+
+      - name: Build iOS (no codesign)
+        run: |
+          flutter build ios --no-codesign -t lib/main.dart
+        shell: bash
+
+      - name: Upload iOS build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-app
+          path: build/ios/iphoneos/Runner.app

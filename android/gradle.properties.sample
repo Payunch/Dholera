@@ -1,0 +1,11 @@
+## Sample Gradle properties for AdMob App IDs and other local secrets.
+## Copy this file to android/gradle.properties (DO NOT commit real secrets to Git).
+
+# AdMob App IDs per flavor
+ADMOB_APP_ID_DEV=ca-app-pub-3940256099942544~3347511713
+ADMOB_APP_ID_STAGING=ca-app-pub-3940256099942544~3347511713
+# Replace with your real production App ID when ready
+ADMOB_APP_ID_PROD=REPLACE_WITH_REAL_ADMOB_APP_ID
+
+# Example: override via command line
+# ./gradlew assembleProdRelease -PADMOB_APP_ID_PROD=ca-app-pub-...

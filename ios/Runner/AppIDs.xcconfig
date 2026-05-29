@@ -1,0 +1,13 @@
+// AppIDs.xcconfig - sample config to set AdMob App ID per build configuration
+// Add this file to your Xcode project and set it as an xcconfig for Debug/Release
+// Then in Build Settings -> User-Defined, add GADApplicationIdentifier = $(GADApplicationIdentifier)
+
+// Debug (use test id)
+GADApplicationIdentifier_debug = ca-app-pub-3940256099942544~3347511713
+
+// Release (replace with real id)
+GADApplicationIdentifier_release = REPLACE_WITH_REAL_ADMOB_APP_ID
+
+// Map configuration-specific variable to the canonical key used by Info.plist
+// In each Xcode configuration set GADApplicationIdentifier = $(GADApplicationIdentifier_debug)
+// or GADApplicationIdentifier = $(GADApplicationIdentifier_release)

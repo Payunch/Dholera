@@ -45,5 +45,8 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- AdMob application identifier (set per build configuration in Xcode or via xcconfig). -->
+	<key>GADApplicationIdentifier</key>
+	<string>$(GADApplicationIdentifier)</string>
 </dict>
 </plist>

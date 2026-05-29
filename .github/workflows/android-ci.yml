@@ -1,0 +1,65 @@
+name: Android CI (assemble Prod)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-android-prod:
+    name: Build Android Prod APK
+    runs-on: ubuntu-latest
+    env:
+      JAVA_HOME: /usr/lib/jvm/zulu-17-amd64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Android SDK components
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip lib32stdc++6 lib32z1
+          SDK_ROOT="$HOME/android-sdk"
+          mkdir -p "$SDK_ROOT/cmdline-tools"
+          curl -sSLo /tmp/cmdline_tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip -q /tmp/cmdline_tools.zip -d "$SDK_ROOT/cmdline-tools"
+          # normalize to latest
+          mkdir -p "$SDK_ROOT/cmdline-tools/latest"
+          mv "$SDK_ROOT/cmdline-tools/tools"/* "$SDK_ROOT/cmdline-tools/latest/" || true
+          export PATH="$SDK_ROOT/cmdline-tools/latest/bin:$PATH"
+          yes | sdkmanager --sdk_root="$SDK_ROOT" --licenses
+          sdkmanager --sdk_root="$SDK_ROOT" "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+        shell: bash
+
+      - name: Prepare Gradle properties (inject AdMob App ID)
+        env:
+          ADMOB_APP_ID_PROD: ${{ secrets.ADMOB_APP_ID_PROD }}
+        run: |
+          # Write a local gradle.properties so the build will substitute the placeholder
+          echo "ADMOB_APP_ID_PROD=${ADMOB_APP_ID_PROD}" >> android/gradle.properties
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build Prod APK
+        run: ./gradlew -p android assembleProdRelease --no-daemon --stacktrace
+
+      - name: Upload APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-prod-apk
+          path: android/app/build/outputs/apk/prod/release/*.apk
+
+      - name: Clean up sensitive file
+        if: always()
+        run: |
+          # Remove local gradle.properties entries to avoid leaking secrets into workspace
+          sed -i '/ADMOB_APP_ID_PROD/d' android/gradle.properties || true

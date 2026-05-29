@@ -29,6 +29,30 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Default manifest placeholder removed in favor of productFlavors below.
+    }
+
+    // Define product flavors for different environments so each build can inject its own AdMob App ID.
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            manifestPlaceholders["com.google.android.gms.ads.APPLICATION_ID"] =
+                (project.findProperty("ADMOB_APP_ID_DEV") as String?)
+                    ?: "ca-app-pub-3940256099942544~3347511713" // test id fallback
+        }
+        create("staging") {
+            dimension = "environment"
+            manifestPlaceholders["com.google.android.gms.ads.APPLICATION_ID"] =
+                (project.findProperty("ADMOB_APP_ID_STAGING") as String?)
+                    ?: "ca-app-pub-3940256099942544~3347511713"
+        }
+        create("prod") {
+            dimension = "environment"
+            manifestPlaceholders["com.google.android.gms.ads.APPLICATION_ID"] =
+                (project.findProperty("ADMOB_APP_ID_PROD") as String?)
+                    ?: "REPLACE_WITH_REAL_ADMOB_APP_ID"
+        }
     }
 
     buildTypes {
