@@ -1,5 +1,5 @@
 class AppAssets {
-  static const String logoPath = 'assets/images/logo.png';
+  static const String logoPath = 'assets/images/sub1.png';
 
   static const List<String> galleryImages = [
     'assets/images/sub1.png',
