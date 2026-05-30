@@ -308,7 +308,7 @@ class _LeadsPageState extends State<LeadsPage> {
                           onTap: () async {
                             if (!lead.isRead) {
                               await _apiService.markLeadAsRead(lead.id);
-                              _fetchLeads(refresh: true);
+                              await _fetchLeads(refresh: true);
                             }
                             if (!mounted) return;
                             _showLeadDetails(lead);
@@ -389,7 +389,7 @@ class _LeadsPageState extends State<LeadsPage> {
                                     if (!context.mounted) return;
                                     if (success) {
                                       Navigator.pop(context);
-                                      _fetchLeads(refresh: true);
+                                      await _fetchLeads(refresh: true);
                                     }
                                   }
                                 },

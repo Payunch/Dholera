@@ -73,7 +73,8 @@ class _UpdatesPageState extends State<UpdatesPage> {
         final result = await _apiService.deleteUpdate(id);
         if (!mounted) return;
         if (result['success'] == true) {
-          _fetchUpdates();
+          await _fetchUpdates();
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Update deleted')));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${result['error']}')));
@@ -94,7 +95,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
     );
 
     if (result == true) {
-      _fetchUpdates();
+      await _fetchUpdates();
     }
   }
 
@@ -172,7 +173,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
                       ),
                     ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _navigateToEditor(),
+        onPressed: _navigateToEditor,
         backgroundColor: Colors.orange,
         tooltip: 'Create New Update',
         child: const Icon(Icons.add),

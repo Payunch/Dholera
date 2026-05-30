@@ -51,7 +51,7 @@ android {
             dimension = "environment"
             manifestPlaceholders["com.google.android.gms.ads.APPLICATION_ID"] =
                 (project.findProperty("ADMOB_APP_ID_PROD") as String?)
-                    ?: "REPLACE_WITH_REAL_ADMOB_APP_ID"
+                    ?: "ca-app-pub-3940256099942544~3347511713" // Use test ID to prevent crash
         }
     }
 

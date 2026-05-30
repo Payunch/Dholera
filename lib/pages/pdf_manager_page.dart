@@ -134,7 +134,7 @@ class _PdfManagerPageState extends State<PdfManagerPage> {
                 });
               }
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PDF uploaded successfully')));
-              _fetchPdfs();
+              await _fetchPdfs();
             } else {
               setDialogState(() => submitting = false);
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${response['error']}')));

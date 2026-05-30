@@ -62,9 +62,9 @@ class AuthProvider extends ChangeNotifier {
         _error = null;
         try {
           // Log login event and set user id for analytics
-          analytics.logLogin(method: 'email');
+          await analytics.logLogin(method: 'email');
           if (_user != null && _user!['id'] != null) {
-            analytics.setUserId(_user!['id'].toString());
+            await analytics.setUserId(_user!['id'].toString());
           }
         } catch (_) {}
         notifyListeners();

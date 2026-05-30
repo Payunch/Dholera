@@ -75,13 +75,13 @@ class _DashboardPageState extends State<DashboardPage> {
     );
     if (picked != null) {
       setState(() => _selectedDateRange = picked);
-      _loadAnalytics();
+      await _loadAnalytics();
     }
   }
 
   Future<void> _handleImport() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['xlsx'],
       );
@@ -97,7 +97,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Imported: ${summary['created']} created, ${summary['updated']} updated')),
             );
-            _loadAnalytics();
+            await _loadAnalytics();
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Import failed: ${importResult['error']}')),

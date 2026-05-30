@@ -3,7 +3,8 @@
     <application
         android:label="dholera_admin_flutter"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <!-- AdMob application id is provided from Gradle manifestPlaceholder per build flavor. -->
         <!-- The placeholder key is com.google.android.gms.ads.APPLICATION_ID -->
         <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="${com.google.android.gms.ads.APPLICATION_ID}"/>

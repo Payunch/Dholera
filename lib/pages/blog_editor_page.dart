@@ -49,6 +49,7 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
     _contentController = TextEditingController(text: widget.update?.content ?? '');
     _category = widget.update?.category ?? 'General';
     _published = widget.update?.published ?? true;
+    _publishedAt = widget.update?.publishedAt ?? widget.update?.createdAt ?? DateTime.now();
     _imagePosition = widget.update?.imagePosition ?? 'top';
     _existingImageUrl = widget.update?.imageUrl;
   }
@@ -80,6 +81,7 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
       'content': _contentController.text.trim(),
       'category': _category,
       'published': _published,
+      'publishedAt': _publishedAt.toIso8601String(),
       'imagePosition': _imagePosition,
       if (_pickedFile != null) 'imagePath': _pickedFile!.path,
     };
@@ -267,6 +269,51 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
               onChanged: (v) => setState(() => _published = v),
               contentPadding: EdgeInsets.zero,
             ),
+            const SizedBox(height: 16),
+            const Text('Publication Date', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 8),
+            InkWell(
+              onTap: () async {
+                final DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: _publishedAt,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2030),
+                );
+                if (!mounted) return;
+                if (pickedDate != null) {
+                  final TimeOfDay? pickedTime = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.fromDateTime(_publishedAt),
+                  );
+                  if (pickedTime != null) {
+                    setState(() {
+                      _publishedAt = DateTime(
+                        pickedDate.year,
+                        pickedDate.month,
+                        pickedDate.day,
+                        pickedTime.hour,
+                        pickedTime.minute,
+                      );
+                    });
+                  }
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today, size: 18),
+                    const SizedBox(width: 12),
+                    Text(DateFormat('MMM dd, yyyy - hh:mm a').format(_publishedAt)),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -323,7 +370,7 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
               const SizedBox(width: 8),
               const Text('Dholera Growth Team', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const Spacer(),
-              Text(DateFormat('dd MMM yyyy').format(DateTime.now()), style: const TextStyle(color: Colors.grey, fontSize: 13)),
+              Text(DateFormat('dd MMM yyyy').format(_publishedAt), style: const TextStyle(color: Colors.grey, fontSize: 13)),
             ],
           ),
           const Divider(height: 32),
@@ -370,7 +417,7 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
       if (p.trim().isEmpty) return const SizedBox();
       
       // Simple header detection (e.g. if it ends with :)
-      bool isHeader = p.trim().endsWith(':') || p.trim().startsWith('#');
+      final isHeader = p.trim().endsWith(':') || p.trim().startsWith('#');
       
       return Padding(
         padding: const EdgeInsets.only(bottom: 16.0),

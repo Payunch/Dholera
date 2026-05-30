@@ -72,7 +72,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if (!mounted) return;
       if (result['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Settings saved successfully')));
-        _fetchSettings();
+        await _fetchSettings();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${result['error']}')));
       }
@@ -86,7 +86,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _handleRestore() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
       );
@@ -99,7 +99,7 @@ class _SettingsPageState extends State<SettingsPage> {
           if (restoreResult['success'] == true) {
             final results = restoreResult['results'];
             if (mounted) {
-              showDialog(
+              await showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text('Restore Complete'),
@@ -111,6 +111,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ],
                 ),
               );
+              await _fetchSettings();
             }
           } else {
             if (mounted) {

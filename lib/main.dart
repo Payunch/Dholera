@@ -15,7 +15,7 @@ void main() async {
   // await Firebase.initializeApp();
   // Initialize Google Mobile Ads SDK for AdMob
   if (_shouldInitializeMobileAds()) {
-    MobileAds.instance.updateRequestConfiguration(RequestConfiguration(testDeviceIds: []));
+    await MobileAds.instance.updateRequestConfiguration(RequestConfiguration(testDeviceIds: []));
     await MobileAds.instance.initialize();
   }
   // Initialize consent manager before app start
