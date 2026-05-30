@@ -24,6 +24,7 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
   late TextEditingController _contentController;
   late String _category;
   late bool _published;
+  late DateTime _publishedAt;
   late String _imagePosition;
   XFile? _pickedFile;
   String? _existingImageUrl;

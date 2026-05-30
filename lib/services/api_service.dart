@@ -371,6 +371,7 @@ class ApiService {
       request.fields['category'] = data['category']?.toString() ?? 'General';
       request.fields['published'] = (data['published'] == true).toString();
       request.fields['imagePosition'] = data['imagePosition']?.toString() ?? 'top';
+      if (data['publishedAt'] != null) request.fields['publishedAt'] = data['publishedAt'].toString();
       if (data['imageUrl'] != null) request.fields['imageUrl'] = data['imageUrl'].toString();
       
       if (data['imagePath'] != null && data['imagePath'].toString().isNotEmpty) {
@@ -414,6 +415,7 @@ class ApiService {
       if (data['category'] != null) request.fields['category'] = data['category'].toString();
       if (data['published'] != null) request.fields['published'] = data['published'].toString();
       if (data['imagePosition'] != null) request.fields['imagePosition'] = data['imagePosition'].toString();
+      if (data['publishedAt'] != null) request.fields['publishedAt'] = data['publishedAt'].toString();
       if (data['imageUrl'] != null) request.fields['imageUrl'] = data['imageUrl'].toString();
       
       if (data['imagePath'] != null && data['imagePath'].toString().isNotEmpty) {

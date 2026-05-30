@@ -18,7 +18,7 @@ class ApiConfig {
   static const String productionUrl = 'https://api.dholeraplatform.com/api';
 
   static String get apiBaseUrl => useLocalBackend 
-      ? 'http://$localIp:3000/api' 
+      ? 'http://$localIp:3001/api' 
       : productionUrl;
   // ---------------------
 

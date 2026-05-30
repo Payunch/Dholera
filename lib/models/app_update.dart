@@ -6,6 +6,7 @@ class AppUpdate {
   final String? imageUrl;
   final String imagePosition;
   final bool published;
+  final DateTime? publishedAt;
   final DateTime createdAt;
 
   AppUpdate({
@@ -16,6 +17,7 @@ class AppUpdate {
     this.imageUrl,
     this.imagePosition = 'top',
     required this.published,
+    this.publishedAt,
     required this.createdAt,
   });
 
@@ -28,6 +30,7 @@ class AppUpdate {
       imageUrl: json['imageUrl'],
       imagePosition: json['imagePosition'] ?? 'top',
       published: json['published'] ?? true,
+      publishedAt: json['publishedAt'] != null ? DateTime.parse(json['publishedAt']) : null,
       createdAt: DateTime.parse(json['createdAt']),
     );
   }
