@@ -25,15 +25,6 @@ class _LeadsPageState extends State<LeadsPage> {
   int _currentPage = 1;
   bool _hasMore = true;
 
-  static const List<String> allowedLeadStatuses = [
-    'New',
-    'Contacted',
-    'Converted',
-    'Follow-up',
-    'Not Interested',
-    'Closed'
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -92,30 +83,6 @@ class _LeadsPageState extends State<LeadsPage> {
               _exportData(ApiConfig.exportLeadsEndpoint, 'leads_export');
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.history, color: Colors.blueGrey),
-            title: const Text('Export User Sessions'),
-            onTap: () {
-              Navigator.pop(context);
-              _exportData(ApiConfig.exportSessionsEndpoint, 'user_sessions');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
-            title: const Text('Export PDF Metadata'),
-            onTap: () {
-              Navigator.pop(context);
-              _exportData(ApiConfig.exportPdfsEndpoint, 'pdfs_metadata');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.article, color: Colors.orange),
-            title: const Text('Export Blogs/Updates'),
-            onTap: () {
-              Navigator.pop(context);
-              _exportData(ApiConfig.exportUpdatesEndpoint, 'blogs_export');
-            },
-          ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.backup, color: Colors.teal),
@@ -130,34 +97,6 @@ class _LeadsPageState extends State<LeadsPage> {
         ],
       ),
     );
-  }
-
-  Future<bool> _updateLeadStatus(int id, String status) async {
-    try {
-      final result = await _apiService.updateLeadStatus(id, status);
-      if (result['success'] == true) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lead status updated to $status')),
-          );
-        }
-        return true;
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${result['error']}')),
-          );
-        }
-        return false;
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-      return false;
-    }
   }
 
   Future<void> _fetchLeads({bool refresh = false}) async {
@@ -180,7 +119,7 @@ class _LeadsPageState extends State<LeadsPage> {
         setState(() {
           _leads.addAll(newLeads);
           _isLoading = false;
-          _hasMore = newLeads.length == 20; // Assuming limit is 20
+          _hasMore = newLeads.length >= 20;
           _currentPage++;
         });
       } else {
@@ -200,9 +139,12 @@ class _LeadsPageState extends State<LeadsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Manage Leads'),
-        backgroundColor: Colors.orange,
+        title: const Text('Intelligence Hub', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: AppColors.textPrimary,
         actions: [
           if (_isExporting)
             const Center(
@@ -211,10 +153,7 @@ class _LeadsPageState extends State<LeadsPage> {
                 child: SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
+                  child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
                 ),
               ),
             )
@@ -228,7 +167,7 @@ class _LeadsPageState extends State<LeadsPage> {
         ],
       ),
       body: _isLoading && _leads.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _error != null && _leads.isEmpty
               ? Center(
                   child: Column(
@@ -245,15 +184,21 @@ class _LeadsPageState extends State<LeadsPage> {
               : RefreshIndicator(
                   onRefresh: () => _fetchLeads(refresh: true),
                   child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
                     itemCount: _leads.length + (_hasMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == _leads.length) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
+                        return Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Center(
                             child: ElevatedButton(
                               onPressed: _fetchLeads,
-                              child: const Text('Load More'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.textPrimary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: const Text('Load More Intelligence'),
                             ),
                           ),
                         );
@@ -265,17 +210,24 @@ class _LeadsPageState extends State<LeadsPage> {
                           lead.createdAt.year == DateTime.now().year;
 
                       return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        elevation: 2,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        elevation: 0,
                         child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                           title: Row(
                             children: [
-                              Text(
-                                lead.name,
-                                style: TextStyle(
-                                  fontWeight: lead.isRead ? FontWeight.normal : FontWeight.bold,
+                              Expanded(
+                                child: Text(
+                                  lead.name,
+                                  style: TextStyle(
+                                    fontWeight: lead.isRead ? FontWeight.w500 : FontWeight.w900,
+                                    color: AppColors.textPrimary,
+                                  ),
                                 ),
                               ),
+                              if (lead.isPro)
+                                const Icon(Icons.verified, size: 16, color: Colors.orange),
                               if (isToday) ...[
                                 const SizedBox(width: 8),
                                 Container(
@@ -284,31 +236,24 @@ class _LeadsPageState extends State<LeadsPage> {
                                   decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
                                 ),
                               ],
-                              const Spacer(),
-                              if (!lead.isRead)
-                                Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
-                                ),
                             ],
                           ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(lead.phone),
+                              const SizedBox(height: 4),
+                              Text(lead.phone, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                              const SizedBox(height: 2),
                               Text(
-                                'Source: ${lead.source} | Status: ${lead.status}',
-                                style: const TextStyle(fontSize: 12),
+                                '${lead.source} • ${lead.status} • ${(lead.timeSpent / 60).round()}m active',
+                                style: const TextStyle(fontSize: 10, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
-                          isThreeLine: true,
-                          trailing: const Icon(Icons.chevron_right),
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
                           onTap: () async {
                             if (!lead.isRead) {
                               await _apiService.markLeadAsRead(lead.id);
-                              await _fetchLeads(refresh: true);
                             }
                             if (!mounted) return;
                             _showLeadDetails(lead);
@@ -325,110 +270,147 @@ class _LeadsPageState extends State<LeadsPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.6,
-          maxChildSize: 0.9,
-          minChildSize: 0.4,
+          initialChildSize: 0.85,
+          maxChildSize: 0.95,
+          minChildSize: 0.5,
           expand: false,
           builder: (context, scrollController) {
-            return SingleChildScrollView(
-              controller: scrollController,
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 50,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+              ),
+              child: SingleChildScrollView(
+                controller: scrollController,
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(2))),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    lead.name,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const Divider(),
-                  _detailRow(Icons.phone, 'Phone', lead.phone),
-                  if (lead.email != null) _detailRow(Icons.email, 'Email', lead.email!),
-                  
-                  // Status Selector
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 32),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Icon(Icons.info_outline, size: 20, color: Colors.orange),
-                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Status', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                              DropdownButton<String>(
-                                value: allowedLeadStatuses.contains(lead.status) ? lead.status : 'New',
-                                isExpanded: true,
-                                underline: const SizedBox(),
-                                items: allowedLeadStatuses.map((String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value),
-                                  );
-                                }).toList(),
-                                onChanged: (String? newValue) async {
-                                  if (newValue != null && newValue != lead.status) {
-                                    final success = await _updateLeadStatus(lead.id, newValue);
-                                    if (!context.mounted) return;
-                                    if (success) {
-                                      Navigator.pop(context);
-                                      await _fetchLeads(refresh: true);
-                                    }
-                                  }
-                                },
-                              ),
+                              Text(lead.name, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+                              Text('DATABASE ID: ${lead.id}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 1)),
                             ],
+                          ),
+                        ),
+                        if (lead.isPro)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(color: Colors.orange.withAlpha(20), borderRadius: BorderRadius.circular(12)),
+                            child: const Text('PRO', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.w900, fontSize: 10)),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    
+                    _sectionHeader('Contact Information'),
+                    _detailItem(Icons.phone, 'Phone', lead.phone, color: Colors.green),
+                    if (lead.email != null) _detailItem(Icons.email, 'Email', lead.email!, color: Colors.blue),
+                    
+                    const SizedBox(height: 24),
+                    _sectionHeader('Intelligence Data'),
+                    Row(
+                      children: [
+                        Expanded(child: _statBox('Active Time', '${(lead.timeSpent / 60).round()}m', Icons.timer)),
+                        const SizedBox(width: 12),
+                        Expanded(child: _statBox('Visits', lead.visitCount.toString(), Icons.repeat)),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _detailItem(Icons.source, 'Entry Source', lead.source),
+                    _detailItem(Icons.calendar_today, 'First Contact', DateFormat('dd MMM yyyy, hh:mm a').format(lead.createdAt)),
+                    
+                    const SizedBox(height: 24),
+                    _sectionHeader('Technical Fingerprint'),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      width: double.infinity,
+                      decoration: BoxDecoration(color: Colors.blueGrey[900], borderRadius: BorderRadius.circular(20)),
+                      child: Text(
+                        lead.browserFingerprint ?? 'Not captured',
+                        style: const TextStyle(color: Colors.greenAccent, fontFamily: 'monospace', fontSize: 10),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    _sectionHeader('User Journey (Pages)'),
+                    if (lead.visitedPagesList != null && lead.visitedPagesList!.isNotEmpty)
+                      ...lead.visitedPagesList!.map((p) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(color: Colors.blueGrey[50], borderRadius: BorderRadius.circular(12)),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.description, size: 14, color: Colors.grey),
+                              const SizedBox(width: 12),
+                              Expanded(child: Text(p, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+                            ],
+                          ),
+                        ),
+                      ))
+                    else
+                      const Text('No page data recorded', style: TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic)),
+
+                    const SizedBox(height: 40),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => launchUrl(Uri.parse('tel:${lead.phone}')),
+                            icon: const Icon(Icons.phone),
+                            label: const Text('CALL'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => launchUrl(Uri.parse('https://wa.me/91${lead.phone.replaceFirst('+', '')}')),
+                            icon: const Icon(Icons.message),
+                            label: const Text('WHATSAPP'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-
-                  _detailRow(Icons.source, 'Source', lead.source),
-                  _detailRow(Icons.timer, 'Time Spent', '${lead.timeSpent} seconds'),
-                  _detailRow(Icons.calendar_today, 'Created At', 
-                      DateFormat('dd MMM yyyy, hh:mm a').format(lead.createdAt)),
-                  _detailRow(Icons.verified, 'Verified', lead.verified ? 'Yes' : 'No'),
-                  _detailRow(Icons.repeat, 'Returning Visitor', lead.returningVisitor ? 'Yes' : 'No'),
-                  _detailRow(Icons.visibility, 'Visit Count', lead.visitCount.toString()),
-                  if (lead.notes != null && lead.notes!.isNotEmpty)
-                    _detailRow(Icons.note, 'Notes', lead.notes!),
-                  const SizedBox(height: 30),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () => launchUrl(Uri.parse('tel:${lead.phone}')),
-                        icon: const Icon(Icons.phone),
-                        label: const Text('Call'),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: const Text('CLOSE DOSSIER'),
                       ),
-                      ElevatedButton.icon(
-                        onPressed: () => launchUrl(Uri.parse('https://wa.me/91${lead.phone}')),
-                        icon: const Icon(Icons.message),
-                        label: const Text('WhatsApp'),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
             );
           },
@@ -437,20 +419,45 @@ class _LeadsPageState extends State<LeadsPage> {
     );
   }
 
-  Widget _detailRow(IconData icon, String label, String value) {
+  Widget _sectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
+      padding: const EdgeInsets.only(bottom: 16, left: 4),
+      child: Text(title.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 2, color: Colors.grey)),
+    );
+  }
+
+  Widget _statBox(String label, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.blueGrey[50], borderRadius: BorderRadius.circular(20)),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: Colors.orange),
-          const SizedBox(width: 12),
+          Icon(icon, size: 16, color: Colors.orange),
+          const SizedBox(height: 8),
+          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+          Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailItem(IconData icon, String label, String value, {Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: (color ?? Colors.orange).withAlpha(20), borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, size: 18, color: color ?? Colors.orange),
+          ),
+          const SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-              const SizedBox(height: 2),
-              Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+              Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
             ],
           ),
         ],
