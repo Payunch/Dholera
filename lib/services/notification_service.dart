@@ -26,7 +26,7 @@ class NotificationService {
     // 2. Setup Local Notifications (Foreground support)
     const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     const InitializationSettings initSettings = InitializationSettings(android: androidInit);
-    await _localNotifications.initialize(initSettings);
+    await _localNotifications.initialize(settings: initSettings);
 
     // 3. Configure FCM Callbacks
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
@@ -57,10 +57,10 @@ class NotificationService {
     const NotificationDetails details = NotificationDetails(android: androidDetails);
     
     await _localNotifications.show(
-      message.hashCode,
-      message.notification?.title ?? 'Admin Alert',
-      message.notification?.body,
-      details,
+      id: message.hashCode,
+      title: message.notification?.title ?? 'Admin Alert',
+      body: message.notification?.body,
+      notificationDetails: details,
     );
   }
 }
