@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-// import 'package:firebase_core/firebase_core.dart';
-// import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'models/auth_provider.dart';
@@ -9,10 +9,19 @@ import 'pages/login_page.dart';
 import 'pages/dashboard_page.dart';
 import 'consent.dart';
 import 'widgets/consent_dialog.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // await Firebase.initializeApp();
+  
+  try {
+    await Firebase.initializeApp();
+    // Initialize real-time notifications
+    await NotificationService().initialize();
+  } catch (e) {
+    if (kDebugMode) print('Firebase initialization failed: $e');
+  }
+
   // Initialize Google Mobile Ads SDK for AdMob
   if (_shouldInitializeMobileAds()) {
     await MobileAds.instance.updateRequestConfiguration(RequestConfiguration(testDeviceIds: []));
@@ -22,8 +31,8 @@ void main() async {
   await ConsentManager.init();
   // Apply analytics collection setting based on consent (if set)
   try {
-    // final analyticsEnabled = ConsentManager.analyticsConsent ?? false;
-    // await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(analyticsEnabled);
+    final analyticsEnabled = ConsentManager.analyticsConsent ?? false;
+    await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(analyticsEnabled);
   } catch (_) {}
   runApp(const MyApp());
 }
