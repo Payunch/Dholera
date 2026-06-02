@@ -21,6 +21,10 @@ class ApiService {
   final _secureStorage = const FlutterSecureStorage();
   final _appCheck = FirebaseAppCheck.instance;
 
+  // Expose configuration for system tasks
+  String get apiBaseUrl => ApiConfig.apiBaseUrl;
+  http.Client get apiClient => http.Client();
+
   // Internal session state
   String? _sessionCookie;
   
@@ -96,7 +100,7 @@ class ApiService {
   }
 
   // Header builder for POST/PUT/DELETE requests (Includes CSRF)
-  Future<Map<String, String>> _getMutationHeaders() async {
+  Future<Map<String, String>> getMutationHeaders() async {
     final token = await getAuthToken(); // This also loads _sessionCookie if null
     final csrfToken = await _refreshCsrfToken();
     final appCheckToken = await _getAppCheckToken();
@@ -111,6 +115,9 @@ class ApiService {
     if (csrfToken != null) headers['X-CSRF-Token'] = csrfToken;
     return headers;
   }
+
+  // Private version for internal use
+  Future<Map<String, String>> _getMutationHeaders() async => getMutationHeaders();
   
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
@@ -137,10 +144,9 @@ class ApiService {
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final prefs = await SharedPreferences.getInstance();
         if (response.headers['set-cookie'] != null) {
           _sessionCookie = response.headers['set-cookie'];
-          await prefs.setString('session_cookie', _sessionCookie!);
+          await _secureStorage.write(key: 'session_cookie', value: _sessionCookie!);
         }
         
         // Capture JWT token from response body (Backend now returns 'token')

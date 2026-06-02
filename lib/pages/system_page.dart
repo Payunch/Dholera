@@ -100,7 +100,9 @@ class _SystemPageState extends State<SystemPage> {
   Future<void> _syncLocalPdfs() async {
     setState(() => _isLoading = true);
     try {
-      final response = await _apiService.apiClient.post('/pdf/sync-disk', headers: await _apiService.getMutationHeaders());
+      final headers = await _apiService.getMutationHeaders();
+      final url = Uri.parse('${_apiService.apiBaseUrl}/pdf/sync-disk');
+      final response = await _apiService.apiClient.post(url, headers: headers);
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Sync complete. New PDFs added to database.')),
