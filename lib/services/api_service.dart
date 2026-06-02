@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import '../config/api_config.dart';
 
 /// API Service for handling all HTTP requests to the backend with session and security support
@@ -18,6 +19,7 @@ class ApiService {
 
   // Secure storage for sensitive data
   final _secureStorage = const FlutterSecureStorage();
+  final _appCheck = FirebaseAppCheck.instance;
 
   // Internal session state
   String? _sessionCookie;
@@ -37,14 +39,26 @@ class ApiService {
     _sessionCookie = null;
   }
 
+  // ROADMAP PHASE 6: APP CHECK TOKEN FETCH
+  Future<String?> _getAppCheckToken() async {
+    try {
+      return await _appCheck.getToken();
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Fetches a fresh CSRF token from the server before every mutation
   Future<String?> _refreshCsrfToken() async {
     try {
+      final appCheckToken = await _getAppCheckToken();
+
       final response = await http.get(
         Uri.parse(ApiConfig.csrfTokenEndpoint),
         headers: {
           'Accept': 'application/json',
           'User-Agent': 'DholeraAdminApp/1.0',
+          if (appCheckToken != null) 'X-Firebase-AppCheck': appCheckToken,
           ...?(_sessionCookie != null ? {'cookie': _sessionCookie!} : null),
         },
       ).timeout(const Duration(seconds: 10));
