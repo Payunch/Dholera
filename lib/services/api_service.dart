@@ -115,6 +115,7 @@ class ApiService {
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final csrfToken = await _refreshCsrfToken();
+      final appCheckToken = await _getAppCheckToken();
       
       final response = await http.post(
         Uri.parse(ApiConfig.loginEndpoint),
@@ -122,6 +123,7 @@ class ApiService {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'User-Agent': 'DholeraAdminApp/1.0',
+          if (appCheckToken != null) 'X-Firebase-AppCheck': appCheckToken,
           // ignore: use_null_aware_elements
           if (csrfToken != null) 'X-CSRF-Token': csrfToken,
           // ignore: use_null_aware_elements

@@ -15,37 +15,54 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
   List<dynamic> _records = [];
   bool _isLoading = true;
   String? _error;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchApprovals();
+    // Auto-refresh every 30 seconds to keep history in sync
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) => _fetchApprovals(isBackground: true));
   }
 
-  Future<void> _fetchApprovals() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchApprovals({bool isBackground = false}) async {
+    if (!isBackground) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+    }
 
     try {
       final response = await _apiService.getPendingApprovals();
       if (response['success'] == true || response['data'] != null) {
-        setState(() {
-          _records = response['data'] ?? response;
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _records = response['data'] ?? response;
+            _isLoading = false;
+          });
+        }
       } else {
+        if (!isBackground && mounted) {
+          setState(() {
+            _error = response['error'] ?? 'Failed to load history';
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (!isBackground && mounted) {
         setState(() {
-          _error = response['error'] ?? 'Failed to load history';
+          _error = e.toString();
           _isLoading = false;
         });
       }
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
     }
   }
 
