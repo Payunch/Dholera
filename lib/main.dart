@@ -10,12 +10,15 @@ import 'pages/dashboard_page.dart';
 import 'consent.dart';
 import 'widgets/consent_dialog.dart';
 import 'services/notification_service.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     // Initialize real-time notifications
     await NotificationService().initialize();
   } catch (e) {

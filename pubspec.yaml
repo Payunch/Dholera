@@ -45,6 +45,7 @@ dependencies:
   # Local storage for auth tokens
   shared_preferences: ^2.2.0
   flutter_secure_storage: ^9.0.0
+  local_auth: ^2.1.6
   
   # Internationalization
   intl: ^0.19.0
