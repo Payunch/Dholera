@@ -24,8 +24,8 @@ class NotificationService {
     }
 
     // 2. Setup Local Notifications (Foreground support)
-    final AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    final InitializationSettings initSettings = InitializationSettings(android: androidInit);
+    const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initSettings = InitializationSettings(android: androidInit);
     await _localNotifications.initialize(initSettings);
 
     // 3. Configure FCM Callbacks

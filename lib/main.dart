@@ -96,14 +96,14 @@ class AuthWrapper extends StatelessWidget {
         if (authProvider.isAuthenticated) {
           return Stack(
             children: [
-              DashboardPage(),
+              const DashboardPage(),
               if (!ConsentManager.isConsentSet()) const _ConsentPrompt(),
             ],
           );
         } else {
           return Stack(
             children: [
-              LoginPage(),
+              const LoginPage(),
               if (!ConsentManager.isConsentSet()) const _ConsentPrompt(),
             ],
           );
