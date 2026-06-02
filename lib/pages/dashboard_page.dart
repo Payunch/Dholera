@@ -135,45 +135,6 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  Future<void> _handleImport() async {
-    try {
-      final FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['xlsx'],
-      );
-
-      if (result != null) {
-        final path = result.files.single.path;
-        if (path != null) {
-          setState(() => _isLoadingAnalytics = true);
-          final importResult = await _apiService.importLeads(path);
-          if (!mounted) return;
-          if (importResult['success'] == true) {
-            final summary = importResult['summary'];
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Imported: ${summary['created']} created, ${summary['updated']} updated')),
-            );
-            await _loadAnalytics();
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Import failed: ${importResult['error']}')),
-            );
-          }
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoadingAnalytics = false);
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
