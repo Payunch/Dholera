@@ -11,6 +11,7 @@ import 'consent.dart';
 import 'widgets/consent_dialog.dart';
 import 'services/notification_service.dart';
 import 'firebase_options.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +20,15 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+
+    // Initialize App Check (Roadmap Phase 6)
+    // Use Play Integrity for Android
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: AndroidProvider.playIntegrity,
+      appleProvider: AppleProvider.deviceCheck,
+      webProvider: ReCaptchaEnterpriseProvider('6LcV6pYqAAAAANL-9I66S6-U3hW_6_n0v0W6-w6X'), // Site Key
+    );
+
     // Initialize real-time notifications
     await NotificationService().initialize();
   } catch (e) {

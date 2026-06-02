@@ -70,12 +70,14 @@ class ApiService {
   // Header builder for GET requests
   Future<Map<String, String>> _getFetchHeaders() async {
     final token = await getAuthToken(); // This also loads _sessionCookie if null
+    final appCheckToken = await _getAppCheckToken();
     final Map<String, String> headers = {
       'Accept': 'application/json',
       'User-Agent': 'DholeraAdminApp/1.0',
     };
     if (token != null) headers['Authorization'] = 'Bearer $token';
     if (_sessionCookie != null) headers['cookie'] = _sessionCookie!;
+    if (appCheckToken != null) headers['X-Firebase-AppCheck'] = appCheckToken;
     return headers;
   }
 
@@ -83,6 +85,7 @@ class ApiService {
   Future<Map<String, String>> _getMutationHeaders() async {
     final token = await getAuthToken(); // This also loads _sessionCookie if null
     final csrfToken = await _refreshCsrfToken();
+    final appCheckToken = await _getAppCheckToken();
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -90,6 +93,7 @@ class ApiService {
     };
     if (token != null) headers['Authorization'] = 'Bearer $token';
     if (_sessionCookie != null) headers['cookie'] = _sessionCookie!;
+    if (appCheckToken != null) headers['X-Firebase-AppCheck'] = appCheckToken;
     if (csrfToken != null) headers['X-CSRF-Token'] = csrfToken;
     return headers;
   }

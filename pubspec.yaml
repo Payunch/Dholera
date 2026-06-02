@@ -69,6 +69,7 @@ dependencies:
   firebase_core: ^2.10.0
   firebase_analytics: ^10.5.0
   firebase_messaging: ^14.6.7
+  firebase_app_check: ^0.2.1+15
   flutter_local_notifications: ^21.0.0
   google_mobile_ads: ^8.0.0
 
