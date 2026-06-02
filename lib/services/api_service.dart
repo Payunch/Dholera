@@ -617,7 +617,7 @@ class ApiService {
     }
   }
 
-  Future<bool> logout() async {
+  Future<Map<String, dynamic>> logout() async {
     try {
       await http.post(
         Uri.parse(ApiConfig.logoutEndpoint), 
@@ -629,6 +629,44 @@ class ApiService {
       await clearAuthToken();
     }
     return true;
+  }
+
+  // --- PAYMENT APPROVAL METHODS ---
+
+  Future<Map<String, dynamic>> getPendingApprovals() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.apiBaseUrl}/payment/admin/pending'),
+        headers: await _getFetchHeaders(),
+      ).timeout(const Duration(seconds: 15));
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> getPendingCount() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.apiBaseUrl}/payment/admin/count-pending'),
+        headers: await _getFetchHeaders(),
+      ).timeout(const Duration(seconds: 10));
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> approvePayment(String transactionId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.apiBaseUrl}/payment/admin/approve/$transactionId'),
+        headers: await _getMutationHeaders(),
+      ).timeout(const Duration(seconds: 15));
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
   }
 
   /// Helper to handle JSON responses and provide consistent error messages
