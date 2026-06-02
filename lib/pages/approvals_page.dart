@@ -12,7 +12,7 @@ class ApprovalsPage extends StatefulWidget {
 
 class _ApprovalsPageState extends State<ApprovalsPage> {
   final ApiService _apiService = ApiService();
-  List<dynamic> _pending = [];
+  List<dynamic> _records = [];
   bool _isLoading = true;
   String? _error;
 
@@ -32,12 +32,12 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
       final response = await _apiService.getPendingApprovals();
       if (response['success'] == true || response['data'] != null) {
         setState(() {
-          _pending = response['data'] ?? response;
+          _records = response['data'] ?? response;
           _isLoading = false;
         });
       } else {
         setState(() {
-          _error = response['error'] ?? 'Failed to load approvals';
+          _error = response['error'] ?? 'Failed to load history';
           _isLoading = false;
         });
       }
@@ -50,7 +50,6 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
   }
 
   Future<void> _approvePayment(String txnId) async {
-    // Show confirmation
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -99,7 +98,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Pending Approvals', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Access History', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: AppColors.textPrimary,
@@ -125,14 +124,14 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                     ),
                   ),
                 )
-              : _pending.isEmpty
+              : _records.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.check_circle_outline, size: 64, color: Colors.grey[300]),
+                          Icon(Icons.history, size: 64, color: Colors.grey[300]),
                           const SizedBox(height: 16),
-                          const Text('No pending approvals', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                          const Text('No access history found', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     )
@@ -140,17 +139,19 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                       onRefresh: _fetchApprovals,
                       child: ListView.builder(
                         padding: const EdgeInsets.all(16),
-                        itemCount: _pending.length,
+                        itemCount: _records.length,
                         itemBuilder: (context, index) {
-                          final p = _pending[index];
+                          final p = _records[index];
                           final lead = p['lead'] ?? {};
                           final items = (p['items'] as List?)?.join(', ') ?? 'Document';
                           final date = DateTime.parse(p['updatedAt']);
+                          final isApproved = p['status'] == 'completed';
 
                           return Card(
                             margin: const EdgeInsets.only(bottom: 12),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                             elevation: 0,
+                            color: isApproved ? Colors.green.withAlpha(5) : Colors.white,
                             borderOnForeground: true,
                             child: Padding(
                               padding: const EdgeInsets.all(16),
@@ -161,15 +162,25 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                                     children: [
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(color: AppColors.primary.withAlpha(25), borderRadius: BorderRadius.circular(8)),
+                                        decoration: BoxDecoration(
+                                          color: isApproved ? Colors.green.withAlpha(20) : AppColors.primary.withAlpha(20),
+                                          borderRadius: BorderRadius.circular(8)
+                                        ),
                                         child: Text(
                                           '₹${(p['amount'] / 100).toStringAsFixed(0)}',
-                                          style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.primary, fontSize: 16),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w900, 
+                                            color: isApproved ? Colors.green[700] : AppColors.primary, 
+                                            fontSize: 16
+                                          ),
                                         ),
                                       ),
+                                      const SizedBox(width: 8),
+                                      if (isApproved)
+                                        const Icon(Icons.check_circle, size: 16, color: Colors.green),
                                       const Spacer(),
                                       Text(
-                                        DateFormat('hh:mm a').format(date.toLocal()),
+                                        DateFormat('MMM d, hh:mm a').format(date.toLocal()),
                                         style: const TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold),
                                       ),
                                     ],
@@ -205,27 +216,33 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                                       const SizedBox(width: 8),
                                       Text(
                                         'UTR: ${p['utr']}',
-                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: ElevatedButton(
-                                          onPressed: () => _approvePayment(p['transaction_id']),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: AppColors.textPrimary,
-                                            foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                            padding: const EdgeInsets.symmetric(vertical: 12),
-                                          ),
-                                          child: const Text('APPROVE', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
+                                        style: TextStyle(
+                                          fontSize: 12, 
+                                          fontWeight: FontWeight.bold, 
+                                          color: isApproved ? Colors.green[700] : AppColors.primary
                                         ),
                                       ),
                                     ],
                                   ),
+                                  if (!isApproved) ...[
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: ElevatedButton(
+                                            onPressed: () => _approvePayment(p['transaction_id']),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: AppColors.textPrimary,
+                                              foregroundColor: Colors.white,
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                              padding: const EdgeInsets.symmetric(vertical: 12),
+                                            ),
+                                            child: const Text('APPROVE', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
