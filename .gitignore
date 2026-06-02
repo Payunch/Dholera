@@ -10,3 +10,6 @@ build/
 
 # Android
 /local.properties
+
+# Secrets
+lib/firebase_secrets.dart

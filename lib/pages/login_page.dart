@@ -20,6 +20,14 @@ class _LoginPageState extends State<LoginPage> {
     super.initState();
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
+    
+    // Auto-trigger biometric login after first build if available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.canUseBiometrics && authProvider.hasSavedCredentials) {
+        authProvider.loginWithBiometrics();
+      }
+    });
   }
 
   @override
@@ -37,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
           return Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.orange[700]!, Colors.orange[500]!],
+                colors: [Colors.orange[800]!, Colors.orange[400]!],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -46,39 +54,44 @@ class _LoginPageState extends State<LoginPage> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
                 child: Card(
-                  elevation: 8,
+                  elevation: 20,
+                  shadowColor: Colors.black45,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(32),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(32.0),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        const Icon(Icons.security, size: 48, color: Colors.orange),
+                        const SizedBox(height: 16),
                         const Text(
-                          'Dholera Admin',
+                          'Dholera Master',
                           style: TextStyle(
                             fontSize: 28,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w900,
                             color: Colors.orange,
+                            letterSpacing: -1,
                           ),
                         ),
-                        const SizedBox(height: 8),
                         const Text(
-                          'Growth Platform',
+                          'Secure Intelligence Hub',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
                             color: Colors.grey,
+                            letterSpacing: 2,
                           ),
                         ),
                         const SizedBox(height: 40),
                         TextField(
                           controller: _emailController,
                           decoration: InputDecoration(
-                            labelText: 'Email',
-                            prefixIcon: const Icon(Icons.email),
+                            labelText: 'Admin Identifier',
+                            prefixIcon: const Icon(Icons.person),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                           ),
                           keyboardType: TextInputType.emailAddress,
@@ -88,8 +101,8 @@ class _LoginPageState extends State<LoginPage> {
                           controller: _passwordController,
                           obscureText: !_isPasswordVisible,
                           decoration: InputDecoration(
-                            labelText: 'Password',
-                            prefixIcon: const Icon(Icons.lock),
+                            labelText: 'Secure Passcode',
+                            prefixIcon: const Icon(Icons.lock_person),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _isPasswordVisible
@@ -103,7 +116,7 @@ class _LoginPageState extends State<LoginPage> {
                               },
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                           ),
                         ),
@@ -112,68 +125,93 @@ class _LoginPageState extends State<LoginPage> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             margin: const EdgeInsets.only(bottom: 16),
+                            width: double.infinity,
                             decoration: BoxDecoration(
                               color: Colors.red[50],
-                              border: Border.all(color: Colors.red),
-                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.red[100]!),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               authProvider.error!,
+                              textAlign: TextAlign.center,
                               style: const TextStyle(
                                 color: Colors.red,
-                                fontSize: 14,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: authProvider.isLoading
-                                ? null
-                                : () {
-                                    final email = _emailController.text;
-                                    final password = _passwordController.text;
+                        
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 56,
+                                child: ElevatedButton(
+                                  onPressed: authProvider.isLoading
+                                      ? null
+                                      : () {
+                                          final email = _emailController.text;
+                                          final password = _passwordController.text;
 
-                                    if (email.isEmpty || password.isEmpty) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                              'Please enter email and password'),
+                                          if (email.isEmpty || password.isEmpty) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text('Verification credentials required.')),
+                                            );
+                                            return;
+                                          }
+                                          authProvider.login(email, password);
+                                        },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.orange[800],
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    elevation: 4,
+                                  ),
+                                  child: authProvider.isLoading
+                                      ? const SizedBox(
+                                          height: 24,
+                                          width: 24,
+                                          child: CircularProgressIndicator(strokeWidth: 3, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                                        )
+                                      : const Text(
+                                          'ESTABLISH ACCESS',
+                                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 1),
                                         ),
-                                      );
-                                      return;
-                                    }
-
-                                    authProvider.login(email, password);
-                                  },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                             ),
-                            child: authProvider.isLoading
-                                ? const SizedBox(
-                                    height: 24,
-                                    width: 24,
-                                    child: CircularProgressIndicator(
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                : const Text(
-                                    'Login',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                            if (authProvider.canUseBiometrics && authProvider.hasSavedCredentials) ...[
+                              const SizedBox(width: 12),
+                              SizedBox(
+                                height: 56,
+                                width: 56,
+                                child: IconButton.filled(
+                                  onPressed: authProvider.isLoading ? null : () => authProvider.loginWithBiometrics(),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.orange[100],
+                                    foregroundColor: Colors.orange[900],
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
                                     ),
                                   ),
-                          ),
+                                  icon: const Icon(Icons.fingerprint, size: 28),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
+                        
+                        if (authProvider.hasSavedCredentials) 
+                          TextButton(
+                            onPressed: () => authProvider.forgetMe(),
+                            child: const Text(
+                              'CLEAR SAVED IDENTITY',
+                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
+                            ),
+                          ),
                       ],
                     ),
                   ),
