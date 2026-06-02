@@ -669,6 +669,32 @@ class ApiService {
     }
   }
 
+  // --- DATABASE EXPLORER METHODS ---
+
+  Future<Map<String, dynamic>> getDatabaseTables() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.apiBaseUrl}/admin/db/tables'),
+        headers: await _getFetchHeaders(),
+      ).timeout(const Duration(seconds: 15));
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> getTableRawData(String tableName) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.apiBaseUrl}/admin/db/raw/$tableName'),
+        headers: await _getFetchHeaders(),
+      ).timeout(const Duration(seconds: 20));
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
   /// Helper to handle JSON responses and provide consistent error messages
   Map<String, dynamic> _handleJsonResponse(http.Response response, [String? arrayKey]) {
     final isSuccess = response.statusCode >= 200 && response.statusCode < 300;
