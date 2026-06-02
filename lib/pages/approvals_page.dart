@@ -143,8 +143,8 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                         itemCount: _pending.length,
                         itemBuilder: (context, index) {
                           final p = _pending[index];
-                          final lead = p['Lead'] ?? {};
-                          final pdf = p['PdfDocument'] ?? {'title': 'PRO ACCESS (ALL)'};
+                          final lead = p['lead'] ?? {};
+                          final items = (p['items'] as List?)?.join(', ') ?? 'Document';
                           final date = DateTime.parse(p['updatedAt']);
 
                           return Card(
@@ -190,7 +190,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
-                                          pdf['title'] ?? 'Full Access',
+                                          items,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
@@ -204,7 +204,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                                       const Icon(Icons.fingerprint, size: 14, color: AppColors.primary),
                                       const SizedBox(width: 8),
                                       Text(
-                                        'UTR: ${p['gateway_payment_id']}',
+                                        'UTR: ${p['utr']}',
                                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
                                       ),
                                     ],
