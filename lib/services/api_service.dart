@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/api_config.dart';
 
 /// API Service for handling all HTTP requests to the backend with session and security support
@@ -15,24 +16,24 @@ class ApiService {
   
   ApiService._internal();
 
+  // Secure storage for sensitive data
+  final _secureStorage = const FlutterSecureStorage();
+
   // Internal session state
   String? _sessionCookie;
   
   Future<String?> getAuthToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    _sessionCookie ??= prefs.getString('session_cookie');
-    return prefs.getString('auth_token');
+    _sessionCookie ??= await _secureStorage.read(key: 'session_cookie');
+    return await _secureStorage.read(key: 'auth_token');
   }
   
   Future<void> setAuthToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', token);
+    await _secureStorage.write(key: 'auth_token', value: token);
   }
   
   Future<void> clearAuthToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
-    await prefs.remove('session_cookie');
+    await _secureStorage.delete(key: 'auth_token');
+    await _secureStorage.delete(key: 'session_cookie');
     _sessionCookie = null;
   }
 
@@ -52,8 +53,7 @@ class ApiService {
         // Capture/update the session cookie
         if (response.headers['set-cookie'] != null) {
           _sessionCookie = response.headers['set-cookie'];
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('session_cookie', _sessionCookie!);
+          await _secureStorage.write(key: 'session_cookie', value: _sessionCookie!);
         }
         final data = jsonDecode(response.body);
         return data['csrfToken']?.toString();
