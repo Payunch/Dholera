@@ -76,7 +76,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Payment approved and access granted.')),
           );
-          _fetchApprovals();
+          await _fetchApprovals();
         }
       } else {
         if (mounted) {
@@ -160,11 +160,11 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                                   Row(
                                     children: [
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, py: 4),
-                                        decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(color: AppColors.primary.withAlpha(25), borderRadius: BorderRadius.circular(8)),
                                         child: Text(
                                           '₹${(p['amount'] / 100).toStringAsFixed(0)}',
-                                          style: const TextStyle(fontWeight: FontWeight.black, color: AppColors.primary, fontSize: 16),
+                                          style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.primary, fontSize: 16),
                                         ),
                                       ),
                                       const Spacer(),
@@ -221,7 +221,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                             padding: const EdgeInsets.symmetric(vertical: 12),
                                           ),
-                                          child: const Text('APPROVE', style: TextStyle(fontWeight: FontWeight.black, letterSpacing: 1)),
+                                          child: const Text('APPROVE', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
                                         ),
                                       ),
                                     ],

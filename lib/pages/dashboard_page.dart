@@ -8,7 +8,6 @@ import '../services/api_service.dart';
 import '../config/assets.dart';
 import '../theme/app_colors.dart';
 import 'leads_page.dart';
-import 'user_dashboard_page.dart';
 import 'updates_page.dart';
 import 'settings_page.dart';
 import 'pdf_manager_page.dart';
@@ -38,8 +37,12 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _apiService = ApiService();
-    _loadAnalytics();
-    _startNotificationPolling();
+    _initDashboard();
+  }
+
+  Future<void> _initDashboard() async {
+    await _loadAnalytics();
+    await _startNotificationPolling();
   }
 
   @override
@@ -49,7 +52,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _startNotificationPolling() async {
-    _checkPendingApprovals();
+    await _checkPendingApprovals();
     // Poll every 30 seconds
     _notificationTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       _checkPendingApprovals();
@@ -185,13 +188,18 @@ class _DashboardPageState extends State<DashboardPage> {
             const SizedBox(width: 12),
             const Text(
               'Master Control',
-              style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.black, letterSpacing: -0.5),
+              style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w900, letterSpacing: -0.5),
             ),
           ],
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_month, color: AppColors.primary),
+            onPressed: _selectDateRange,
+            tooltip: 'Filter by Date',
+          ),
           Stack(
             children: [
               IconButton(
@@ -328,7 +336,7 @@ class _DashboardPageState extends State<DashboardPage> {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Stack(
           children: [
@@ -378,7 +386,7 @@ class _DashboardPageState extends State<DashboardPage> {
         _buildActionTile('Updates', Icons.edit_document, AppColors.accentWarning, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UpdatesPage()))),
         _buildActionTile('Documents', Icons.picture_as_pdf, AppColors.accentSuccess, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PdfManagerPage()))),
         _buildActionTile('Sessions', Icons.history, Colors.blueGrey, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UserSessionsPage()))),
-        _buildActionTile('Users/OTP', Icons.admin_panel_settings, Colors.purple, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UserDashboardPage()))),
+        _buildActionTile('Import Leads', Icons.upload_file, Colors.teal, _handleImport),
         _buildActionTile('Settings', Icons.settings, AppColors.textSecondary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()))),
       ],
     );
@@ -390,8 +398,8 @@ class _DashboardPageState extends State<DashboardPage> {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          color: color.withOpacity(0.05),
-          border: Border.all(color: color.withOpacity(0.1)),
+          color: color.withAlpha(13),
+          border: Border.all(color: color.withAlpha(25)),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -399,7 +407,7 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+              decoration: BoxDecoration(color: color.withAlpha(25), shape: BoxShape.circle),
               child: Icon(icon, color: color, size: 28),
             ),
             const SizedBox(height: 12),

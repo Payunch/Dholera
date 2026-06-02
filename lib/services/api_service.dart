@@ -628,7 +628,7 @@ class ApiService {
     } finally {
       await clearAuthToken();
     }
-    return true;
+    return {'success': true};
   }
 
   // --- PAYMENT APPROVAL METHODS ---
