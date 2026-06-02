@@ -14,6 +14,7 @@ import 'analytics_overview_page.dart';
 import 'user_sessions_page.dart';
 import 'approvals_page.dart';
 import 'database_explorer_page.dart';
+import 'system_page.dart';
 import '../widgets/ad_banner.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -347,7 +348,7 @@ class _DashboardPageState extends State<DashboardPage> {
         _buildActionTile('Updates', Icons.edit_document, AppColors.accentWarning, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UpdatesPage()))),
         _buildActionTile('Documents', Icons.picture_as_pdf, AppColors.accentSuccess, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PdfManagerPage()))),
         _buildActionTile('Database', Icons.storage, Colors.indigo, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DatabaseExplorerPage()))),
-        _buildActionTile('Sessions', Icons.history, Colors.blueGrey, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UserSessionsPage()))),
+        _buildActionTile('System', Icons.settings_applications, Colors.blueGrey, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SystemPage()))),
         _buildActionTile('Settings', Icons.settings, AppColors.textSecondary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()))),
       ],
     );
