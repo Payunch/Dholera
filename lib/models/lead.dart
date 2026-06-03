@@ -23,6 +23,8 @@ class Lead {
   final List<dynamic>? sessions;
   final List<String>? visitedPagesList;
 
+  bool get isVerified => verified;
+
   Lead({
     required this.id,
     required this.name,

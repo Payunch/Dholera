@@ -54,7 +54,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('User & OTP Management'),
+        title: const Text('Member Management'),
         backgroundColor: Colors.indigo,
         actions: [
           IconButton(onPressed: _fetchUserData, icon: const Icon(Icons.refresh)),
@@ -73,55 +73,21 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                       columns: const [
                         DataColumn(label: Text('Name', style: TextStyle(fontWeight: FontWeight.bold))),
                         DataColumn(label: Text('Phone', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Email', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('OTP (Active)', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Passcode', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Registered', style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text('Verified', style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text('Source', style: TextStyle(fontWeight: FontWeight.bold))),
                         DataColumn(label: Text('Created At', style: TextStyle(fontWeight: FontWeight.bold))),
                       ],
                       rows: _leads.map((lead) {
                         return DataRow(cells: [
                           DataCell(Text(lead.name)),
                           DataCell(Text(lead.phone)),
-                          DataCell(Text(lead.email ?? 'N/A')),
-                          DataCell(
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: lead.otpRaw != null ? Colors.red.withValues(alpha: 0.1) : Colors.transparent,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                lead.otpRaw ?? '---',
-                                style: TextStyle(
-                                  color: lead.otpRaw != null ? Colors.red : Colors.grey,
-                                  fontWeight: lead.otpRaw != null ? FontWeight.bold : FontWeight.normal,
-                                ),
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: lead.passcodeRaw != null ? Colors.indigo.withValues(alpha: 0.1) : Colors.transparent,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                lead.passcodeRaw ?? '---',
-                                style: TextStyle(
-                                  color: lead.passcodeRaw != null ? Colors.indigo : Colors.grey,
-                                  fontWeight: lead.passcodeRaw != null ? FontWeight.bold : FontWeight.normal,
-                                ),
-                              ),
-                            ),
-                          ),
                           DataCell(
                             Icon(
-                              lead.isRegistered ? Icons.check_circle : Icons.pending,
-                              color: lead.isRegistered ? Colors.green : Colors.orange,
+                              lead.isVerified ? Icons.check_circle : Icons.pending,
+                              color: lead.isVerified ? Colors.green : Colors.orange,
                             ),
                           ),
+                          DataCell(Text(lead.source ?? 'Web')),
                           DataCell(Text(DateFormat('dd/MM/yy HH:mm').format(lead.createdAt))),
                         ]);
                       }).toList(),
