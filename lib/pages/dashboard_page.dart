@@ -11,7 +11,6 @@ import 'updates_page.dart';
 import 'settings_page.dart';
 import 'pdf_manager_page.dart';
 import 'analytics_overview_page.dart';
-import 'user_sessions_page.dart';
 import 'approvals_page.dart';
 import 'database_explorer_page.dart';
 import 'system_page.dart';

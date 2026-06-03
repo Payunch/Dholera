@@ -53,6 +53,7 @@ class _SystemPageState extends State<SystemPage> {
       );
 
       if (result != null && result.files.single.path != null) {
+        if (!mounted) return;
         final confirm = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
@@ -104,6 +105,7 @@ class _SystemPageState extends State<SystemPage> {
       final url = Uri.parse('${_apiService.apiBaseUrl}/pdf/sync-disk');
       final response = await _apiService.apiClient.post(url, headers: headers);
       if (response.statusCode == 200) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Sync complete. New PDFs added to database.')),
         );
