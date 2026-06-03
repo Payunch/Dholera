@@ -317,7 +317,6 @@ class _LeadsPageState extends State<LeadsPage> {
                     
                     _sectionHeader('Contact Information'),
                     _detailItem(Icons.phone, 'Phone', lead.phone, color: Colors.green),
-                    if (lead.email != null) _detailItem(Icons.email, 'Email', lead.email!, color: Colors.blue),
                     
                     const SizedBox(height: 24),
                     _sectionHeader('Intelligence Data'),
