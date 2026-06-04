@@ -592,6 +592,32 @@ class ApiService {
     }
   }
 
+  // --- CONTENT METHODS ---
+
+  Future<Map<String, dynamic>> getProjects() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.apiBaseUrl}/content/projects'),
+        headers: await _getFetchHeaders(),
+      ).timeout(const Duration(seconds: 15));
+      return _handleJsonResponse(response, 'projects');
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> getTpMaps() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.apiBaseUrl}/content/tp-maps'),
+        headers: await _getFetchHeaders(),
+      ).timeout(const Duration(seconds: 15));
+      return _handleJsonResponse(response, 'tpMaps');
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
   Future<Map<String, dynamic>> getUserSessions() async {
     try {
       final response = await http.get(
