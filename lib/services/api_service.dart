@@ -651,6 +651,18 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getPortals() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.apiBaseUrl}/content/portals'),
+        headers: await _getFetchHeaders(),
+      ).timeout(const Duration(seconds: 15));
+      return _handleJsonResponse(response, 'portals');
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
   Future<Map<String, dynamic>> getUserSessions() async {
     try {
       final response = await http.get(

@@ -12,6 +12,7 @@ import 'clearance_engine_page.dart';
 import 'airport_page.dart';
 import 'infrastructure_page.dart';
 import 'updates_page.dart';
+import 'portals_page.dart';
 
 class InvestorLandingPage extends StatefulWidget {
   const InvestorLandingPage({super.key});
@@ -166,6 +167,16 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                               ),
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 32),
+                        _buildSectionTitle(context, 'Official Directories'),
+                        const SizedBox(height: 16),
+                        _buildFeatureCard(
+                          context,
+                          Icons.account_balance,
+                          'Government Portals',
+                          'Direct access to DSIRDA, RERA, and Land Records.',
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PortalsPage())),
                         ),
                         const SizedBox(height: 40),
                         Row(

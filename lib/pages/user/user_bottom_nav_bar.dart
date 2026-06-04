@@ -5,6 +5,7 @@ import '../updates_page.dart';
 import '../settings_page.dart';
 import '../investor_landing_page.dart';
 import '../vault_page.dart';
+import '../about_page.dart';
 import '../../blocs/localization/localization_bloc.dart';
 import '../../blocs/localization/localization_state.dart';
 
@@ -22,7 +23,7 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
     const InvestorLandingPage(),
     const UpdatesPage(),
     const VaultPage(),
-    const SettingsPage(),
+    const AboutPage(),
   ];
 
   @override
