@@ -1,16 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'dart:io';
 
-import 'config/assets.dart';
 import 'firebase_options.dart';
-import 'theme/board_theme.dart';
-import 'blocs/auth/auth_bloc.dart';
+...
 import 'blocs/auth/auth_event.dart';
 import 'blocs/theme/theme_bloc.dart';
 import 'blocs/theme/theme_state.dart';

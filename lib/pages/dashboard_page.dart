@@ -59,7 +59,7 @@ class _DashboardPageState extends State<DashboardPage> {
     _notificationSubscription = NotificationService.dataStream.listen((data) {
       if (mounted) {
         final lead = Lead(
-          id: int.tryParse(data['lead_id'] ?? '0') ?? 0,
+          id: int.tryParse(data['lead_id']?.toString() ?? '0') ?? 0,
           name: data['name'] ?? 'New Lead',
           phone: data['phone'] ?? '',
           source: data['source'] ?? 'Push',
@@ -98,7 +98,6 @@ class _DashboardPageState extends State<DashboardPage> {
       if (result['success'] == true) {
         final newCount = result['count'] ?? 0;
         
-        // If count increased, show an in-app "notification" snackbar
         if (newCount > _pendingApprovalsCount && mounted) {
            ScaffoldMessenger.of(context).showSnackBar(
              SnackBar(
