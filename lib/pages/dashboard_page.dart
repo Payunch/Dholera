@@ -363,6 +363,9 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+import 'admin/project_manager_page.dart';
+import 'admin/tp_map_manager_page.dart';
+...
   Widget _buildActionGrid() {
     return GridView.count(
       crossAxisCount: 2,
@@ -376,10 +379,10 @@ class _DashboardPageState extends State<DashboardPage> {
         _buildActionTile('Analytics', Icons.analytics, AppColors.primary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AnalyticsOverviewPage()))),
         _buildActionTile('Leads', Icons.people, AppColors.accentInfo, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeadsPage()))),
         _buildActionTile('Updates', Icons.edit_document, AppColors.accentWarning, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UpdatesPage()))),
+        _buildActionTile('Projects', Icons.business_center, Colors.deepOrange, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProjectManagerPage()))),
+        _buildActionTile('TP Maps', Icons.map_outlined, Colors.indigo, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TpMapManagerPage()))),
         _buildActionTile('Documents', Icons.picture_as_pdf, AppColors.accentSuccess, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PdfManagerPage()))),
         _buildActionTile('Database', Icons.storage, Colors.indigo, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DatabaseExplorerPage()))),
-        _buildActionTile('System', Icons.settings_applications, Colors.blueGrey, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SystemPage()))),
-        _buildActionTile('Settings', Icons.settings, AppColors.textSecondary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()))),
       ],
     );
   }
