@@ -62,6 +62,10 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_svg: ^2.0.10
 
+  # Local Database
+  sqflite: ^2.3.0
+  path: ^1.9.0
+
   # File export
   path_provider: ^2.1.5
   share_plus: ^10.1.4

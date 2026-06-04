@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 import '../models/lead.dart';
+import '../services/local_database_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -18,6 +19,7 @@ class LeadsPage extends StatefulWidget {
 
 class _LeadsPageState extends State<LeadsPage> {
   final ApiService _apiService = ApiService();
+  final LocalDatabaseService _db = LocalDatabaseService();
   List<Lead> _leads = [];
   bool _isLoading = true;
   bool _isExporting = false;
@@ -28,7 +30,18 @@ class _LeadsPageState extends State<LeadsPage> {
   @override
   void initState() {
     super.initState();
-    _fetchLeads();
+    _loadLocalAndFetch();
+  }
+
+  Future<void> _loadLocalAndFetch() async {
+    final localData = await _db.getLeads();
+    if (localData.isNotEmpty) {
+      setState(() {
+        _leads = localData.map((m) => Lead.fromLocalMap(m)).toList();
+        _isLoading = false;
+      });
+    }
+    await _fetchLeads(refresh: true);
   }
 
   Future<void> _exportData(String endpoint, String filename) async {
@@ -103,9 +116,8 @@ class _LeadsPageState extends State<LeadsPage> {
     if (refresh) {
       setState(() {
         _currentPage = 1;
-        _leads = [];
         _hasMore = true;
-        _isLoading = true;
+        _isLoading = _leads.isEmpty;
         _error = null;
       });
     }
@@ -116,8 +128,25 @@ class _LeadsPageState extends State<LeadsPage> {
         final List<dynamic> leadsData = response['leads'] ?? [];
         final List<Lead> newLeads = Lead.fromList(leadsData);
         
+        // Save to local DB for persistence
+        for (var lead in newLeads) {
+          await _db.insertLead({
+            'server_id': lead.id.toString(),
+            'name': lead.name,
+            'phone': lead.phone,
+            'source': lead.source,
+            'status': lead.status,
+            'createdAt': lead.createdAt.toIso8601String(),
+            'synced': 1,
+          });
+        }
+
         setState(() {
-          _leads.addAll(newLeads);
+          if (refresh) {
+            _leads = newLeads;
+          } else {
+            _leads.addAll(newLeads);
+          }
           _isLoading = false;
           _hasMore = newLeads.length >= 20;
           _currentPage++;

@@ -85,6 +85,23 @@ class Lead {
     );
   }
 
+  factory Lead.fromLocalMap(Map<String, dynamic> map) {
+    return Lead(
+      id: map['id'] ?? 0,
+      name: map['name'] ?? 'Unknown',
+      phone: map['phone'] ?? '',
+      source: map['source'] ?? 'Push',
+      timeSpent: 0,
+      status: map['status'] ?? 'New',
+      verified: true,
+      returningVisitor: false,
+      visitCount: 1,
+      isRegistered: false,
+      isRead: false,
+      createdAt: DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
+    );
+  }
+
   static List<Lead> fromList(List<dynamic> list) {
     return list.map((item) => Lead.fromJson(item)).toList();
   }
