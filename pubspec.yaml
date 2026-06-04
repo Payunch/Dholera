@@ -85,6 +85,7 @@ dependencies:
   firebase_app_check: ^0.2.1+15
   flutter_local_notifications: ^21.0.0
   google_mobile_ads: ^8.0.0
+  flutter_pdfview: ^1.4.4
 
 dev_dependencies:
   flutter_test:

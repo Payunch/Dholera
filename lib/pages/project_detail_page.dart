@@ -5,10 +5,23 @@ import '../models/project.dart';
 import '../blocs/localization/localization_bloc.dart';
 import '../blocs/localization/localization_state.dart';
 
-class ProjectDetailPage extends StatelessWidget {
+class ProjectDetailPage extends StatefulWidget {
   final Project project;
 
   const ProjectDetailPage({super.key, required this.project});
+
+  @override
+  State<ProjectDetailPage> createState() => _ProjectDetailPageState();
+}
+
+class _ProjectDetailPageState extends State<ProjectDetailPage> {
+  final ApiService _apiService = ApiService();
+
+  @override
+  void initState() {
+    super.initState();
+    _apiService.trackActivity('Project: ${widget.project.name}');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,9 +35,9 @@ class ProjectDetailPage extends StatelessWidget {
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
                   background: Image.network(
-                    project.image != null && project.image!.startsWith('http')
-                        ? project.image!
-                        : 'https://api.dholeraplatform.com${project.image}',
+                    widget.project.image != null && widget.project.image!.startsWith('http')
+                        ? widget.project.image!
+                        : 'https://api.dholeraplatform.com${widget.project.image}',
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -45,11 +58,11 @@ class ProjectDetailPage extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              project.category.toUpperCase(),
+                              widget.project.category.toUpperCase(),
                               style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 10, fontWeight: FontWeight.bold),
                             ),
                           ),
-                          if (project.reraApproved)
+                          if (widget.project.reraApproved)
                             const Row(
                               children: [
                                 Icon(Icons.verified, color: Colors.green, size: 16),
@@ -61,12 +74,12 @@ class ProjectDetailPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        project.name,
+                        widget.project.name,
                         style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        state.translate(project.taglineKey),
+                        state.translate(widget.project.taglineKey),
                         style: TextStyle(color: Colors.grey[600], fontSize: 16),
                       ),
                       const SizedBox(height: 24),
@@ -77,7 +90,7 @@ class ProjectDetailPage extends StatelessWidget {
                       _buildSectionTitle('About Project'),
                       const SizedBox(height: 12),
                       Text(
-                        state.translate(project.descKey),
+                        state.translate(widget.project.descKey),
                         style: const TextStyle(fontSize: 15, height: 1.6, color: Colors.black87),
                       ),
                       const SizedBox(height: 100),
@@ -109,10 +122,10 @@ class ProjectDetailPage extends StatelessWidget {
       crossAxisSpacing: 16,
       childAspectRatio: 2.5,
       children: [
-        _buildSpecItem(Icons.straighten, 'Plot Sizes', project.plotSizes ?? 'N/A'),
-        _buildSpecItem(Icons.home_work, 'Offering', project.offering ?? 'N/A'),
-        _buildSpecItem(Icons.add_road, 'Road Width', project.roadWidth ?? 'N/A'),
-        _buildSpecItem(Icons.layers, 'Zoning', project.zoning ?? 'N/A'),
+        _buildSpecItem(Icons.straighten, 'Plot Sizes', widget.project.plotSizes ?? 'N/A'),
+        _buildSpecItem(Icons.home_work, 'Offering', widget.project.offering ?? 'N/A'),
+        _buildSpecItem(Icons.add_road, 'Road Width', widget.project.roadWidth ?? 'N/A'),
+        _buildSpecItem(Icons.layers, 'Zoning', widget.project.zoning ?? 'N/A'),
       ],
     );
   }
@@ -161,7 +174,7 @@ class ProjectDetailPage extends StatelessWidget {
               icon: const Icon(Icons.chat_bubble),
               label: const Text('WHATSAPP INQUIRY'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0UI25D366),
+                backgroundColor: const Color(0xFF25D366),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -186,7 +199,7 @@ class ProjectDetailPage extends StatelessWidget {
   }
 
   Future<void> _launchWhatsapp() async {
-    final text = Uri.encodeComponent(project.whatsappText ?? 'Hi, I am interested in ${project.name}');
+    final text = Uri.encodeComponent(widget.project.whatsappText ?? 'Hi, I am interested in ${widget.project.name}');
     final url = Uri.parse('https://wa.me/917435808031?text=$text');
     if (await canLaunchUrl(url)) {
       await launchUrl(url);

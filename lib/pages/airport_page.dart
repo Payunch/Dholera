@@ -2,9 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/localization/localization_bloc.dart';
 import '../blocs/localization/localization_state.dart';
+import '../services/api_service.dart';
 
-class AirportPage extends StatelessWidget {
+class AirportPage extends StatefulWidget {
   const AirportPage({super.key});
+
+  @override
+  State<AirportPage> createState() => _AirportPageState();
+}
+
+class _AirportPageState extends State<AirportPage> {
+  final ApiService _apiService = ApiService();
+
+  @override
+  void initState() {
+    super.initState();
+    _apiService.trackActivity('Airport Details');
+  }
 
   @override
   Widget build(BuildContext context) {

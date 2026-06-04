@@ -22,6 +22,7 @@ class _TpMapsPageState extends State<TpMapsPage> {
   void initState() {
     super.initState();
     _fetchTpMaps();
+    _apiService.trackActivity('TP Maps List');
   }
 
   Future<void> _fetchTpMaps() async {

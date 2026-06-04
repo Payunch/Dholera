@@ -1,15 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import '../blocs/localization/localization_bloc.dart';
 import '../blocs/localization/localization_state.dart';
+import '../theme/board_theme.dart';
+import '../models/app_update.dart';
+import '../services/api_service.dart';
 import 'projects_page.dart';
 import 'tp_maps_page.dart';
 import 'clearance_engine_page.dart';
 import 'airport_page.dart';
 import 'infrastructure_page.dart';
+import 'updates_page.dart';
 
-class InvestorLandingPage extends StatelessWidget {
+class InvestorLandingPage extends StatefulWidget {
   const InvestorLandingPage({super.key});
+
+  @override
+  State<InvestorLandingPage> createState() => _InvestorLandingPageState();
+}
+
+class _InvestorLandingPageState extends State<InvestorLandingPage> {
+  final ApiService _apiService = ApiService();
+  List<AppUpdate> _latestInsights = [];
+  bool _isInsightsLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchInsights();
+    _apiService.trackActivity('Investor Home');
+  }
+
+  Future<void> _fetchInsights() async {
+    final response = await _apiService.getUpdates();
+    if (response['success'] == true) {
+      final allUpdates = AppUpdate.fromList(response['updates']);
+      setState(() {
+        _latestInsights = allUpdates.where((u) => u.published).take(3).toList();
+        _isInsightsLoading = false;
+      });
+    } else {
+      setState(() => _isInsightsLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,124 +56,141 @@ class InvestorLandingPage extends StatelessWidget {
         }
 
         return Scaffold(
-          body: CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                expandedHeight: 300.0,
-                floating: false,
-                pinned: true,
-                flexibleSpace: FlexibleSpaceBar(
-                  title: Text(state.translate('dholera_platform')),
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.network(
-                        'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2070',
-                        fit: BoxFit.cover,
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withOpacity(0.7),
+          body: RefreshIndicator(
+            onRefresh: _fetchInsights,
+            child: CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  expandedHeight: 300.0,
+                  floating: false,
+                  pinned: true,
+                  flexibleSpace: FlexibleSpaceBar(
+                    title: Text(state.translate('dholera_platform')),
+                    background: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.network(
+                          'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2070',
+                          fit: BoxFit.cover,
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.7),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                state.translate('hero_title'),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                state.translate('hero_subtitle'),
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 16,
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      ],
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionTitle(context, state.translate('benefits_title')),
+                        const SizedBox(height: 16),
+                        _buildFeatureCard(
+                          context,
+                          Icons.map,
+                          state.translate('verified_maps'),
+                          state.translate('strategic_loc_desc'),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TpMapsPage())),
+                        ),
+                        _buildFeatureCard(
+                          context,
+                          Icons.trending_up,
+                          state.translate('realtime_updates'),
+                          state.translate('featured_insights_desc'),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProjectsPage())),
+                        ),
+                        _buildFeatureCard(
+                          context,
+                          Icons.calculate,
+                          state.translate('fee_calculator'),
+                          state.translate('compliance_verification'),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClearanceEnginePage())),
+                        ),
+                        const SizedBox(height: 32),
+                        _buildSectionTitle(context, 'Core Infrastructure'),
+                        const SizedBox(height: 16),
+                        Row(
                           children: [
-                            Text(
-                              state.translate('hero_title'),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                            Expanded(
+                              child: _buildSmallCard(
+                                context,
+                                Icons.airplanemode_active,
+                                'Airport',
+                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AirportPage())),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              state.translate('hero_subtitle'),
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 16,
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildSmallCard(
+                                context,
+                                Icons.construction,
+                                'Trunk Infra',
+                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InfrastructurePage())),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 40),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.between,
+                          children: [
+                            _buildSectionTitle(context, state.translate('featured_insights')),
+                            TextButton(
+                              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UpdatesPage())),
+                              child: const Text('SEE ALL'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        if (_isInsightsLoading)
+                          const Center(child: CircularProgressIndicator())
+                        else if (_latestInsights.isEmpty)
+                          const Text('No recent updates available.')
+                        else
+                          ..._latestInsights.map((u) => _buildInsightCard(context, u)),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSectionTitle(context, state.translate('benefits_title')),
-                      const SizedBox(height: 16),
-                      _buildFeatureCard(
-                        context,
-                        Icons.map,
-                        state.translate('verified_maps'),
-                        state.translate('strategic_loc_desc'),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TpMapsPage())),
-                      ),
-                      _buildFeatureCard(
-                        context,
-                        Icons.trending_up,
-                        state.translate('realtime_updates'),
-                        state.translate('featured_insights_desc'),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProjectsPage())),
-                      ),
-                      _buildFeatureCard(
-                        context,
-                        Icons.calculate,
-                        state.translate('fee_calculator'),
-                        state.translate('compliance_verification'),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClearanceEnginePage())),
-                      ),
-                      const SizedBox(height: 32),
-                      _buildSectionTitle(context, 'Core Infrastructure'),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildSmallCard(
-                              context,
-                              Icons.airplanemode_active,
-                              'Airport',
-                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AirportPage())),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildSmallCard(
-                              context,
-                              Icons.construction,
-                              'Trunk Infra',
-                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InfrastructurePage())),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 32),
-                      _buildSectionTitle(context, state.translate('featured_insights')),
-                      const SizedBox(height: 16),
-                      Text(state.translate('featured_insights_desc')),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -219,6 +270,61 @@ class InvestorLandingPage extends StatelessWidget {
             Text(title.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInsightCard(BuildContext context, AppUpdate update) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey[100]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (update.imageUrl != null)
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              child: Image.network(
+                update.imageUrl!.startsWith('http') ? update.imageUrl! : 'https://api.dholeraplatform.com${update.imageUrl}',
+                height: 150,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(6)),
+                      child: Text(update.category.toUpperCase(), style: const TextStyle(color: Colors.blue, fontSize: 8, fontWeight: FontWeight.bold)),
+                    ),
+                    Text(DateFormat('MMM dd').format(update.createdAt), style: TextStyle(color: Colors.grey[400], fontSize: 10)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(update.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 8),
+                Text(
+                  update.content,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 13, height: 1.5),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

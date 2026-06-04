@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/localization/localization_bloc.dart';
 import '../blocs/localization/localization_state.dart';
+import '../services/api_service.dart';
 
 class ClearanceEnginePage extends StatefulWidget {
   const ClearanceEnginePage({super.key});
@@ -11,9 +12,16 @@ class ClearanceEnginePage extends StatefulWidget {
 }
 
 class _ClearanceEnginePageState extends State<ClearanceEnginePage> {
+  final ApiService _apiService = ApiService();
   final TextEditingController _sizeController = TextEditingController();
   String _useType = 'residential';
   double? _calculatedFee;
+
+  @override
+  void initState() {
+    super.initState();
+    _apiService.trackActivity('Clearance Engine');
+  }
 
   void _calculate() {
     final size = double.tryParse(_sizeController.text);

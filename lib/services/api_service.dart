@@ -490,6 +490,18 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getMyVaultPdfs() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.apiBaseUrl}/pdf/my-vault'),
+        headers: await _getFetchHeaders(),
+      ).timeout(const Duration(seconds: 15));
+      return _handleJsonResponse(response, 'pdfs');
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
   Future<Map<String, dynamic>> uploadPdf(Map<String, dynamic> data) async {
     try {
       final token = await getAuthToken();
@@ -589,6 +601,27 @@ class ApiService {
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
+    }
+  }
+
+  Future<void> trackActivity(String page) async {
+    try {
+      final token = await getAuthToken();
+      if (token == null) return;
+
+      final headers = await _getMutationHeaders();
+      headers['Authorization'] = 'Bearer $token';
+
+      await http.post(
+        Uri.parse('${ApiConfig.apiBaseUrl}/leads/track-returning'),
+        headers: headers,
+        body: jsonEncode({
+          'page': 'App: $page',
+          'timeSpent': 10, // Incremental tracking
+        }),
+      ).timeout(const Duration(seconds: 5));
+    } catch (e) {
+      // Silent fail for tracking
     }
   }
 

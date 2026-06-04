@@ -25,6 +25,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
   void initState() {
     super.initState();
     _fetchProjects();
+    _apiService.trackActivity('Projects List');
   }
 
   Future<void> _fetchProjects() async {

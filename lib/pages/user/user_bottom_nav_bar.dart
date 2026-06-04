@@ -4,6 +4,7 @@ import '../user_dashboard_page.dart';
 import '../updates_page.dart';
 import '../settings_page.dart';
 import '../investor_landing_page.dart';
+import '../vault_page.dart';
 import '../../blocs/localization/localization_bloc.dart';
 import '../../blocs/localization/localization_state.dart';
 
@@ -20,7 +21,7 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
   final List<Widget> _pages = [
     const InvestorLandingPage(),
     const UpdatesPage(),
-    const UserDashboardPage(), // This might be renamed to My Vault or similar for investors
+    const VaultPage(),
     const SettingsPage(),
   ];
 
