@@ -3,7 +3,10 @@ import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
-import 'local_database_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../blocs/leads/leads_bloc.dart';
+import '../blocs/leads/leads_event.dart';
+import '../models/lead.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -12,7 +15,11 @@ class NotificationService {
 
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
-  final LocalDatabaseService _db = LocalDatabaseService();
+  
+  // To access BLoC from global service, we'll need a navigator key or context
+  // For now, we use a static global access or handle it via a stream
+  static final _dataStreamController = StreamController<Map<String, dynamic>>.broadcast();
+  static Stream<Map<String, dynamic>> get dataStream => _dataStreamController.stream;
 
   Future<void> initialize() async {
     // 1. Request Permission (iOS/Android 13+)
@@ -30,7 +37,7 @@ class NotificationService {
     const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     const InitializationSettings initSettings = InitializationSettings(android: androidInit);
     await _localNotifications.initialize(
-      initSettings,
+      settings: initSettings,
       onDidReceiveNotificationResponse: (details) {
         // Handle notification click if needed
       },
@@ -51,41 +58,14 @@ class NotificationService {
   void _handleForegroundMessage(RemoteMessage message) {
     if (kDebugMode) print('Foreground Message: ${message.notification?.title}');
     
-    // Save to local DB
-    _saveNotificationToLocalDb(message);
-    
-    // Show local notification so user sees it while app is open
-    _showLocalNotification(message);
-  }
-
-  Future<void> _saveNotificationToLocalDb(RemoteMessage message) async {
-    try {
-      final data = message.data;
-      
-      // Save the raw notification record
-      await _db.insertNotification({
-        'title': message.notification?.title ?? 'Admin Alert',
-        'body': message.notification?.body ?? '',
-        'data': jsonEncode(data),
-        'receivedAt': DateTime.now().toIso8601String(),
-      });
-
-      // If it's a lead, save to leads table
-      if (data['type'] == 'lead_onboard' || data['type'] == 'lead_registration') {
-        await _db.insertLead({
-          'server_id': data['lead_id'],
-          'name': data['name'],
-          'phone': data['phone'],
-          'source': data['source'],
-          'status': 'New',
-          'createdAt': data['createdAt'] ?? DateTime.now().toIso8601String(),
-          'synced': 1,
-        });
-        if (kDebugMode) print('Lead saved locally: ${data['name']}');
-      }
-    } catch (e) {
-      if (kDebugMode) print('Error saving notification: $e');
+    // Push to stream so UI can react and update BLoC
+    final data = message.data;
+    if (data['type'] == 'lead_onboard' || data['type'] == 'lead_registration') {
+       _dataStreamController.add(data);
     }
+    
+    // Show local notification
+    _showLocalNotification(message);
   }
 
   Future<void> _showLocalNotification(RemoteMessage message) async {
@@ -112,31 +92,7 @@ class NotificationService {
 // Global background handler
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Since this runs in a separate isolate, we need to re-initialize services if needed
-  // However, sqflite works fine across isolates.
-  final db = LocalDatabaseService();
-  final data = message.data;
-
-  try {
-    await db.insertNotification({
-      'title': message.notification?.title ?? 'Background Alert',
-      'body': message.notification?.body ?? '',
-      'data': jsonEncode(data),
-      'receivedAt': DateTime.now().toIso8601String(),
-    });
-
-    if (data['type'] == 'lead_onboard' || data['type'] == 'lead_registration') {
-      await db.insertLead({
-        'server_id': data['lead_id'],
-        'name': data['name'],
-        'phone': data['phone'],
-        'source': data['source'],
-        'status': 'New',
-        'createdAt': data['createdAt'] ?? DateTime.now().toIso8601String(),
-        'synced': 1,
-      });
-    }
-  } catch (e) {
-    // Ignore errors in background
-  }
+  // In background, we rely on the next app open to sync from server 
+  // because HydratedBloc doesn't easily persist across background isolates 
+  // without complex setup.
 }

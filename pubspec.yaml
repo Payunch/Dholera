@@ -30,6 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -48,7 +50,7 @@ dependencies:
   local_auth: ^2.1.6
   
   # Internationalization
-  intl: ^0.19.0
+  intl: ^0.20.2
 
   # URL Launcher for calls and WhatsApp
   url_launcher: ^6.2.1
@@ -69,6 +71,13 @@ dependencies:
   # File export
   path_provider: ^2.1.5
   share_plus: ^10.1.4
+
+  # State Management & Persistence
+  flutter_bloc: ^9.1.0
+  hydrated_bloc: ^10.0.0
+  bloc: ^9.0.0
+  equatable: ^2.0.7
+
   # Firebase analytics
   firebase_core: ^2.10.0
   firebase_analytics: ^10.5.0

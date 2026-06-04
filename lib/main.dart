@@ -3,10 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:provider/provider.dart';
-import 'models/auth_provider.dart';
-import 'pages/login_page.dart';
-import 'pages/dashboard_page.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'blocs/auth/auth_bloc.dart';
+import 'blocs/auth/auth_event.dart';
+import 'blocs/theme/theme_bloc.dart';
+import 'blocs/theme/theme_state.dart';
+import 'blocs/localization/localization_bloc.dart';
+import 'blocs/localization/localization_state.dart';
+import 'blocs/preferences/preferences_bloc.dart';
+import 'blocs/leads/leads_bloc.dart';
+import 'blocs/leads/leads_event.dart';
+import 'pages/splash_page.dart';
 import 'consent.dart';
 import 'widgets/consent_dialog.dart';
 import 'services/notification_service.dart';
@@ -61,67 +71,53 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
-
-    return MultiProvider(
+    return MultiBlocProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()..initAuth()),
+        BlocProvider(create: (_) => AuthBloc()..add(AuthCheckRequested())),
+        BlocProvider(create: (_) => ThemeBloc()),
+        BlocProvider(create: (_) => LocalizationBloc()..add(LoadTranslations())),
+        BlocProvider(create: (_) => PreferencesBloc()),
+        BlocProvider(create: (_) => LeadsBloc()..add(const FetchLeadsRequested())),
       ],
-      child: MaterialApp(
-        title: 'Dholera Admin',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.orange,
-          ),
-          useMaterial3: true,
-        ),
-        home: const AuthWrapper(),
-        // navigatorObservers: [FirebaseAnalyticsObserver(analytics: analytics)],
-        debugShowCheckedModeBanner: false,
-      ),
-    );
-  }
-}
-
-/// Wrapper widget to handle authentication routing
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, _) {
-        if (authProvider.isLoading) {
-          return const Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(color: Colors.orange),
-                  SizedBox(height: 20),
-                  Text('Verifying session...', style: TextStyle(color: Colors.orange)),
+      child: BlocBuilder<LocalizationBloc, LocalizationState>(
+        builder: (context, localizationState) {
+          return BlocBuilder<ThemeBloc, ThemeState>(
+            builder: (context, themeState) {
+              final colors = themeState.colors;
+              return MaterialApp(
+                title: 'Dholera Admin',
+                locale: localizationState.locale,
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
                 ],
-              ),
-            ),
+                supportedLocales: const [
+                  Locale('en'),
+                  Locale('hi'),
+                  Locale('mr'),
+                  Locale('ta'),
+                  Locale('te'),
+                  Locale('kn'),
+                ],
+                theme: ThemeData(
+                  scaffoldBackgroundColor: colors.background,
+                  primaryColor: colors.primary,
+                  colorScheme: ColorScheme.fromSeed(
+                    seedColor: colors.primary,
+                    surface: colors.card,
+                    onSurface: colors.textPrimary,
+                    secondary: colors.secondary,
+                  ),
+                  useMaterial3: true,
+                ),
+                home: const SplashPage(),
+                debugShowCheckedModeBanner: false,
+              );
+            },
           );
-        }
-        
-        if (authProvider.isAuthenticated) {
-          return Stack(
-            children: [
-              const DashboardPage(),
-              if (!ConsentManager.isConsentSet()) const _ConsentPrompt(),
-            ],
-          );
-        } else {
-          return Stack(
-            children: [
-              const LoginPage(),
-              if (!ConsentManager.isConsentSet()) const _ConsentPrompt(),
-            ],
-          );
-        }
-      },
+        },
+      ),
     );
   }
 }

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../services/api_service.dart';
+import '../blocs/auth/auth_bloc.dart';
+import '../blocs/auth/auth_event.dart';
+import 'login_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -15,6 +19,30 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _isLoading = true;
   String? _error;
   final Map<String, TextEditingController> _controllers = {};
+
+  void _handleLogout() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Logout'),
+        content: const Text('Are you sure you want to terminate your secure session?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+          ElevatedButton(
+            onPressed: () {
+              context.read<AuthBloc>().add(AuthLogoutRequested());
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+                (route) => false,
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('LOGOUT'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -317,6 +345,21 @@ class _SettingsPageState extends State<SettingsPage> {
                               child: const Text('SAVE ALL SETTINGS', style: TextStyle(fontWeight: FontWeight.bold)),
                             ),
                           ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 24.0),
+                            child: Divider(),
+                          ),
+                          ListTile(
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                              child: const Icon(Icons.logout_rounded, color: Colors.red),
+                            ),
+                            title: const Text('Terminate Session', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                            subtitle: const Text('Logout from this device safely'),
+                            onTap: _handleLogout,
+                          ),
+                          const SizedBox(height: 40),
                         ],
                       ),
                     ),

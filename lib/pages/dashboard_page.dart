@@ -16,6 +16,12 @@ import 'database_explorer_page.dart';
 import 'system_page.dart';
 import '../widgets/ad_banner.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../blocs/leads/leads_bloc.dart';
+import '../blocs/leads/leads_event.dart';
+import '../models/lead.dart';
+import '../services/notification_service.dart';
+
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -24,6 +30,7 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  StreamSubscription? _notificationSubscription;
   late ApiService _apiService;
   Map<String, dynamic>? _analytics;
   bool _isLoadingAnalytics = false;
@@ -38,6 +45,7 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
     _apiService = ApiService();
     _initDashboard();
+    _setupNotificationListener();
   }
 
   Future<void> _initDashboard() async {
@@ -45,8 +53,31 @@ class _DashboardPageState extends State<DashboardPage> {
     await _startNotificationPolling();
   }
 
+  void _setupNotificationListener() {
+    _notificationSubscription = NotificationService.dataStream.listen((data) {
+      if (mounted) {
+        final lead = Lead(
+          id: int.tryParse(data['lead_id'] ?? '0') ?? 0,
+          name: data['name'] ?? 'New Lead',
+          phone: data['phone'] ?? '',
+          source: data['source'] ?? 'Push',
+          timeSpent: 0,
+          status: 'New',
+          verified: true,
+          returningVisitor: false,
+          visitCount: 1,
+          isRegistered: false,
+          isRead: false,
+          createdAt: DateTime.tryParse(data['createdAt'] ?? '') ?? DateTime.now(),
+        );
+        context.read<LeadsBloc>().add(LeadAddedManually(lead));
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _notificationSubscription?.cancel();
     _notificationTimer?.cancel();
     super.dispose();
   }

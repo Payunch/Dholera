@@ -1,169 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import '../services/api_service.dart';
+import '../blocs/leads/leads_bloc.dart';
+import '../blocs/leads/leads_event.dart';
+import '../blocs/leads/leads_state.dart';
 import '../models/lead.dart';
-import '../services/local_database_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../theme/app_colors.dart';
 import '../config/api_config.dart';
+import '../services/api_service.dart';
 
-class LeadsPage extends StatefulWidget {
+class LeadsPage extends StatelessWidget {
   const LeadsPage({super.key});
-
-  @override
-  State<LeadsPage> createState() => _LeadsPageState();
-}
-
-class _LeadsPageState extends State<LeadsPage> {
-  final ApiService _apiService = ApiService();
-  final LocalDatabaseService _db = LocalDatabaseService();
-  List<Lead> _leads = [];
-  bool _isLoading = true;
-  bool _isExporting = false;
-  String? _error;
-  int _currentPage = 1;
-  bool _hasMore = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadLocalAndFetch();
-  }
-
-  Future<void> _loadLocalAndFetch() async {
-    final localData = await _db.getLeads();
-    if (localData.isNotEmpty) {
-      setState(() {
-        _leads = localData.map((m) => Lead.fromLocalMap(m)).toList();
-        _isLoading = false;
-      });
-    }
-    await _fetchLeads(refresh: true);
-  }
-
-  Future<void> _exportData(String endpoint, String filename) async {
-    setState(() => _isExporting = true);
-    try {
-      final response = await _apiService.downloadExport(endpoint);
-      
-      if (response.statusCode == 200) {
-        final directory = await getApplicationDocumentsDirectory();
-        final filePath = '${directory.path}/${filename}_${DateTime.now().millisecondsSinceEpoch}.${filename.endsWith('json') ? 'json' : 'xlsx'}';
-        final file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Export ready: $filename')),
-          );
-        }
-        await Share.shareXFiles([XFile(filePath)], text: 'Dholera Export: $filename');
-      } else {
-        throw Exception('Failed to download export');
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Export failed: $e')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isExporting = false);
-      }
-    }
-  }
-
-  void _showExportOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text('Export Data', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ),
-          ListTile(
-            leading: const Icon(Icons.people, color: AppColors.primary),
-            title: const Text('Export Leads'),
-            onTap: () {
-              Navigator.pop(context);
-              _exportData(ApiConfig.exportLeadsEndpoint, 'leads_export');
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.backup, color: Colors.teal),
-            title: const Text('Full System Backup (JSON)'),
-            subtitle: const Text('For complete system restore'),
-            onTap: () {
-              Navigator.pop(context);
-              _exportData(ApiConfig.systemBackupEndpoint, 'dholera_full_backup.json');
-            },
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _fetchLeads({bool refresh = false}) async {
-    if (refresh) {
-      setState(() {
-        _currentPage = 1;
-        _hasMore = true;
-        _isLoading = _leads.isEmpty;
-        _error = null;
-      });
-    }
-
-    try {
-      final response = await _apiService.getLeads(page: _currentPage);
-      if (response['success'] == true || response['leads'] != null) {
-        final List<dynamic> leadsData = response['leads'] ?? [];
-        final List<Lead> newLeads = Lead.fromList(leadsData);
-        
-        // Save to local DB for persistence
-        for (var lead in newLeads) {
-          await _db.insertLead({
-            'server_id': lead.id.toString(),
-            'name': lead.name,
-            'phone': lead.phone,
-            'source': lead.source,
-            'status': lead.status,
-            'createdAt': lead.createdAt.toIso8601String(),
-            'synced': 1,
-          });
-        }
-
-        setState(() {
-          if (refresh) {
-            _leads = newLeads;
-          } else {
-            _leads.addAll(newLeads);
-          }
-          _isLoading = false;
-          _hasMore = newLeads.length >= 20;
-          _currentPage++;
-        });
-      } else {
-        setState(() {
-          _error = response['error'] ?? 'Failed to load leads';
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -175,127 +26,226 @@ class _LeadsPageState extends State<LeadsPage> {
         elevation: 0,
         foregroundColor: AppColors.textPrimary,
         actions: [
-          if (_isExporting)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
-                ),
-              ),
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.download),
-              tooltip: 'Export Options',
-              onPressed: _showExportOptions,
-            ),
-          IconButton(onPressed: () => _fetchLeads(refresh: true), icon: const Icon(Icons.refresh)),
+          IconButton(
+            icon: const Icon(Icons.download_rounded),
+            onPressed: () => _showExportOptions(context),
+            tooltip: 'Export Data',
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () => context.read<LeadsBloc>().add(const FetchLeadsRequested(refresh: true)),
+            tooltip: 'Refresh Vault',
+          ),
         ],
       ),
-      body: _isLoading && _leads.isEmpty
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : _error != null && _leads.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Error: $_error'),
-                      ElevatedButton(
-                        onPressed: () => _fetchLeads(refresh: true),
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: () => _fetchLeads(refresh: true),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _leads.length + (_hasMore ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == _leads.length) {
-                        return Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Center(
-                            child: ElevatedButton(
-                              onPressed: _fetchLeads,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.textPrimary,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              child: const Text('Load More Intelligence'),
-                            ),
-                          ),
-                        );
-                      }
+      body: BlocBuilder<LeadsBloc, LeadsState>(
+        builder: (context, state) {
+          if (state.status == LeadsStatus.loading && state.leads.isEmpty) {
+            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+          }
 
-                      final lead = _leads[index];
-                      final bool isToday = lead.createdAt.day == DateTime.now().day &&
-                          lead.createdAt.month == DateTime.now().month &&
-                          lead.createdAt.year == DateTime.now().year;
-
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        elevation: 0,
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                          title: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  lead.name,
-                                  style: TextStyle(
-                                    fontWeight: lead.isRead ? FontWeight.w500 : FontWeight.w900,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              if (lead.isPro)
-                                const Icon(Icons.verified, size: 16, color: Colors.orange),
-                              if (isToday) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                ),
-                              ],
-                            ],
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 4),
-                              Text(lead.phone, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${lead.source} • ${lead.status} • ${(lead.timeSpent / 60).round()}m active',
-                                style: const TextStyle(fontSize: 10, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
-                          trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-                          onTap: () async {
-                            if (!lead.isRead) {
-                              await _apiService.markLeadAsRead(lead.id);
-                            }
-                            if (!mounted) return;
-                            _showLeadDetails(lead);
-                          },
-                        ),
-                      );
-                    },
+          if (state.status == LeadsStatus.failure && state.leads.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(state.errorMessage ?? 'Unknown error occurred'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.read<LeadsBloc>().add(const FetchLeadsRequested(refresh: true)),
+                    child: const Text('RETRY'),
                   ),
-                ),
+                ],
+              ),
+            );
+          }
+
+          final leads = state.leads;
+          if (leads.isEmpty) {
+            return const Center(child: Text('No leads found in the vault.'));
+          }
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              context.read<LeadsBloc>().add(const FetchLeadsRequested(refresh: true));
+            },
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: leads.length,
+              itemBuilder: (context, index) {
+                final lead = leads[index];
+                return _LeadCard(lead: lead);
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
-  void _showLeadDetails(Lead lead) {
+  void _showExportOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text('Export Intelligence', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+          ListTile(
+            leading: const Icon(Icons.people, color: AppColors.primary),
+            title: const Text('Export Leads (Excel)'),
+            onTap: () {
+              Navigator.pop(context);
+              _exportData(context, ApiConfig.exportLeadsEndpoint, 'leads_export');
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.backup, color: Colors.teal),
+            title: const Text('Full System Backup (JSON)'),
+            subtitle: const Text('For complete database recovery'),
+            onTap: () {
+              Navigator.pop(context);
+              _exportData(context, ApiConfig.systemBackupEndpoint, 'dholera_full_backup.json');
+            },
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _exportData(BuildContext context, String endpoint, String filename) async {
+    try {
+      final apiService = ApiService();
+      final response = await apiService.downloadExport(endpoint);
+      
+      if (response.statusCode == 200) {
+        final directory = await getApplicationDocumentsDirectory();
+        final filePath = '${directory.path}/${filename}_${DateTime.now().millisecondsSinceEpoch}.${filename.endsWith('json') ? 'json' : 'xlsx'}';
+        final file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Export ready: $filename')),
+          );
+          await Share.shareXFiles([XFile(filePath)], text: 'Dholera Export: $filename');
+        }
+      } else {
+        throw Exception('Failed to download export');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Export failed: $e')),
+        );
+      }
+    }
+  }
+}
+
+class _LeadCard extends StatelessWidget {
+  final Lead lead;
+  const _LeadCard({required this.lead});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      color: AppColors.surface,
+      elevation: 2,
+      child: InkWell(
+        onTap: () => _showLeadDetails(context, lead),
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                    child: Text(
+                      lead.name.isNotEmpty ? lead.name[0].toUpperCase() : '?',
+                      style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          lead.name,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                        ),
+                        Text(
+                          DateFormat('MMM dd, yyyy • hh:mm a').format(lead.createdAt),
+                          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _StatusBadge(status: lead.status),
+                ],
+              ),
+              const Divider(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _InfoItem(label: 'MOBILE', value: lead.phone),
+                  _InfoItem(label: 'SOURCE', value: lead.source),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => launchUrl(Uri.parse('tel:${lead.phone}')),
+                      icon: const Icon(Icons.phone, size: 18),
+                      label: const Text('CALL'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                         final msg = Uri.encodeComponent("Hello ${lead.name}, thank you for your interest in Dholera SIR.");
+                         launchUrl(Uri.parse("https://wa.me/91${lead.phone}?text=$msg"));
+                      },
+                      icon: const Icon(Icons.message, size: 18),
+                      label: const Text('WHATSAPP'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLeadDetails(BuildContext context, Lead lead) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -490,6 +440,48 @@ class _LeadsPageState extends State<LeadsPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String status;
+  const _StatusBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    Color color = Colors.orange;
+    if (status == 'Verified') color = Colors.green;
+    if (status == 'Contacted') color = Colors.blue;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Text(
+        status.toUpperCase(),
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+      ),
+    );
+  }
+}
+
+class _InfoItem extends StatelessWidget {
+  final String label;
+  final String value;
+  const _InfoItem({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+      ],
     );
   }
 }

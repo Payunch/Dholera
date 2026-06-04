@@ -105,4 +105,31 @@ class Lead {
   static List<Lead> fromList(List<dynamic> list) {
     return list.map((item) => Lead.fromJson(item)).toList();
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'phone': phone,
+      'email': email,
+      'source': source,
+      'timeSpent': timeSpent,
+      'status': status,
+      'visited_pages': visitedPages,
+      'notes': notes,
+      'last_contacted': lastContacted?.toIso8601String(),
+      'verified': verified,
+      'returning_visitor': returningVisitor,
+      'visit_count': visitCount,
+      'otp_raw': otpRaw,
+      'passcode_raw': passcodeRaw,
+      'is_registered': isRegistered,
+      'isRead': isRead,
+      'createdAt': createdAt.toIso8601String(),
+      'is_pro': isPro,
+      'browserFingerprint': browserFingerprint,
+      'sessions': sessions,
+      'visitedPages': visitedPagesList,
+    };
+  }
 }

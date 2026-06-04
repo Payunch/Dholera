@@ -1,32 +1,34 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ConsentManager {
   static const _kAnalyticsKey = 'consent_analytics';
   static const _kAdsKey = 'consent_ads';
 
-  static SharedPreferences? _prefs;
+  static const _storage = FlutterSecureStorage();
 
   static bool? analyticsConsent;
   static bool? adsConsent;
 
   static Future<void> init() async {
-    _prefs = await SharedPreferences.getInstance();
-    if (_prefs!.containsKey(_kAnalyticsKey)) {
-      analyticsConsent = _prefs!.getBool(_kAnalyticsKey);
+    final analytics = await _storage.read(key: _kAnalyticsKey);
+    final ads = await _storage.read(key: _kAdsKey);
+    
+    if (analytics != null) {
+      analyticsConsent = analytics == 'true';
     }
-    if (_prefs!.containsKey(_kAdsKey)) {
-      adsConsent = _prefs!.getBool(_kAdsKey);
+    if (ads != null) {
+      adsConsent = ads == 'true';
     }
   }
 
   static Future<void> setAnalyticsConsent(bool allowed) async {
     analyticsConsent = allowed;
-    await _prefs?.setBool(_kAnalyticsKey, allowed);
+    await _storage.write(key: _kAnalyticsKey, value: allowed.toString());
   }
 
   static Future<void> setAdsConsent(bool allowed) async {
     adsConsent = allowed;
-    await _prefs?.setBool(_kAdsKey, allowed);
+    await _storage.write(key: _kAdsKey, value: allowed.toString());
   }
 
   static bool isConsentSet() {

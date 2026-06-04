@@ -542,6 +542,43 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getTranslations(String lang) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.translationsEndpoint}/$lang'),
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'DholeraAdminApp/1.0',
+        },
+      ).timeout(const Duration(seconds: 15));
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> updatePreferences({String? language, String? theme}) async {
+    try {
+      final token = await getAuthToken();
+      if (token == null) return {'success': false, 'error': 'Not logged in'};
+
+      final headers = await _getMutationHeaders();
+      headers['x-lead-token'] = token;
+
+      final response = await http.post(
+        Uri.parse('${ApiConfig.preferencesEndpoint}/user'),
+        headers: headers,
+        body: jsonEncode({
+          if (language != null) 'language': language,
+          if (theme != null) 'theme': theme,
+        }),
+      ).timeout(const Duration(seconds: 15));
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
   Future<Map<String, dynamic>> updateSettings(Map<String, dynamic> data) async {
     try {
       final response = await http.post(

@@ -61,4 +61,8 @@ class ApiConfig {
   
   // Settings endpoints
   static String get settingsEndpoint => '$apiBaseUrl/settings';
+
+  // Preferences endpoints
+  static String get preferencesEndpoint => '$apiBaseUrl/preferences';
+  static String get translationsEndpoint => '$apiBaseUrl/preferences/translations';
 }
