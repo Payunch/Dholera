@@ -32,10 +32,32 @@ class _TpMapEditorPageState extends State<TpMapEditorPage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    
     setState(() => _isLoading = true);
-    // Pending API
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Save functionality pending API.')));
-    setState(() => _isLoading = false);
+    
+    final data = {
+      'title': _titleController.text,
+      'tp_id': _tpIdController.text,
+      'area': _areaController.text,
+      'focus': _focusController.text,
+      'badges': widget.tpMap?.badges ?? [], // Keep existing badges for now
+    };
+
+    try {
+      final response = await _apiService.saveTpMap(data, id: widget.tpMap?.id);
+      if (response['success'] == true) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Scheme saved successfully')));
+          Navigator.pop(context, true);
+        }
+      } else {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${response['error']}')));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override

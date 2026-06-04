@@ -651,6 +651,64 @@ class ApiService {
     }
   }
 
+  // --- ADMIN CONTENT MANAGEMENT ---
+
+  Future<Map<String, dynamic>> saveProject(Map<String, dynamic> data, {int? id}) async {
+    try {
+      final url = id == null 
+          ? '${ApiConfig.apiBaseUrl}/content/projects'
+          : '${ApiConfig.apiBaseUrl}/content/projects/$id';
+      
+      final response = id == null
+          ? await http.post(Uri.parse(url), headers: await _getMutationHeaders(), body: jsonEncode(data))
+          : await http.put(Uri.parse(url), headers: await _getMutationHeaders(), body: jsonEncode(data));
+          
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteProject(int id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${ApiConfig.apiBaseUrl}/content/projects/$id'),
+        headers: await _getMutationHeaders(),
+      );
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> saveTpMap(Map<String, dynamic> data, {int? id}) async {
+    try {
+      final url = id == null 
+          ? '${ApiConfig.apiBaseUrl}/content/tp-maps'
+          : '${ApiConfig.apiBaseUrl}/content/tp-maps/$id';
+      
+      final response = id == null
+          ? await http.post(Uri.parse(url), headers: await _getMutationHeaders(), body: jsonEncode(data))
+          : await http.put(Uri.parse(url), headers: await _getMutationHeaders(), body: jsonEncode(data));
+          
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteTpMap(int id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${ApiConfig.apiBaseUrl}/content/tp-maps/$id'),
+        headers: await _getMutationHeaders(),
+      );
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
   Future<Map<String, dynamic>> getPortals() async {
     try {
       final response = await http.get(

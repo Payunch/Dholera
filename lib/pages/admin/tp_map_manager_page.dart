@@ -89,9 +89,52 @@ class _TpMapManagerPageState extends State<TpMapManagerPage> {
         ),
         title: Text(map.title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text('${map.tpId.toUpperCase()} • ${map.area}', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-        trailing: IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => _openEditor(map)),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => _openEditor(map)),
+            IconButton(icon: const Icon(Icons.delete_outline, color: Colors.redAccent), onPressed: () => _deleteMap(map)),
+          ],
+        ),
       ),
     );
+  }
+
+  Future<void> _deleteMap(TpMap map) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Scheme?'),
+        content: Text('Are you sure you want to remove "${map.title}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('DELETE'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() => _isLoading = true);
+      try {
+        final response = await _apiService.deleteTpMap(map.id!);
+        if (response['success'] == true) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Scheme deleted successfully')));
+            _fetchMaps();
+          }
+        } else {
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${response['error']}')));
+        }
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
   }
 
   void _openEditor(TpMap? map) async {

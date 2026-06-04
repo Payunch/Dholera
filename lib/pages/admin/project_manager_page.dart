@@ -54,8 +54,22 @@ class _ProjectManagerPageState extends State<ProjectManagerPage> {
     );
 
     if (confirmed == true) {
-      // Implement delete API call in ApiService
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Delete functionality pending API implementation.')));
+      setState(() => _isLoading = true);
+      try {
+        final response = await _apiService.deleteProject(project.id!);
+        if (response['success'] == true) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Project deleted successfully')));
+            _fetchProjects();
+          }
+        } else {
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${response['error']}')));
+        }
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
     }
   }
 

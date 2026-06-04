@@ -66,9 +66,21 @@ class _ProjectEditorPageState extends State<ProjectEditorPage> {
       'image': _imageController.text,
     };
 
-    // Implement create/update in ApiService
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Save functionality pending API implementation.')));
-    setState(() => _isLoading = false);
+    try {
+      final response = await _apiService.saveProject(data, id: widget.project?.id);
+      if (response['success'] == true) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Project saved successfully')));
+          Navigator.pop(context, true);
+        }
+      } else {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${response['error']}')));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
