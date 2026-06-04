@@ -4,6 +4,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../services/api_service.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
+import '../blocs/auth/auth_state.dart';
+import '../blocs/localization/localization_bloc.dart';
+import '../blocs/localization/localization_event.dart';
+import '../blocs/localization/localization_state.dart';
+import '../blocs/theme/theme_bloc.dart';
+import '../blocs/theme/theme_event.dart';
+import '../blocs/theme/theme_state.dart';
+import '../theme/board_theme.dart';
 import 'login_page.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -15,10 +23,12 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final ApiService _apiService = ApiService();
-  Map<String, dynamic> _settings = {};
-  bool _isLoading = true;
-  String? _error;
-  final Map<String, TextEditingController> _controllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _apiService.trackActivity('Settings Page');
+  }
 
   void _handleLogout() {
     showDialog(
@@ -45,212 +55,42 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _fetchSettings();
-  }
+  Widget build(BuildContext context) {
+    final isAdmin = context.watch<AuthBloc>().state is AuthAuthenticated;
 
-  Future<void> _fetchSettings() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      final response = await _apiService.getSettings();
-      if (response['success'] == true) {
-        setState(() {
-          _settings = response['settings'] ?? {};
-          _controllers.forEach((_, controller) => controller.dispose());
-          _controllers.clear();
-          
-          _settings.forEach((key, value) {
-            _controllers[key] = TextEditingController(text: value.toString());
-          });
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _error = response['error'] ?? 'Failed to load settings';
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _saveSettings() async {
-    final Map<String, dynamic> updates = {};
-    _controllers.forEach((key, controller) {
-      updates[key] = controller.text;
-    });
-
-    if (updates.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No settings to save')));
-      return;
-    }
-
-    setState(() => _isLoading = true);
-    try {
-      final result = await _apiService.updateSettings(updates);
-      if (!mounted) return;
-      if (result['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Settings saved successfully')));
-        await _fetchSettings();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${result['error']}')));
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _handleRestore() async {
-    try {
-      final FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json'],
-      );
-
-      if (result != null) {
-        final path = result.files.single.path;
-        if (path != null) {
-          setState(() => _isLoading = true);
-          final restoreResult = await _apiService.restoreSystem(path);
-          if (restoreResult['success'] == true) {
-            final results = restoreResult['results'];
-            if (mounted) {
-              await showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Restore Complete'),
-                  content: Text('Leads: ${results['leads']['created']} created, ${results['leads']['updated']} updated\n'
-                      'Updates: ${results['updates']['created']} created, ${results['updates']['updated']} updated\n'
-                      'Sessions: ${results['sessions']['created']} created'),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
-                  ],
-                ),
-              );
-              await _fetchSettings();
-            }
-          } else {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Restore failed: ${restoreResult['error']}')),
-              );
-            }
-          }
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  void _addNewSetting() {
-    String newKey = '';
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        final isCompact = MediaQuery.of(dialogContext).size.width < 600;
-
-        return Dialog(
-          insetPadding: isCompact ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: isCompact ? double.infinity : 520,
-              maxHeight: isCompact ? double.infinity : MediaQuery.of(dialogContext).size.height * 0.65,
-            ),
-            child: Material(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 12, 12),
-                    child: Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            'Add New Setting Field',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(dialogContext),
-                          icon: const Icon(Icons.close),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TextField(
-                            autofocus: true,
-                            decoration: const InputDecoration(
-                              labelText: 'Setting Name (e.g. whatsapp_number)',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) => newKey = value.trim().toLowerCase().replaceAll(' ', '_'),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Add a new dynamic config field for contact details, links, or platform settings.',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.pop(dialogContext),
-                            child: const Text('Cancel'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (newKey.isNotEmpty) {
-                                setState(() {
-                                  _controllers[newKey] = TextEditingController();
-                                });
-                                Navigator.pop(dialogContext);
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
-                            child: const Text('Add'),
-                          ),
-                        ),
-                      ],
-                    ),
+    return BlocBuilder<LocalizationBloc, LocalizationState>(
+      builder: (context, localState) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('APP SETTINGS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionHeader('APP PREFERENCES'),
+                const SizedBox(height: 16),
+                _buildThemeToggle(context),
+                const SizedBox(height: 12),
+                _buildLanguageSelector(context, localState),
+                const SizedBox(height: 32),
+                if (isAdmin) ...[
+                  _buildSectionHeader('ADMIN CONTROLS'),
+                  const SizedBox(height: 16),
+                  _buildAdminTile(
+                    'Business Settings',
+                    'Manage platform contact and configuration.',
+                    Icons.admin_panel_settings,
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminBusinessSettingsPage())),
                   ),
                 ],
-              ),
+                const SizedBox(height: 48),
+                _buildLogoutTile(context),
+                const SizedBox(height: 40),
+              ],
             ),
           ),
         );
@@ -258,111 +98,183 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.black, letterSpacing: 1.2, color: Colors.grey),
+    );
+  }
+
+  Widget _buildThemeToggle(BuildContext context) {
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, state) {
+        final isDark = state.boardTheme == AppBoardTheme.blueBoard;
+        return _buildPreferenceTile(
+          'Dark Mode',
+          'Switch between light and dark visual themes.',
+          Icons.dark_mode_outlined,
+          trailing: Switch(
+            value: isDark,
+            activeColor: Colors.orange,
+            onChanged: (val) {
+              context.read<ThemeBloc>().add(ThemeChanged(val ? AppBoardTheme.blueBoard : AppBoardTheme.standard));
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageSelector(BuildContext context, LocalizationState state) {
+    return _buildPreferenceTile(
+      'Language',
+      'Choose your preferred UI language.',
+      Icons.translate_rounded,
+      trailing: DropdownButton<String>(
+        value: state.locale.languageCode,
+        underline: const SizedBox(),
+        onChanged: (code) {
+          if (code != null) {
+            context.read<LocalizationBloc>().add(LocalizationChanged(Locale(code)));
+          }
+        },
+        items: const [
+          DropdownMenuItem(value: 'en', child: Text('English')),
+          DropdownMenuItem(value: 'hi', child: Text('हिन्दी')),
+          DropdownMenuItem(value: 'gu', child: Text('ગુજરાતી')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPreferenceTile(String title, String subtitle, IconData icon, {Widget? trailing}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey[100]!),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.grey[400]),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const SizedBox(height: 2),
+                Text(subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 10)),
+              ],
+            ),
+          ),
+          if (trailing != null) trailing,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminTile(String title, String subtitle, IconData icon, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: _buildPreferenceTile(title, subtitle, icon, trailing: const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey)),
+    );
+  }
+
+  Widget _buildLogoutTile(BuildContext context) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+        child: const Icon(Icons.logout_rounded, color: Colors.red),
+      ),
+      title: const Text('Sign Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+      subtitle: const Text('Safely terminate your session.', style: TextStyle(fontSize: 10)),
+      onTap: _handleLogout,
+    );
+  }
+}
+
+class AdminBusinessSettingsPage extends StatefulWidget {
+  const AdminBusinessSettingsPage({super.key});
+
   @override
-  void dispose() {
-    _controllers.forEach((_, controller) => controller.dispose());
-    super.dispose();
+  State<AdminBusinessSettingsPage> createState() => _AdminBusinessSettingsPageState();
+}
+
+class _AdminBusinessSettingsPageState extends State<AdminBusinessSettingsPage> {
+  final ApiService _apiService = ApiService();
+  Map<String, dynamic> _settings = {};
+  bool _isLoading = true;
+  String? _error;
+  final Map<String, TextEditingController> _controllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSettings();
+  }
+
+  Future<void> _fetchSettings() async {
+    setState(() { _isLoading = true; _error = null; });
+    try {
+      final response = await _apiService.getSettings();
+      if (response['success'] == true) {
+        setState(() {
+          _settings = response['settings'] ?? {};
+          _controllers.forEach((_, c) => c.dispose());
+          _controllers.clear();
+          _settings.forEach((k, v) => _controllers[k] = TextEditingController(text: v.toString()));
+          _isLoading = false;
+        });
+      } else {
+        setState(() { _error = response['error']; _isLoading = false; });
+      }
+    } catch (e) {
+      setState(() { _error = e.toString(); _isLoading = false; });
+    }
+  }
+
+  Future<void> _saveSettings() async {
+    final Map<String, dynamic> updates = {};
+    _controllers.forEach((k, c) => updates[k] = c.text);
+    setState(() => _isLoading = true);
+    try {
+      final res = await _apiService.updateSettings(updates);
+      if (res['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved successfully')));
+        await _fetchSettings();
+      }
+    } catch (_) {}
+    setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Business Settings'),
-        backgroundColor: Colors.orange,
-        actions: [
-          IconButton(icon: const Icon(Icons.restore, color: Colors.white), onPressed: _handleRestore, tooltip: 'Restore from backup'),
-          IconButton(icon: const Icon(Icons.add), onPressed: _addNewSetting, tooltip: 'Add new field'),
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchSettings),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Error: $_error'),
-                      ElevatedButton(onPressed: _fetchSettings, child: const Text('Retry')),
-                    ],
-                  ),
-                )
-              : _controllers.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.settings_outlined, size: 64, color: Colors.grey),
-                          const SizedBox(height: 16),
-                          const Text('No settings found.', style: TextStyle(color: Colors.grey)),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: _addNewSetting,
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add First Setting'),
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
-                          ),
-                        ],
-                      )
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: ListView(
-                              children: _controllers.keys.map((key) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 16.0),
-                                  child: TextField(
-                                    controller: _controllers[key],
-                                    decoration: InputDecoration(
-                                      labelText: key.replaceAll('_', ' ').toUpperCase(),
-                                      border: const OutlineInputBorder(),
-                                      suffixIcon: IconButton(
-                                        icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-                                        onPressed: () {
-                                          setState(() {
-                                            _controllers[key]!.dispose();
-                                            _controllers.remove(key);
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 50,
-                            child: ElevatedButton(
-                              onPressed: _saveSettings,
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
-                              child: const Text('SAVE ALL SETTINGS', style: TextStyle(fontWeight: FontWeight.bold)),
-                            ),
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 24.0),
-                            child: Divider(),
-                          ),
-                          ListTile(
-                            leading: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                              child: const Icon(Icons.logout_rounded, color: Colors.red),
-                            ),
-                            title: const Text('Terminate Session', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                            subtitle: const Text('Logout from this device safely'),
-                            onTap: _handleLogout,
-                          ),
-                          const SizedBox(height: 40),
-                        ],
-                      ),
-                    ),
+      appBar: AppBar(title: const Text('BUSINESS SETTINGS')),
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              ..._controllers.keys.map((k) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: TextField(
+                  controller: _controllers[k],
+                  decoration: InputDecoration(labelText: k.toUpperCase(), border: const OutlineInputBorder()),
+                ),
+              )),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _saveSettings,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, padding: const EdgeInsets.all(20)),
+                child: const Text('SAVE SETTINGS'),
+              ),
+            ],
+          ),
     );
   }
 }

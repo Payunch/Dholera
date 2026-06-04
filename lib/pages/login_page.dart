@@ -4,6 +4,7 @@ import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
 import '../blocs/auth/auth_state.dart';
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 import 'admin/admin_bottom_nav_bar.dart';
 import 'user/user_bottom_nav_bar.dart';
 
@@ -51,7 +52,6 @@ class _LoginPageState extends State<LoginPage> {
         
         if (token != null && mounted) {
           // Simple role detection for now based on login identifier
-          // In a real scenario, the backend should return the role
           final role = identifier.toLowerCase().contains('admin') 
               ? AppRole.adminOwner 
               : AppRole.userInvestor;
@@ -61,6 +61,9 @@ class _LoginPageState extends State<LoginPage> {
             userName: userData['name'] ?? userData['email'] ?? 'Authorized User',
             role: role,
           ));
+
+          // Sync notification token for push alerts
+          await NotificationService().syncTokenWithBackend();
 
           if (role == AppRole.adminOwner) {
             Navigator.of(context).pushReplacement(

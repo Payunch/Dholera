@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/preferences/preferences_bloc.dart';
 import '../blocs/preferences/preferences_event.dart';
+import '../services/notification_service.dart';
 import 'role_selection_page.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -32,6 +33,18 @@ class _OnboardingPageState extends State<OnboardingPage> {
       image: 'assets/images/logo.png',
     ),
   ];
+
+  void _finishOnboarding() async {
+    context.read<PreferencesBloc>().add(OnboardingCompleted());
+    
+    // Sync notification token
+    await NotificationService().syncTokenWithBackend();
+
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const RoleSelectionPage()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,13 +125,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
           ),
         ],
       ),
-    );
-  }
-
-  void _finishOnboarding() {
-    context.read<PreferencesBloc>().add(OnboardingCompleted());
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const RoleSelectionPage()),
     );
   }
 }

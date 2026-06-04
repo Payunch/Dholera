@@ -3,10 +3,9 @@ import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../blocs/leads/leads_bloc.dart';
-import '../blocs/leads/leads_event.dart';
-import '../models/lead.dart';
+import 'package:http/http.dart' as http;
+import 'api_service.dart';
+import '../config/api_config.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -15,14 +14,13 @@ class NotificationService {
 
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+  final ApiService _apiService = ApiService();
   
-  // To access BLoC from global service, we'll need a navigator key or context
-  // For now, we use a static global access or handle it via a stream
   static final _dataStreamController = StreamController<Map<String, dynamic>>.broadcast();
   static Stream<Map<String, dynamic>> get dataStream => _dataStreamController.stream;
 
   Future<void> initialize() async {
-    // 1. Request Permission (iOS/Android 13+)
+    // 1. Request Permission
     final NotificationSettings settings = await _fcm.requestPermission(
       alert: true,
       badge: true,
@@ -30,16 +28,16 @@ class NotificationService {
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      if (kDebugMode) print('User granted permission');
+      if (kDebugMode) print('Notification Permission Granted');
     }
 
-    // 2. Setup Local Notifications (Foreground support)
+    // 2. Setup Local Notifications
     const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     const InitializationSettings initSettings = InitializationSettings(android: androidInit);
     await _localNotifications.initialize(
       settings: initSettings,
       onDidReceiveNotificationResponse: (details) {
-        // Handle notification click if needed
+        // Handle notification click
       },
     );
 
@@ -47,52 +45,77 @@ class NotificationService {
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     
-    // 4. Subscribe to Admin Alerts topic
-    await _fcm.subscribeToTopic('admin_alerts');
+    // 4. Initial Topics
+    await _fcm.subscribeToTopic('investors');
+    
+    // 5. Sync token if already logged in
+    await syncTokenWithBackend();
   }
 
   Future<String?> getToken() async {
-    return await _fcm.getToken();
+    try {
+      return await _fcm.getToken();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<void> syncTokenWithBackend() async {
+    try {
+      final leadToken = await _apiService.getAuthToken();
+      if (leadToken == null) return;
+
+      final fcmToken = await getToken();
+      if (fcmToken == null) return;
+
+      final headers = await _apiService.getMutationHeaders();
+      headers['x-lead-token'] = leadToken;
+
+      await http.post(
+        Uri.parse('${ApiConfig.apiBaseUrl}/preferences/fcm-token'),
+        headers: headers,
+        body: jsonEncode({'fcmToken': fcmToken}),
+      ).timeout(const Duration(seconds: 10));
+
+      if (kDebugMode) print('FCM Token synced successfully');
+    } catch (e) {
+      if (kDebugMode) print('FCM Token sync failed: $e');
+    }
   }
 
   void _handleForegroundMessage(RemoteMessage message) {
     if (kDebugMode) print('Foreground Message: ${message.notification?.title}');
     
-    // Push to stream so UI can react and update BLoC
     final data = message.data;
-    if (data['type'] == 'lead_onboard' || data['type'] == 'lead_registration') {
-       _dataStreamController.add(data);
-    }
+    _dataStreamController.add(data);
     
-    // Show local notification
     _showLocalNotification(message);
   }
 
   Future<void> _showLocalNotification(RemoteMessage message) async {
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'dholera_admin_channel',
-      'Admin Alerts',
-      channelDescription: 'Notifications for new leads and payments',
+      'dholera_general_channel',
+      'General Notifications',
+      channelDescription: 'Updates on Dholera SIR infrastructure and projects',
       importance: Importance.max,
       priority: Priority.high,
       showWhen: true,
+      color: Color(0xFFFF7A00),
     );
     
     const NotificationDetails details = NotificationDetails(android: androidDetails);
     
     await _localNotifications.show(
       id: message.hashCode,
-      title: message.notification?.title ?? 'Admin Alert',
+      title: message.notification?.title ?? 'Dholera Platform',
       body: message.notification?.body,
       notificationDetails: details,
+      payload: jsonEncode(message.data),
     );
   }
 }
 
-// Global background handler
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // In background, we rely on the next app open to sync from server 
-  // because HydratedBloc doesn't easily persist across background isolates 
-  // without complex setup.
+  // Logic for background processing if needed
 }
