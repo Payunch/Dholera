@@ -64,7 +64,7 @@ class _ContactPageState extends State<ContactPage> {
                 const SizedBox(height: 40),
                 const Text(
                   'SEND AN INQUIRY',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.black, letterSpacing: 1.2, color: Colors.grey),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: Colors.grey),
                 ),
                 const SizedBox(height: 24),
                 _buildForm(),
@@ -104,7 +104,7 @@ class _ContactPageState extends State<ContactPage> {
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)]),
               child: Icon(icon, color: Colors.orange, size: 24),
             ),
             const SizedBox(width: 16),

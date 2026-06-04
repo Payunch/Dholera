@@ -38,7 +38,7 @@ class _AirportPageState extends State<AirportPage> {
                       Image.network(
                         'https://api.dholeraplatform.com/uploads/images/airportVision.webp',
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(color: Colors.slate[900]),
+                        errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
                       ),
                       Container(color: Colors.black.withOpacity(0.4)),
                     ],
@@ -106,7 +106,7 @@ class _AirportPageState extends State<AirportPage> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title.toUpperCase(),
-      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.black, letterSpacing: 1.2, color: Colors.grey),
+      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: Colors.grey),
     );
   }
 
@@ -136,7 +136,7 @@ class _AirportPageState extends State<AirportPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.between,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(phase, style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 10)),
               Container(

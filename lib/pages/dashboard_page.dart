@@ -15,6 +15,8 @@ import 'approvals_page.dart';
 import 'database_explorer_page.dart';
 import 'system_page.dart';
 import '../widgets/ad_banner.dart';
+import 'admin/project_manager_page.dart';
+import 'admin/tp_map_manager_page.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/leads/leads_bloc.dart';
@@ -238,9 +240,9 @@ class _DashboardPageState extends State<DashboardPage> {
                     value: 'logout',
                     child: Row(
                       children: [
-                        Icon(Icons.logout, color: Colors.red),
-                        SizedBox(width: 8),
-                        Text('Logout', style: TextStyle(color: Colors.red)),
+                        const Icon(Icons.logout, color: Colors.red),
+                        const SizedBox(width: 8),
+                        const Text('Logout', style: TextStyle(color: Colors.red)),
                       ],
                     ),
                   ),
@@ -363,9 +365,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-import 'admin/project_manager_page.dart';
-import 'admin/tp_map_manager_page.dart';
-...
   Widget _buildActionGrid() {
     return GridView.count(
       crossAxisCount: 2,

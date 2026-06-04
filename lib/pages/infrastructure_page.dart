@@ -38,7 +38,7 @@ class _InfrastructurePageState extends State<InfrastructurePage> {
                       Image.network(
                         'https://api.dholeraplatform.com/uploads/images/arialviewdholeraexpress.webp',
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(color: Colors.slate[900]),
+                        errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
                       ),
                       Container(color: Colors.black.withOpacity(0.4)),
                     ],

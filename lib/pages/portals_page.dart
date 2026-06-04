@@ -76,7 +76,7 @@ class _PortalsPageState extends State<PortalsPage> {
       children: [
         Text(
           category.toUpperCase(),
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.black, letterSpacing: -0.5),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5),
         ),
         if (portals.isNotEmpty)
           Padding(
@@ -98,7 +98,6 @@ class _PortalsPageState extends State<PortalsPage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       elevation: 0,
       color: Colors.grey[50],
-      borderOnForeground: true,
       child: InkWell(
         onTap: () => _launchUrl(portal.url),
         borderRadius: BorderRadius.circular(20),

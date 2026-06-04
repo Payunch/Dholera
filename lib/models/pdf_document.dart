@@ -25,4 +25,8 @@ class PdfDocument {
       unlocked: json['unlocked'] == true,
     );
   }
+
+  static List<PdfDocument> fromList(List<dynamic> list) {
+    return list.map((item) => PdfDocument.fromJson(item)).toList();
+  }
 }

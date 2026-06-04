@@ -190,7 +190,7 @@ class _ClearanceEnginePageState extends State<ClearanceEnginePage> {
           const SizedBox(height: 12),
           Text(
             '₹${_calculatedFee!.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-            style: const TextStyle(color: Colors.orange, fontSize: 36, fontWeight: FontWeight.black),
+            style: const TextStyle(color: Colors.orange, fontSize: 36, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 12),
           const Text(

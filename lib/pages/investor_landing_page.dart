@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../blocs/localization/localization_bloc.dart';
 import '../blocs/localization/localization_state.dart';
-import '../theme/board_theme.dart';
 import '../models/app_update.dart';
 import '../services/api_service.dart';
 import 'projects_page.dart';
@@ -81,7 +80,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.transparent,
-                                Colors.black.withOpacity(0.7),
+                                Colors.black.withValues(alpha: 0.7),
                               ],
                             ),
                           ),
@@ -180,7 +179,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                         ),
                         const SizedBox(height: 40),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.between,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             _buildSectionTitle(context, state.translate('featured_insights')),
                             TextButton(
@@ -226,7 +225,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.grey.withOpacity(0.2)),
+          side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -235,7 +234,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: Theme.of(context).primaryColor),

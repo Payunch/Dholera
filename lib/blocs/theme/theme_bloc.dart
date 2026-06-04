@@ -11,7 +11,7 @@ class ThemeBloc extends Bloc<ThemeEvent, ThemeState> {
     on<ThemeChanged>(_onThemeChanged);
   }
 
-  Future<void> _onThemeChanged(ThemeChanged event, Emit<ThemeState> emit) async {
+  Future<void> _onThemeChanged(ThemeChanged event, Emitter<ThemeState> emit) async {
     emit(ThemeState(boardTheme: event.boardTheme));
     
     // Sync with backend if possible

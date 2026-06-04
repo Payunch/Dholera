@@ -39,7 +39,7 @@ class _AboutPageState extends State<AboutPage> {
                       Image.network(
                         'https://api.dholeraplatform.com/uploads/images/futuristic_dholera.png',
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(color: Colors.slate[900]),
+                        errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
                       ),
                       Container(color: Colors.black.withOpacity(0.5)),
                     ],
@@ -56,7 +56,7 @@ class _AboutPageState extends State<AboutPage> {
                       const SizedBox(height: 20),
                       const Text(
                         'THE INTELLIGENCE HUB',
-                        style: TextStyle(fontSize: 32, fontWeight: FontWeight.black, height: 1.1),
+                        style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, height: 1.1),
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -156,7 +156,7 @@ class _AboutPageState extends State<AboutPage> {
           const Text(
             'BUILDING THE FUTURE, ONE DECODED MAP AT A TIME.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.black, height: 1.2),
+            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900, height: 1.2),
           ),
           const SizedBox(height: 16),
           const Text(

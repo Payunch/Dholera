@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../services/api_service.dart';
 import '../blocs/auth/auth_bloc.dart';
@@ -56,7 +55,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = context.watch<AuthBloc>().state is AuthAuthenticated;
+    final authState = context.watch<AuthBloc>().state;
+    final isAdmin = authState.status == AuthStatus.authenticated && authState.role == AppRole.adminOwner;
 
     return BlocBuilder<LocalizationBloc, LocalizationState>(
       builder: (context, localState) {
@@ -101,7 +101,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.black, letterSpacing: 1.2, color: Colors.grey),
+      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: Colors.grey),
     );
   }
 
@@ -115,7 +115,7 @@ class _SettingsPageState extends State<SettingsPage> {
           Icons.dark_mode_outlined,
           trailing: Switch(
             value: isDark,
-            activeColor: Colors.orange,
+            activeThumbColor: Colors.orange,
             onChanged: (val) {
               context.read<ThemeBloc>().add(ThemeChanged(val ? AppBoardTheme.blueBoard : AppBoardTheme.standard));
             },
@@ -208,7 +208,6 @@ class _AdminBusinessSettingsPageState extends State<AdminBusinessSettingsPage> {
   final ApiService _apiService = ApiService();
   Map<String, dynamic> _settings = {};
   bool _isLoading = true;
-  String? _error;
   final Map<String, TextEditingController> _controllers = {};
 
   @override
@@ -218,7 +217,7 @@ class _AdminBusinessSettingsPageState extends State<AdminBusinessSettingsPage> {
   }
 
   Future<void> _fetchSettings() async {
-    setState(() { _isLoading = true; _error = null; });
+    setState(() { _isLoading = true; });
     try {
       final response = await _apiService.getSettings();
       if (response['success'] == true) {
@@ -230,10 +229,10 @@ class _AdminBusinessSettingsPageState extends State<AdminBusinessSettingsPage> {
           _isLoading = false;
         });
       } else {
-        setState(() { _error = response['error']; _isLoading = false; });
+        setState(() { _isLoading = false; });
       }
     } catch (e) {
-      setState(() { _error = e.toString(); _isLoading = false; });
+      setState(() { _isLoading = false; });
     }
   }
 
@@ -244,7 +243,7 @@ class _AdminBusinessSettingsPageState extends State<AdminBusinessSettingsPage> {
     try {
       final res = await _apiService.updateSettings(updates);
       if (res['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved successfully')));
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved successfully')));
         await _fetchSettings();
       }
     } catch (_) {}

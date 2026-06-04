@@ -8,7 +8,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'dart:io';
 
 import 'config/assets.dart';
-import 'config/firebase_options.dart';
+import 'firebase_options.dart';
 import 'theme/board_theme.dart';
 import 'blocs/auth/auth_bloc.dart';
 import 'blocs/auth/auth_event.dart';
@@ -36,7 +36,7 @@ void main() async {
 
     await FirebaseAppCheck.instance.activate(
       androidProvider: AndroidProvider.playIntegrity,
-      appleProvider: AndroidProvider.debug, // Change for production
+      appleProvider: AppleProvider.deviceCheck,
     );
 
     await NotificationService().initialize();
@@ -90,7 +90,7 @@ class _MyAppState extends State<MyApp> {
                 navigatorKey: _navigatorKey,
                 title: 'Dholera Platform',
                 debugShowCheckedModeBanner: false,
-                theme: themeState.themeData,
+                theme: themeState.colors.toThemeData(),
                 locale: localizationState.locale,
                 home: const SplashPage(),
               );

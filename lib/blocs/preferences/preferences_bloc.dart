@@ -23,19 +23,19 @@ class PreferencesBloc extends Bloc<PreferencesEvent, PreferencesState> {
     ));
   }
 
-  void _onLoadPreferences(LoadPreferences event, Emit<PreferencesState> emit) {
+  void _onLoadPreferences(LoadPreferences event, Emitter<PreferencesState> emit) {
     emit(state.copyWith(
       isLanguageSelected: event.isLanguageSelected,
       isOnboardingDone: event.isOnboardingDone,
     ));
   }
 
-  void _onLanguageSelected(LanguageSelected event, Emit<PreferencesState> emit) {
+  void _onLanguageSelected(LanguageSelected event, Emitter<PreferencesState> emit) {
     emit(state.copyWith(isLanguageSelected: true));
     _storage.write(key: 'isLanguageSelected', value: 'true');
   }
 
-  void _onOnboardingCompleted(OnboardingCompleted event, Emit<PreferencesState> emit) {
+  void _onOnboardingCompleted(OnboardingCompleted event, Emitter<PreferencesState> emit) {
     emit(state.copyWith(isOnboardingDone: true));
     _storage.write(key: 'isOnboardingDone', value: 'true');
   }

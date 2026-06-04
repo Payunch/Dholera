@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum AppBoardTheme { blueBoard, beigeBoard }
+enum AppBoardTheme { blueBoard, beigeBoard, standard }
 
 class BoardThemeData {
   final Color background;
@@ -66,6 +66,31 @@ class BoardThemeData {
       refreshIndicator: Color(0xFF8B4513),
       shimmerBase: Color(0xFFE5E5CA),
       shimmerHighlight: Color(0xFFF5F5DC),
+    );
+  }
+
+  static BoardThemeData standard() => blueBoard();
+
+  ThemeData toThemeData() {
+    return ThemeData(
+      primaryColor: primary,
+      scaffoldBackgroundColor: background,
+      cardColor: card,
+      dividerColor: divider,
+      dialogBackgroundColor: dialog,
+      textTheme: TextTheme(
+        bodyLarge: TextStyle(color: textPrimary),
+        bodyMedium: TextStyle(color: textPrimary),
+        bodySmall: TextStyle(color: textSecondary),
+      ),
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primary,
+        brightness: background.computeLuminance() > 0.5 ? Brightness.light : Brightness.dark,
+      ).copyWith(
+        primary: primary,
+        secondary: secondary,
+        surface: card,
+      ),
     );
   }
 }

@@ -11,7 +11,7 @@ class LocalizationBloc extends Bloc<LocalizationEvent, LocalizationState> {
     on<LoadTranslations>(_onLoadTranslations);
   }
 
-  Future<void> _onLocalizationChanged(LocalizationChanged event, Emit<LocalizationState> emit) async {
+  Future<void> _onLocalizationChanged(LocalizationChanged event, Emitter<LocalizationState> emit) async {
     emit(state.copyWith(locale: event.locale, isLoading: true));
     try {
       final response = await _apiService.getTranslations(event.locale.languageCode);
@@ -32,7 +32,7 @@ class LocalizationBloc extends Bloc<LocalizationEvent, LocalizationState> {
     await _apiService.updatePreferences(language: event.locale.languageCode);
   }
 
-  Future<void> _onLoadTranslations(LoadTranslations event, Emit<LocalizationState> emit) async {
+  Future<void> _onLoadTranslations(LoadTranslations event, Emitter<LocalizationState> emit) async {
     emit(state.copyWith(isLoading: true));
     try {
       final response = await _apiService.getTranslations(state.locale.languageCode);
