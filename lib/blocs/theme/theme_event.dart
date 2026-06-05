@@ -13,3 +13,7 @@ class ThemeChanged extends ThemeEvent {
   @override
   List<Object?> get props => [boardTheme];
 }
+
+class AutoThemeRefresh extends ThemeEvent {}
+
+class LoadThemePreference extends ThemeEvent {}

@@ -7,7 +7,7 @@ class LocalizationState extends Equatable {
   final bool isLoading;
 
   const LocalizationState({
-    this.locale = const Locale('en'),
+    this.locale = const Locale('hi'),
     this.translations = const {},
     this.isLoading = false,
   });

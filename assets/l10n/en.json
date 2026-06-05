@@ -1,0 +1,17 @@
+{
+  "nav_home": "Home",
+  "nav_tp_maps": "Maps",
+  "nav_pdf": "Documents",
+  "nav_projects": "Projects",
+  "nav_updates": "Latest Updates",
+  "nav_contact": "Contact Us",
+  "nav_about": "About Us",
+  "nav_portals": "Portals",
+  "start_here": "Get Started",
+  "verify_desc": "Please identify yourself to view details",
+  "full_name": "Full Name",
+  "mobile_number": "Mobile Number",
+  "get_access": "Continue",
+  "access_granted": "Access Granted",
+  "talk_to_owner": "Talk to Owner"
+}
