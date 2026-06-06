@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 import '../models/app_update.dart';
+import '../blocs/auth/auth_bloc.dart';
+import '../blocs/auth/auth_state.dart';
 import 'blog_editor_page.dart';
+import 'update_detail_page.dart';
 
 class UpdatesPage extends StatefulWidget {
   const UpdatesPage({super.key});
@@ -17,10 +22,6 @@ class _UpdatesPageState extends State<UpdatesPage> {
   bool _isLoading = true;
   String? _error;
 
-  String _formatUploadedAt(DateTime uploadedAt) {
-    return DateFormat('dd MMM yyyy, hh:mm a').format(uploadedAt);
-  }
-
   @override
   void initState() {
     super.initState();
@@ -28,6 +29,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
   }
 
   Future<void> _fetchUpdates() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _error = null;
@@ -35,6 +37,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
 
     try {
       final response = await _apiService.getUpdates();
+      if (!mounted) return;
       if (response['success'] == true) {
         final List<dynamic> updatesData = response['updates'] ?? [];
         setState(() {
@@ -48,41 +51,11 @@ class _UpdatesPageState extends State<UpdatesPage> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _isLoading = false;
       });
-    }
-  }
-
-  Future<void> _deleteUpdate(int id) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Delete'),
-        content: const Text('Are you sure you want to delete this update?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        final result = await _apiService.deleteUpdate(id);
-        if (!mounted) return;
-        if (result['success'] == true) {
-          await _fetchUpdates();
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Update deleted')));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${result['error']}')));
-        }
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
     }
   }
 
@@ -95,164 +68,176 @@ class _UpdatesPageState extends State<UpdatesPage> {
     );
 
     if (result == true) {
-      await _fetchUpdates();
+      _fetchUpdates();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isAdmin = context.read<AuthBloc>().state.role == AppRole.adminOwner;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF020617) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Property Updates'),
-        backgroundColor: Colors.orange,
+        title: Text(
+          'INTELLIGENCE',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w900, letterSpacing: 2),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
         actions: [
-          IconButton(onPressed: _fetchUpdates, icon: const Icon(Icons.refresh)),
+          IconButton(onPressed: _fetchUpdates, icon: const Icon(Icons.refresh_rounded)),
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Colors.orange))
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Error: $_error'),
-                      const SizedBox(height: 16),
-                      ElevatedButton(onPressed: _fetchUpdates, child: const Text('Retry')),
-                    ],
-                  ),
-                )
+              ? _buildErrorView()
               : _updates.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.update_disabled, size: 64, color: Colors.grey),
-                          const SizedBox(height: 16),
-                          const Text('No updates found'),
-                          const SizedBox(height: 16),
-                          ElevatedButton(onPressed: _fetchUpdates, child: const Text('Refresh')),
-                        ],
-                      ),
-                    )
+                  ? _buildEmptyView()
                   : RefreshIndicator(
+                      color: Colors.orange,
                       onRefresh: _fetchUpdates,
-                      child: ListView.builder(
+                      child: ListView.separated(
+                        padding: const EdgeInsets.all(24),
                         itemCount: _updates.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 24),
                         itemBuilder: (context, index) {
-                          final update = _updates[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            child: ListTile(
-                              leading: update.imageUrl != null
-                                  ? Image.network(update.imageUrl!, width: 50, height: 50, fit: BoxFit.cover, 
-                                      errorBuilder: (_, _, _) => const Icon(Icons.image_not_supported))
-                                  : const Icon(Icons.update, size: 40, color: Colors.orange),
-                              title: Text(update.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                              subtitle: Text(
-                                '${update.category} • Uploaded: ${_formatUploadedAt(update.createdAt)}',
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit, color: Colors.blue),
-                                    onPressed: () => _navigateToEditor(update),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () => _deleteUpdate(update.id),
-                                  ),
-                                ],
-                              ),
-                              onTap: () => _showUpdateDetails(update),
-                            ),
-                          );
+                          return _buildUpdateCard(_updates[index], isAdmin, isDark);
                         },
                       ),
                     ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToEditor,
-        backgroundColor: Colors.orange,
-        tooltip: 'Create New Update',
-        child: const Icon(Icons.add),
+      floatingActionButton: isAdmin
+          ? FloatingActionButton(
+              onPressed: _navigateToEditor,
+              backgroundColor: Colors.orange,
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildUpdateCard(AppUpdate update, bool isAdmin, bool isDark) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => UpdateDetailPage(update: update, isAdmin: isAdmin)),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0F172A) : Colors.white,
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.slate[100]!),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.4 : 0.05),
+              blurRadius: 30,
+              offset: const Offset(0, 15),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (update.imageUrl != null)
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Image.network(
+                    update.imageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(color: Colors.slate[100]),
+                  ),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        update.category.toUpperCase(),
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.orange[700],
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      Text(
+                        DateFormat('MMM d, yyyy').format(update.createdAt),
+                        style: GoogleFonts.inter(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    update.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      height: 1.2,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    update.content,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      height: 1.5,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  void _showUpdateDetails(AppUpdate update) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (update.imageUrl != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(update.imageUrl!, width: double.infinity, height: 250, fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => const SizedBox()),
-                ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(update.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                        Text(update.category, style: TextStyle(color: Colors.orange[700], fontWeight: FontWeight.w500)),
-                      ],
-                    ),
-                  ),
-                  IconButton.filledTonal(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _navigateToEditor(update);
-                    },
-                    icon: const Icon(Icons.edit),
-                  ),
-                ],
-              ),
-              const Divider(height: 32),
-              Text(update.content, style: const TextStyle(fontSize: 16, height: 1.5)),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Text('Created: ${DateFormat('dd MMM yyyy, hh:mm a').format(update.createdAt)}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(update.published ? Icons.check_circle : Icons.unpublished, size: 14, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Text('Status: ${update.published ? "Published" : "Draft"}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.photo_size_select_actual, size: 14, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Text('Image Position: ${update.imagePosition}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                ],
-              ),
-            ],
+  Widget _buildErrorView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline_rounded, size: 48, color: Colors.redAccent),
+          const SizedBox(height: 16),
+          Text('Error: $_error', textAlign: TextCenter.center),
+          const SizedBox(height: 24),
+          ElevatedButton(onPressed: _fetchUpdates, child: const Text('RETRY')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.feed_outlined, size: 64, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text(
+            'NO INTELLIGENCE FOUND',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w900, color: Colors.grey[400]),
           ),
-        ),
+          const SizedBox(height: 24),
+          ElevatedButton(onPressed: _fetchUpdates, child: const Text('REFRESH')),
+        ],
       ),
     );
   }
