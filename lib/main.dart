@@ -26,31 +26,42 @@ import 'pages/splash_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Initialize services in parallel where possible, but don't let them crash the app
+  await Future.wait([
+    _initFirebase(),
+    _initAds(),
+    ConsentManager.init(),
+  ]);
+  
+  runApp(const MyApp());
+}
+
+Future<void> _initFirebase() async {
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
+    // Don't wait forever for App Check
     await FirebaseAppCheck.instance.activate(
       androidProvider: AndroidProvider.playIntegrity,
       appleProvider: AppleProvider.deviceCheck,
-    );
+    ).timeout(const Duration(seconds: 5), onTimeout: () => null);
 
     await NotificationService().initialize();
   } catch (e) {
-    if (kDebugMode) print('Firebase initialization failed: $e');
+    debugPrint('Firebase initialization error: $e');
   }
-
-  if (_shouldInitializeMobileAds()) {
-    await MobileAds.instance.initialize();
-  }
-  await ConsentManager.init();
-  
-  runApp(const MyApp());
 }
 
-bool _shouldInitializeMobileAds() {
-  return !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+Future<void> _initAds() async {
+  try {
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      await MobileAds.instance.initialize();
+    }
+  } catch (e) {
+    debugPrint('Ads initialization error: $e');
+  }
 }
 
 class MyApp extends StatefulWidget {

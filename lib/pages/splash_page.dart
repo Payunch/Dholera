@@ -24,30 +24,40 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _navigateToNext() async {
-    // Artificial delay for splash animation/feel
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
+    try {
+      // Maximum time to wait in splash
+      final timeout = Future.delayed(const Duration(seconds: 5));
+      
+      // Artificial delay for splash animation
+      await Future.delayed(const Duration(seconds: 2));
+      
+      if (!mounted) return;
 
-    final prefState = context.read<PreferencesBloc>().state;
-    final authState = context.read<AuthBloc>().state;
+      final prefState = context.read<PreferencesBloc>().state;
+      final authState = context.read<AuthBloc>().state;
 
-    if (!prefState.isLanguageSelected) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LanguagePage()),
-      );
-    } else if (!prefState.isOnboardingDone) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const OnboardingPage()),
-      );
-    } else if (authState.status == AuthStatus.authenticated) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const DashboardPage()),
-      );
-    } else {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const RoleSelectionPage()),
-      );
+      if (!prefState.isLanguageSelected) {
+        _replacePage(const LanguagePage());
+      } else if (!prefState.isOnboardingDone) {
+        _replacePage(const OnboardingPage());
+      } else if (authState.status == AuthStatus.authenticated) {
+        _replacePage(const DashboardPage());
+      } else {
+        _replacePage(const RoleSelectionPage());
+      }
+    } catch (e) {
+      debugPrint('Splash Navigation Error: $e');
+      // Fallback to role selection if everything fails
+      if (mounted) {
+        _replacePage(const RoleSelectionPage());
+      }
     }
+  }
+
+  void _replacePage(Widget page) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => page),
+    );
   }
 
   @override
