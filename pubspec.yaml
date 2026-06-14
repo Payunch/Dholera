@@ -87,6 +87,7 @@ dependencies:
   google_mobile_ads: ^8.0.0
   flutter_pdfview: ^1.4.4
   app_links: ^7.0.0
+  connectivity_plus: ^7.1.1
 
 dev_dependencies:
   flutter_test:

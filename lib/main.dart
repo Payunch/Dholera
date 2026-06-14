@@ -19,6 +19,7 @@ import 'blocs/leads/leads_bloc.dart';
 import 'blocs/leads/leads_event.dart';
 import 'services/notification_service.dart';
 import 'services/deep_link_service.dart';
+import 'widgets/offline_wrapper.dart';
 import 'consent.dart';
 
 import 'pages/splash_page.dart';
@@ -94,13 +95,15 @@ class _MyAppState extends State<MyApp> {
         builder: (context, localizationState) {
           return BlocBuilder<ThemeBloc, ThemeState>(
             builder: (context, themeState) {
-              return MaterialApp(
-                navigatorKey: _navigatorKey,
-                title: 'Dholera Platform',
-                debugShowCheckedModeBanner: false,
-                theme: themeState.colors.toThemeData(),
-                locale: localizationState.locale,
-                home: const SplashPage(),
+              return OfflineWrapper(
+                child: MaterialApp(
+                  navigatorKey: _navigatorKey,
+                  title: 'Dholera Platform',
+                  debugShowCheckedModeBanner: false,
+                  theme: themeState.colors.toThemeData(),
+                  locale: localizationState.locale,
+                  home: const SplashPage(),
+                ),
               );
             },
           );

@@ -11,6 +11,7 @@ import '../blocs/theme/theme_bloc.dart';
 import '../blocs/theme/theme_event.dart';
 import '../blocs/theme/theme_state.dart';
 import '../theme/board_theme.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -87,7 +88,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminBusinessSettingsPage())),
                   ),
                 ],
-                const SizedBox(height: 48),
+                const SizedBox(height: 32),
+                _buildDeleteAccountTile(context),
+                const SizedBox(height: 16),
                 _buildLogoutTile(context),
                 const SizedBox(height: 40),
               ],
@@ -193,6 +196,55 @@ class _SettingsPageState extends State<SettingsPage> {
       title: const Text('Sign Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
       subtitle: const Text('Safely terminate your session.', style: TextStyle(fontSize: 10)),
       onTap: _handleLogout,
+    );
+  }
+
+  void _handleDeleteAccount() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Account'),
+        content: const Text('WARNING: This will permanently delete your account and remove all your data. This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL')),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                // Delete from Firebase
+                final user = FirebaseAuth.instance.currentUser;
+                await user?.delete();
+                if (mounted) {
+                  context.read<AuthBloc>().add(AuthLogoutRequested());
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginPage()),
+                    (route) => false,
+                  );
+                }
+              } catch (e) {
+                Navigator.pop(dialogContext);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to delete account. You may need to sign in again to perform this action.')));
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('DELETE PERMANENTLY'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeleteAccountTile(BuildContext context) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+        child: const Icon(Icons.person_remove_rounded, color: Colors.red),
+      ),
+      title: const Text('Delete Account', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+      subtitle: const Text('Permanently remove your account & data.', style: TextStyle(fontSize: 10)),
+      onTap: _handleDeleteAccount,
     );
   }
 }
