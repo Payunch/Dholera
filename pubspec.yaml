@@ -88,6 +88,7 @@ dependencies:
   flutter_pdfview: ^1.4.4
   app_links: ^7.0.0
   connectivity_plus: ^7.1.1
+  firebase_auth: ^4.16.0
 
 dev_dependencies:
   flutter_test:

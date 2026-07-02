@@ -13,7 +13,7 @@ This guide provides everything you need to build and deploy the Dholera Admin ap
 | Task | Command |
 |------|---------|
 | **Setup** | `./setup-build.sh` |
-| **Build APK** | `./build-apk.sh` |
+| **Build APK** | `flutter build apk --release` |
 | **Install** | `flutter install` |
 | **Test API Config** | Edit `lib/config/api_config.dart` |
 | **License Help** | Read `ANDROID_LICENSE_FIX.md` |

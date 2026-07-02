@@ -130,7 +130,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF0F172A) : Colors.white,
           borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.slate[100]!),
+          border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.blueGrey[100]!),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(isDark ? 0.4 : 0.05),
@@ -150,7 +150,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
                   child: Image.network(
                     update.imageUrl!,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(color: Colors.slate[100]),
+                    errorBuilder: (_, __, ___) => Container(color: Colors.blueGrey[100]),
                   ),
                 ),
               ),
@@ -216,7 +216,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
         children: [
           const Icon(Icons.error_outline_rounded, size: 48, color: Colors.redAccent),
           const SizedBox(height: 16),
-          Text('Error: $_error', textAlign: TextCenter.center),
+          Text('Error: $_error', textAlign: TextAlign.center),
           const SizedBox(height: 24),
           ElevatedButton(onPressed: _fetchUpdates, child: const Text('RETRY')),
         ],

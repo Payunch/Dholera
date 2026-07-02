@@ -36,8 +36,8 @@ class UpdateDetailPage extends StatelessWidget {
         catBg = Colors.orange[50]!;
         break;
       default:
-        catColor = Colors.slate[600]!;
-        catBg = Colors.slate[50]!;
+        catColor = Colors.blueGrey[600]!;
+        catBg = Colors.blueGrey[50]!;
     }
 
     if (isDark) catBg = catColor.withOpacity(0.1);
@@ -184,7 +184,7 @@ class UpdateDetailPage extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       height: 1.7,
-                      color: isDark ? Colors.slate[300] : const Color(0xFF334155),
+                      color: isDark ? Colors.blueGrey[300] : const Color(0xFF334155),
                     ),
                   ),
                   
@@ -194,7 +194,7 @@ class UpdateDetailPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(32),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withOpacity(0.03) : Colors.slate[50],
+                      color: isDark ? Colors.white.withOpacity(0.03) : Colors.blueGrey[50],
                       borderRadius: BorderRadius.circular(32),
                       border: Border.all(color: Colors.grey[isDark ? 900 : 100]!),
                     ),
@@ -202,7 +202,7 @@ class UpdateDetailPage extends StatelessWidget {
                       children: [
                         Text(
                           'Ready to invest in Dholera SIR?',
-                          textAlign: TextCenter.center,
+                          textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             fontSize: 20,
                             fontWeight: FontWeight.w900,
