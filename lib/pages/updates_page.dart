@@ -148,7 +148,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
                 child: AspectRatio(
                   aspectRatio: 16 / 9,
                   child: Image.network(
-                    update.imageUrl!,
+                    update.imageUrl!.startsWith('http') ? update.imageUrl! : 'https://api.dholeraplatform.com${update.imageUrl}',
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(color: Colors.blueGrey[100]),
                   ),

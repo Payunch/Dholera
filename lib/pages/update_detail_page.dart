@@ -66,7 +66,7 @@ class UpdateDetailPage extends StatelessWidget {
               stretchModes: const [StretchMode.zoomBackground],
               background: update.imageUrl != null
                   ? Image.network(
-                      update.imageUrl!,
+                      update.imageUrl!.startsWith('http') ? update.imageUrl! : 'https://api.dholeraplatform.com${update.imageUrl}',
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => _buildPlaceholder(),
                     )

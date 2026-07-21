@@ -244,8 +244,8 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
                   children: [
                     _pickedFile != null
                         ? Image.file(File(_pickedFile!.path), height: 150, width: double.infinity, fit: BoxFit.cover)
-                        : Image.network(_existingImageUrl!, height: 150, width: double.infinity, fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.error))),
+                        : Image.network(_existingImageUrl!.startsWith('http') ? _existingImageUrl! : 'https://api.dholeraplatform.com$_existingImageUrl', height: 150, width: double.infinity, fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(height: 150, color: Colors.grey[200], child: const Icon(Icons.image, color: Colors.grey))),
                     Positioned(
                       right: 4,
                       top: 4,
@@ -404,8 +404,9 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
       borderRadius: BorderRadius.circular(12),
       child: _pickedFile != null
           ? Image.file(File(_pickedFile!.path), width: double.infinity, fit: BoxFit.cover)
-          : Image.network(_existingImageUrl!, width: double.infinity, fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => const SizedBox()),
+          : Image.network(_existingImageUrl!.startsWith('http') ? _existingImageUrl! : 'https://api.dholeraplatform.com$_existingImageUrl', width: double.infinity, fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(height: 200, color: Colors.blueGrey[50], child: const Center(child: Icon(Icons.image, color: Colors.grey, size: 50))),
+            ),
     );
   }
 
