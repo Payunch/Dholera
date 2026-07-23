@@ -28,17 +28,33 @@ class ApiService {
   String? _sessionCookie;
   
   Future<String?> getAuthToken() async {
-    _sessionCookie ??= await _secureStorage.read(key: 'session_cookie');
-    return await _secureStorage.read(key: 'auth_token');
+    try {
+      _sessionCookie ??= await _secureStorage.read(key: 'session_cookie');
+      return await _secureStorage.read(key: 'auth_token');
+    } catch (e) {
+      try { await _secureStorage.deleteAll(); } catch (_) {}
+      return null;
+    }
   }
   
   Future<void> setAuthToken(String token) async {
-    await _secureStorage.write(key: 'auth_token', value: token);
+    try {
+      await _secureStorage.write(key: 'auth_token', value: token);
+    } catch (e) {
+      try {
+        await _secureStorage.deleteAll();
+        await _secureStorage.write(key: 'auth_token', value: token);
+      } catch (_) {}
+    }
   }
   
   Future<void> clearAuthToken() async {
-    await _secureStorage.delete(key: 'auth_token');
-    await _secureStorage.delete(key: 'session_cookie');
+    try {
+      await _secureStorage.delete(key: 'auth_token');
+      await _secureStorage.delete(key: 'session_cookie');
+    } catch (e) {
+      try { await _secureStorage.deleteAll(); } catch (_) {}
+    }
     _sessionCookie = null;
   }
 
