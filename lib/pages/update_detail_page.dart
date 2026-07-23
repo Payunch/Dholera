@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/app_update.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 
 class UpdateDetailPage extends StatelessWidget {
   final AppUpdate update;
@@ -169,7 +170,9 @@ class UpdateDetailPage extends StatelessWidget {
                         const Spacer(),
                         IconButton(
                           icon: const Icon(Icons.share_outlined),
-                          onPressed: () {},
+                          onPressed: () {
+                            Share.share('Read this latest update: ${update.title}\n\nhttps://dholeraplatform.com/updates/${update.id}');
+                          },
                           color: Colors.grey[400],
                         ),
                       ],

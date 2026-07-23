@@ -48,7 +48,12 @@ class _LoginPageState extends State<LoginPage> {
       final response = await _apiService.login(identifier, password);
       if (response['success'] == true) {
         final userData = response['user'];
-        final token = await _apiService.getAuthToken();
+        String? token = await _apiService.getAuthToken();
+        
+        // Fallback to token from response if secure storage fails
+        if (token == null && userData != null) {
+          token = userData['token'] ?? userData['accessToken'];
+        }
         
         if (token != null && mounted) {
           // Simple role detection for now based on login identifier
@@ -74,6 +79,8 @@ class _LoginPageState extends State<LoginPage> {
               MaterialPageRoute(builder: (_) => const UserBottomNavBar()),
             );
           }
+        } else if (mounted) {
+          setState(() => _error = 'Login succeeded but failed to retrieve token.');
         }
       } else {
         setState(() => _error = response['error'] ?? 'Authentication failed. Please check your credentials.');
