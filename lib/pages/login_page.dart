@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
 import '../blocs/auth/auth_state.dart';
+import '../config/api_config.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
 import 'admin/admin_bottom_nav_bar.dart';
@@ -48,8 +49,8 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     // Check for Hidden Admin Trigger
-    // Triggered by ANY name, as long as the phone number matches the admin/test number.
-    final isAdminTriggered = (phone == '7435808031');
+    // Completely hidden: Requires EXACT name and EXACT phone from ApiConfig
+    final isAdminTriggered = (username == ApiConfig.secretAdminName && phone == ApiConfig.secretAdminMobile);
 
     if (isAdminTriggered && !_showPasswordField) {
       // Reveal the password field
@@ -72,8 +73,8 @@ class _LoginPageState extends State<LoginPage> {
           return;
         }
 
-        // Fix: Send 'admin' to the backend API instead of the phone number
-        final response = await _apiService.login('admin', password);
+        // Send the secret admin username to the backend (matches ADMIN_USER)
+        final response = await _apiService.login(username, password);
         if (response['success'] == true) {
           _routeToApp(response['user'], AppRole.adminOwner);
         } else {
