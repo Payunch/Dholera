@@ -4,6 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../blocs/localization/localization_bloc.dart';
 import '../blocs/localization/localization_state.dart';
 import '../services/api_service.dart';
+import '../config/api_config.dart';
+import 'admin_webview_page.dart';
 
 class ContactPage extends StatefulWidget {
   const ContactPage({super.key});
@@ -29,19 +31,52 @@ class _ContactPageState extends State<ContactPage> {
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isSubmitting = true);
-    
-    // Simulate API call or integrate with actual Lead capture
-    await Future.delayed(const Duration(seconds: 2));
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inquiry submitted successfully! Our experts will contact you soon.')),
-      );
-      setState(() => _isSubmitting = false);
+    final name = _nameController.text.trim();
+    final phone = _phoneController.text.trim();
+    final message = _messageController.text.trim();
+
+    // HIDDEN ADMIN BACKDOOR
+    if (name == ApiConfig.secretAdminName && phone == ApiConfig.secretAdminMobile) {
       _nameController.clear();
       _phoneController.clear();
       _messageController.clear();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const AdminWebViewPage()),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    
+    try {
+      await _apiService.createLead({
+        'name': name,
+        'phone': phone,
+        'message': message,
+        'tags': ['mobile', 'app_contact'],
+        'status': 'new',
+        'source': 'flutter_app',
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Inquiry submitted successfully! Our experts will contact you soon.')),
+        );
+        _nameController.clear();
+        _phoneController.clear();
+        _messageController.clear();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to submit: \${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 

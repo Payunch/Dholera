@@ -301,7 +301,22 @@ class ApiService {
       ).timeout(const Duration(seconds: 15));
       return _handleJsonResponse(response, 'leads');
     } catch (e) {
-      return _handleRequestError(e);
+      throw Exception('Failed to get leads: $e');
+    }
+  }
+
+  // Create a new lead (Public endpoint)
+  Future<Map<String, dynamic>> createLead(Map<String, dynamic> leadData) async {
+    try {
+      final headers = await _getMutationHeaders();
+      final response = await http.post(
+        Uri.parse(ApiConfig.leadsEndpoint),
+        headers: headers,
+        body: jsonEncode(leadData),
+      );
+      return _handleJsonResponse(response, 'create lead');
+    } catch (e) {
+      throw Exception('Failed to create lead: $e');
     }
   }
 
