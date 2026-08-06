@@ -12,6 +12,13 @@ import 'airport_page.dart';
 import 'infrastructure_page.dart';
 import 'updates_page.dart';
 import 'portals_page.dart';
+import 'government_schemes_page.dart';
+import 'investment_guide_page.dart';
+import 'plots_for_sale_page.dart';
+import 'smart_city_page.dart';
+import 'travel_lifestyle_page.dart';
+import 'privacy_policy_page.dart';
+import 'terms_page.dart';
 
 class InvestorLandingPage extends StatefulWidget {
   const InvestorLandingPage({super.key});
@@ -144,6 +151,38 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClearanceEnginePage())),
                         ),
                         const SizedBox(height: 32),
+                        _buildSectionTitle(context, 'Investment Resources'),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildSmallCard(
+                                context,
+                                Icons.real_estate_agent,
+                                'Plots for Sale',
+                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PlotsForSalePage())),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildSmallCard(
+                                context,
+                                Icons.menu_book,
+                                'Investment Guide',
+                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InvestmentGuidePage())),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildFeatureCard(
+                          context,
+                          Icons.account_balance_wallet,
+                          'Government Schemes',
+                          'Explore Gujarat Government and Central Government subsidies for Dholera.',
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GovernmentSchemesPage())),
+                        ),
+                        const SizedBox(height: 32),
                         _buildSectionTitle(context, 'Core Infrastructure'),
                         const SizedBox(height: 16),
                         Row(
@@ -163,6 +202,28 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                                 Icons.construction,
                                 'Trunk Infra',
                                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InfrastructurePage())),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildSmallCard(
+                                context,
+                                Icons.location_city,
+                                'Smart City Features',
+                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SmartCityPage())),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildSmallCard(
+                                context,
+                                Icons.directions_car,
+                                'Travel & Lifestyle',
+                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TravelLifestylePage())),
                               ),
                             ),
                           ],
@@ -195,6 +256,23 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                           const Text('No recent updates available.')
                         else
                           ..._latestInsights.map((u) => _buildInsightCard(context, u)),
+                        const SizedBox(height: 40),
+                        Center(
+                          child: Wrap(
+                            spacing: 16,
+                            children: [
+                              TextButton(
+                                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyPolicyPage())),
+                                child: const Text('Privacy Policy', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TermsPage())),
+                                child: const Text('Terms of Service', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 40),
                       ],
                     ),
                   ),
