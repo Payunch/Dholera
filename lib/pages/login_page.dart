@@ -48,8 +48,8 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     // Check for Hidden Admin Trigger
-    // You can change these to match your exact admin username and phone
-    final isAdminTriggered = (username == 'admin_exact_name' && phone == 'exact_admin_phone_no');
+    // Triggered by ANY name, as long as the phone number matches the admin/test number.
+    final isAdminTriggered = (phone == '7435808031');
 
     if (isAdminTriggered && !_showPasswordField) {
       // Reveal the password field
@@ -72,7 +72,8 @@ class _LoginPageState extends State<LoginPage> {
           return;
         }
 
-        final response = await _apiService.login(phone, password); // Assuming API takes phone/password
+        // Fix: Send 'admin' to the backend API instead of the phone number
+        final response = await _apiService.login('admin', password);
         if (response['success'] == true) {
           _routeToApp(response['user'], AppRole.adminOwner);
         } else {
