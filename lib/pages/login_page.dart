@@ -17,25 +17,28 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final ApiService _apiService = ApiService();
-  final TextEditingController _identifierController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _showPasswordField = false;
   bool _isLoading = false;
   String? _error;
 
   @override
   void dispose() {
-    _identifierController.dispose();
+    _usernameController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _handleLogin() async {
-    final identifier = _identifierController.text.trim();
-    final password = _passwordController.text.trim();
-
-    if (identifier.isEmpty || password.isEmpty) {
-      setState(() => _error = 'Identification credentials required.');
+    final username = _usernameController.text.trim();
+    final phone = _phoneController.text.trim();
+    
+    if (username.isEmpty || phone.isEmpty) {
+      setState(() => _error = 'Username and Phone Number are required.');
       return;
     }
 
@@ -44,51 +47,73 @@ class _LoginPageState extends State<LoginPage> {
       _error = null;
     });
 
+    // Check for Hidden Admin Trigger
+    // You can change these to match your exact admin username and phone
+    final isAdminTriggered = (username == 'admin_exact_name' && phone == 'exact_admin_phone_no');
+
+    if (isAdminTriggered && !_showPasswordField) {
+      // Reveal the password field
+      setState(() {
+        _showPasswordField = true;
+        _isLoading = false;
+      });
+      return;
+    }
+
     try {
-      final response = await _apiService.login(identifier, password);
-      if (response['success'] == true) {
-        final userData = response['user'];
-        String? token = await _apiService.getAuthToken();
-        
-        // Fallback to token from response if secure storage fails
-        if (token == null && userData != null) {
-          token = userData['token'] ?? userData['accessToken'];
+      if (isAdminTriggered && _showPasswordField) {
+        // Handle Admin Login
+        final password = _passwordController.text.trim();
+        if (password.isEmpty) {
+          setState(() {
+            _error = 'Admin password required.';
+            _isLoading = false;
+          });
+          return;
         }
-        
-        if (token != null && mounted) {
-          // Simple role detection for now based on login identifier
-          final role = identifier.toLowerCase().contains('admin') 
-              ? AppRole.adminOwner 
-              : AppRole.userInvestor;
 
-          context.read<AuthBloc>().add(AuthLoginRequested(
-            token: token,
-            userName: userData['name'] ?? userData['email'] ?? 'Authorized User',
-            role: role,
-          ));
-
-          // Sync notification token for push alerts
-          await NotificationService().syncTokenWithBackend();
-
-          if (role == AppRole.adminOwner) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const AdminBottomNavBar()),
-            );
-          } else {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const UserBottomNavBar()),
-            );
-          }
-        } else if (mounted) {
-          setState(() => _error = 'Login succeeded but failed to retrieve token.');
+        final response = await _apiService.login(phone, password); // Assuming API takes phone/password
+        if (response['success'] == true) {
+          _routeToApp(response['user'], AppRole.adminOwner);
+        } else {
+          setState(() => _error = response['error'] ?? 'Admin authentication failed.');
         }
       } else {
-        setState(() => _error = response['error'] ?? 'Authentication failed. Please check your credentials.');
+        // Handle Normal User (Public App)
+        // In a real app, you might hit /api/leads/onboard with just name and phone here
+        _routeToApp({'name': username, 'phone': phone}, AppRole.userInvestor);
       }
     } catch (e) {
-      setState(() => _error = 'Connection Error: Unable to reach the security vault.');
+      setState(() => _error = 'Connection Error: Unable to reach the server.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _routeToApp(Map<String, dynamic>? userData, AppRole role) async {
+    String? token = await _apiService.getAuthToken();
+    if (token == null && userData != null) {
+      token = userData['token'] ?? userData['accessToken'] ?? 'temp_public_token';
+    }
+    
+    if (token != null && mounted) {
+      context.read<AuthBloc>().add(AuthLoginRequested(
+        token: token,
+        userName: userData?['name'] ?? 'Authorized User',
+        role: role,
+      ));
+
+      await NotificationService().syncTokenWithBackend();
+
+      if (role == AppRole.adminOwner) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const AdminBottomNavBar()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const UserBottomNavBar()),
+        );
+      }
     }
   }
 
@@ -126,7 +151,7 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text(
-                          'ESTABLISH ACCESS',
+                          'ENTER APP',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w900,
@@ -134,28 +159,27 @@ class _LoginPageState extends State<LoginPage> {
                             letterSpacing: 2,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Secure Intelligence Hub Login',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white.withOpacity(0.5),
-                            letterSpacing: 1,
-                          ),
-                        ),
                         const SizedBox(height: 40),
                         _buildTextField(
-                          controller: _identifierController,
-                          label: 'IDENTIFIER',
+                          controller: _usernameController,
+                          label: 'FULL NAME',
                           icon: Icons.person_outline,
                         ),
                         const SizedBox(height: 20),
                         _buildTextField(
-                          controller: _passwordController,
-                          label: 'PASSCODE',
-                          icon: Icons.lock_outline,
-                          isPassword: true,
+                          controller: _phoneController,
+                          label: 'PHONE NUMBER',
+                          icon: Icons.phone_android,
                         ),
+                        if (_showPasswordField) ...[
+                          const SizedBox(height: 20),
+                          _buildTextField(
+                            controller: _passwordController,
+                            label: 'ADMIN PASSCODE',
+                            icon: Icons.lock_outline,
+                            isPassword: true,
+                          ),
+                        ],
                         if (_error != null) ...[
                           const SizedBox(height: 20),
                           Text(
@@ -188,7 +212,7 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                   )
                                 : const Text(
-                                    'INITIALIZE CONNECTION',
+                                    'CONTINUE',
                                     style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
                                   ),
                           ),
