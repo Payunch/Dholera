@@ -13,3 +13,10 @@ build/
 
 # Secrets
 lib/firebase_secrets.dart
+
+# ADK cleanup
+.env
+linux/
+windows/
+android/.gradle/
+*.iml
