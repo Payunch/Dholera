@@ -24,3 +24,7 @@
 # General Android
 -dontwarn android.support.**
 -keep class android.support.** { *; }
+
+# Play Core (Fixes Flutter SplitInstall errors during AAB build)
+-dontwarn com.google.android.play.core.**
+-keep class com.google.android.play.core.** { *; }
