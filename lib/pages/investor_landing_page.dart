@@ -19,6 +19,7 @@ import 'smart_city_page.dart';
 import 'travel_lifestyle_page.dart';
 import 'privacy_policy_page.dart';
 import 'terms_page.dart';
+import '../widgets/interactive_hero_grid.dart';
 
 class InvestorLandingPage extends StatefulWidget {
   const InvestorLandingPage({super.key});
@@ -76,21 +77,9 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                     background: Stack(
                       fit: StackFit.expand,
                       children: [
-                        Image.network(
-                          'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2070',
-                          fit: BoxFit.cover,
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withValues(alpha: 0.7),
-                              ],
-                            ),
-                          ),
+                        const InteractiveHeroGrid(
+                          crossAxisCount: 2,
+                          totalItems: 24,
                         ),
                         Padding(
                           padding: const EdgeInsets.all(20.0),
