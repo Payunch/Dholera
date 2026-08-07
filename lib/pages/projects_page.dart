@@ -137,10 +137,11 @@ class _ProjectsPageState extends State<ProjectsPage> {
                   height: 200,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
+                  errorBuilder: (context, error, stackTrace) => Image.asset(
+                    'assets/images/ui_blueprint.png',
                     height: 200,
-                    color: Colors.grey[200],
-                    child: const Icon(Icons.image, size: 50, color: Colors.grey),
+                    width: double.infinity,
+                    fit: BoxFit.cover,
                   ),
                 ),
                 Positioned(
