@@ -34,10 +34,7 @@ class LanguagePage extends StatelessWidget {
                   children: [
                     _buildLanguageItem(context, 'English', 'English', const Locale('en')),
                     _buildLanguageItem(context, 'हिंदी', 'Hindi', const Locale('hi')),
-                    _buildLanguageItem(context, 'मराठी', 'Marathi', const Locale('mr')),
-                    _buildLanguageItem(context, 'தமிழ்', 'Tamil', const Locale('ta')),
-                    _buildLanguageItem(context, 'తెలుగు', 'Telugu', const Locale('te')),
-                    _buildLanguageItem(context, 'ಕನ್ನಡ', 'Kannada', const Locale('kn')),
+                    _buildLanguageItem(context, 'ગુજરાતી', 'Gujarati', const Locale('gu')),
                   ],
                 ),
               ),

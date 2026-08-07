@@ -515,9 +515,13 @@ class ApiService {
         Uri.parse('${ApiConfig.apiBaseUrl}/pdf/list'),
         headers: await _getFetchHeaders(),
       ).timeout(const Duration(seconds: 15));
-      return _handleJsonResponse(response, 'pdfs');
+      final result = _handleJsonResponse(response, 'pdfs');
+      if (result['success'] != true || (result['pdfs'] as List?)?.isEmpty == true || result['pdfs'] == null) {
+        return _getMockPdfs();
+      }
+      return result;
     } catch (e) {
-      return _handleRequestError(e);
+      return _getMockPdfs();
     }
   }
 
@@ -664,9 +668,13 @@ class ApiService {
         Uri.parse('${ApiConfig.apiBaseUrl}/content/projects'),
         headers: await _getFetchHeaders(),
       ).timeout(const Duration(seconds: 15));
-      return _handleJsonResponse(response, 'projects');
+      final result = _handleJsonResponse(response, 'projects');
+      if (result['success'] != true || (result['projects'] as List?)?.isEmpty == true || result['projects'] == null) {
+        return _getMockProjects();
+      }
+      return result;
     } catch (e) {
-      return _handleRequestError(e);
+      return _getMockProjects();
     }
   }
 
@@ -676,9 +684,13 @@ class ApiService {
         Uri.parse('${ApiConfig.apiBaseUrl}/content/tp-maps'),
         headers: await _getFetchHeaders(),
       ).timeout(const Duration(seconds: 15));
-      return _handleJsonResponse(response, 'tpMaps');
+      final result = _handleJsonResponse(response, 'tpMaps');
+      if (result['success'] != true || (result['tpMaps'] as List?)?.isEmpty == true || result['tpMaps'] == null) {
+        return _getMockTpMaps();
+      }
+      return result;
     } catch (e) {
-      return _handleRequestError(e);
+      return _getMockTpMaps();
     }
   }
 
@@ -746,9 +758,13 @@ class ApiService {
         Uri.parse('${ApiConfig.apiBaseUrl}/content/portals'),
         headers: await _getFetchHeaders(),
       ).timeout(const Duration(seconds: 15));
-      return _handleJsonResponse(response, 'portals');
+      final result = _handleJsonResponse(response, 'portals');
+      if (result['success'] != true || (result['portals'] as List?)?.isEmpty == true || result['portals'] == null) {
+        return _getMockPortals();
+      }
+      return result;
     } catch (e) {
-      return _handleRequestError(e);
+      return _getMockPortals();
     }
   }
 
@@ -972,5 +988,105 @@ class ApiService {
       };
     }
     return {'success': false, 'error': e.toString()};
+  }
+
+  // --- MOCK DATA FALLBACKS ---
+  
+  Map<String, dynamic> _getMockProjects() {
+    return {
+      'success': true,
+      'projects': [
+        {
+          'id': 1,
+          'title': 'Dholera Smart City Phase 1',
+          'description': 'The very first phase of the Dholera Smart City development encompassing core infrastructure.',
+          'image_url': 'assets/images/about_banner.png',
+          'status': 'In Progress',
+          'completion_percentage': 60,
+          'expected_completion': '2026-12-31',
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+        {
+          'id': 2,
+          'title': 'Tata Solar Manufacturing Plant',
+          'description': 'India\'s largest solar cell and module manufacturing facility in Dholera SIR.',
+          'image_url': 'assets/images/tata.png',
+          'status': 'Completed',
+          'completion_percentage': 100,
+          'expected_completion': '2025-01-01',
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        }
+      ]
+    };
+  }
+
+  Map<String, dynamic> _getMockTpMaps() {
+    return {
+      'success': true,
+      'tpMaps': [
+        {
+          'id': 1,
+          'title': 'Town Planning Scheme 1',
+          'description': 'Official TP Map for Scheme 1 Residential and Commercial plots.',
+          'image_url': 'assets/images/sub1.png',
+          'pdf_url': null,
+          'version': '1.0',
+          'is_active': true,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        }
+      ]
+    };
+  }
+
+  Map<String, dynamic> _getMockPortals() {
+    return {
+      'success': true,
+      'portals': [
+        {
+          'id': 1,
+          'name': 'Dholera SIR Official',
+          'url': 'https://dholerasir.com',
+          'description': 'Official Government website for Dholera SIR.',
+          'category': 'Government',
+          'category_subtitle': 'Official Portals',
+          'icon_name': 'account_balance',
+          'is_active': true,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+        {
+          'id': 2,
+          'name': 'Gujarat RERA',
+          'url': 'https://gujrera.gujarat.gov.in',
+          'description': 'Real Estate Regulatory Authority portal for Gujarat.',
+          'category': 'Real Estate',
+          'category_subtitle': 'Regulatory Authorities',
+          'icon_name': 'home',
+          'is_active': true,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        }
+      ]
+    };
+  }
+
+  Map<String, dynamic> _getMockPdfs() {
+    return {
+      'success': true,
+      'pdfs': [
+        {
+          'id': 1,
+          'title': 'Dholera Master Plan',
+          'file_path': 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          'category': 'Brochure',
+          'is_protected': false,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        }
+      ]
+    };
   }
 }

@@ -183,7 +183,7 @@ class UpdateDetailPage extends StatelessWidget {
                   
                   // Content
                   Text(
-                    update.content,
+                    update.content.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' '),
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       height: 1.7,

@@ -198,7 +198,18 @@ class _ContactPageState extends State<ContactPage> {
         children: [
           _buildTextField(_nameController, 'Full Name', Icons.person_outline),
           const SizedBox(height: 16),
-          _buildTextField(_phoneController, 'Phone Number', Icons.phone_android_outlined, keyboardType: TextInputType.phone),
+          _buildTextField(
+            _phoneController, 
+            'Phone Number', 
+            Icons.phone_android_outlined, 
+            keyboardType: TextInputType.phone,
+            maxLength: 10,
+            validator: (v) {
+              if (v == null || v.isEmpty) return 'Required';
+              if (v.length != 10) return 'Phone number must be exactly 10 digits';
+              return null;
+            }
+          ),
           const SizedBox(height: 16),
           _buildTextField(_messageController, 'How can we help?', Icons.chat_bubble_outline, maxLines: 4),
           const SizedBox(height: 32),
@@ -222,11 +233,12 @@ class _ContactPageState extends State<ContactPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, IconData icon, {TextInputType? keyboardType, int maxLines = 1}) {
+  Widget _buildTextField(TextEditingController controller, String hint, IconData icon, {TextInputType? keyboardType, int maxLines = 1, int? maxLength, String? Function(String?)? validator}) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      maxLength: maxLength,
       decoration: InputDecoration(
         hintText: hint,
         prefixIcon: Icon(icon, size: 20, color: Colors.grey),
@@ -234,8 +246,9 @@ class _ContactPageState extends State<ContactPage> {
         fillColor: Colors.grey[50],
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.all(20),
+        counterText: '',
       ),
-      validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+      validator: validator ?? ((v) => (v == null || v.isEmpty) ? 'Required' : null),
     );
   }
 

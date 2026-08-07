@@ -18,6 +18,7 @@ import 'government_schemes_page.dart';
 import 'investment_guide_page.dart';
 import 'plots_for_sale_page.dart';
 import 'smart_city_page.dart';
+import 'updates_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'travel_lifestyle_page.dart';
 import 'privacy_policy_page.dart';
@@ -93,45 +94,16 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
             child: CustomScrollView(
               slivers: [
                 SliverAppBar(
-                  expandedHeight: 300.0,
+                  expandedHeight: 500.0,
                   floating: false,
                   pinned: true,
                   flexibleSpace: FlexibleSpaceBar(
-                    title: Text(state.translate('dholera_platform')),
-                    background: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        const InteractiveHeroGrid(
-                          crossAxisCount: 2,
-                          totalItems: 24,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                state.translate('hero_title'),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                state.translate('hero_subtitle'),
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    centerTitle: true,
+                    title: Text(
+                      state.translate('dholera_platform'),
+                      style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 16),
                     ),
+                    background: _HeroSlider(),
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -443,6 +415,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -805,6 +778,140 @@ class _AutoScrollingLogosState extends State<_AutoScrollingLogos> {
           ),
         );
       },
+    );
+  }
+}
+
+class _HeroSlider extends StatefulWidget {
+  @override
+  State<_HeroSlider> createState() => _HeroSliderState();
+}
+
+class _HeroSliderState extends State<_HeroSlider> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+  final List<String> _images = [
+    'assets/images/about_banner.png',
+    'assets/images/sub1.png',
+    'assets/images/larsen-toubro.png', // Fallback, normally more banners
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _startAutoScroll();
+  }
+
+  void _startAutoScroll() {
+    Future.delayed(const Duration(seconds: 4), () {
+      if (!mounted) return;
+      int nextPage = (_currentPage + 1) % _images.length;
+      _pageController.animateToPage(
+        nextPage,
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.easeInOut,
+      );
+      _startAutoScroll();
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        PageView.builder(
+          controller: _pageController,
+          onPageChanged: (idx) => setState(() => _currentPage = idx),
+          itemCount: _images.length,
+          itemBuilder: (context, index) {
+            return Image.asset(
+              _images[index],
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(color: Colors.black87),
+            );
+          },
+        ),
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.black.withValues(alpha: 0.3), Colors.black.withValues(alpha: 0.8)],
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(),
+                const Text(
+                  'DHOLERA PLATFORM',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Dholera Platform is a comprehensive application designed for exploring and tracking real estate investments, smart city developments, and infrastructure progress in Dholera SIR.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final uri = Uri.parse("https://wa.me/917435808031?text=Hello%20Owner");
+                        if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      ),
+                      icon: const Icon(Icons.chat),
+                      label: const Text('Talk to Owner', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 16),
+                    OutlinedButton.icon(
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProjectsPage())),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.white, width: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      ),
+                      icon: const Icon(Icons.business),
+                      label: const Text('View Projects', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
