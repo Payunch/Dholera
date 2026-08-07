@@ -32,16 +32,17 @@ class _AboutPageState extends State<AboutPage> {
                 expandedHeight: 250,
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
-                  title: Text(state.translate('nav_about')),
+                  title: const Text('ABOUT DHOLERA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  centerTitle: true,
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.network(
-                        'https://api.dholeraplatform.com/uploads/images/futuristic_dholera.png',
+                      Image.asset(
+                        'assets/images/about_banner.png',
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
                       ),
-                      Container(color: Colors.black.withValues(alpha: 0.5)),
+                      Container(color: Colors.black.withValues(alpha: 0.6)),
                     ],
                   ),
                 ),
@@ -75,6 +76,8 @@ class _AboutPageState extends State<AboutPage> {
                       ),
                       const SizedBox(height: 40),
                       _buildInfoGrid(),
+                      const SizedBox(height: 40),
+                      _buildFounderCard(),
                       const SizedBox(height: 40),
                       _buildCTA(),
                       const SizedBox(height: 40),
@@ -119,6 +122,45 @@ class _AboutPageState extends State<AboutPage> {
       crossAxisSpacing: 16,
       childAspectRatio: 0.8,
       children: items.map(_buildInfoCard).toList(),
+    );
+  }
+
+  Widget _buildFounderCard() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey[200]!),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        children: [
+          const CircleAvatar(
+            radius: 60,
+            backgroundImage: AssetImage('assets/images/ng1.png'),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'NARESH GOHEL',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: 1),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'FOUNDER & DIRECTOR, VISIONARY LEADERSHIP',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.orange[700], fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Leading the transformation of Dholera Smart City through data-driven intelligence and transparent real estate solutions.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey[600], height: 1.5),
+          ),
+        ],
+      ),
     );
   }
 

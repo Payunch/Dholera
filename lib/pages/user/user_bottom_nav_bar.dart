@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../updates_page.dart';
 import '../investor_landing_page.dart';
-import '../vault_page.dart';
 import '../about_page.dart';
 import '../tp_maps_page.dart';
 import '../projects_page.dart';
@@ -29,7 +28,6 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
     const Scaffold(body: Center(child: Text('PDF Library Coming Soon'))),
     const ProjectsPage(),
     const UpdatesPage(),
-    const VaultPage(),
     const PortalsPage(),
     const ContactPage(),
     const AboutPage(),
@@ -61,7 +59,6 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
               SideMenuItem(icon: Icons.picture_as_pdf_rounded, label: state.translate('nav_pdf')),
               SideMenuItem(icon: Icons.business_rounded, label: state.translate('nav_projects')),
               SideMenuItem(icon: Icons.feed_rounded, label: state.translate('nav_updates')),
-              SideMenuItem(icon: Icons.account_balance_wallet_rounded, label: state.translate('nav_vault')),
               SideMenuItem(icon: Icons.public_rounded, label: state.translate('nav_portals')),
               SideMenuItem(icon: Icons.contact_support_rounded, label: state.translate('nav_contact')),
               SideMenuItem(icon: Icons.person_rounded, label: state.translate('nav_about')),

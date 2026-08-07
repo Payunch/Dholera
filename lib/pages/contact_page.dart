@@ -85,27 +85,58 @@ class _ContactPageState extends State<ContactPage> {
     return BlocBuilder<LocalizationBloc, LocalizationState>(
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            title: Text(state.translate('nav_contact'), style: const TextStyle(fontWeight: FontWeight.bold)),
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-          ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildInfoCards(),
-                const SizedBox(height: 40),
-                const Text(
-                  'SEND AN INQUIRY',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: Colors.grey),
+          body: CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 250,
+                pinned: true,
+                flexibleSpace: FlexibleSpaceBar(
+                  title: const Text('CONTACT US', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  centerTitle: true,
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.asset(
+                        'assets/images/sub1.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
+                      ),
+                      Container(color: Colors.black.withValues(alpha: 0.6)),
+                      const Center(
+                        child: Text(
+                          'GET IN TOUCH',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 24),
-                _buildForm(),
-                const SizedBox(height: 40),
-              ],
-            ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInfoCards(),
+                      const SizedBox(height: 40),
+                      const Text(
+                        'SEND AN INQUIRY',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 24),
+                      _buildForm(),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },

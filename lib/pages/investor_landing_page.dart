@@ -12,12 +12,13 @@ import 'tp_maps_page.dart';
 import 'clearance_engine_page.dart';
 import 'airport_page.dart';
 import 'infrastructure_page.dart';
-import 'updates_page.dart';
+import 'update_detail_page.dart';
 import 'portals_page.dart';
 import 'government_schemes_page.dart';
 import 'investment_guide_page.dart';
 import 'plots_for_sale_page.dart';
 import 'smart_city_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'travel_lifestyle_page.dart';
 import 'privacy_policy_page.dart';
 import 'terms_page.dart';
@@ -390,9 +391,11 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
   }
 
   Widget _buildInsightCard(BuildContext context, AppUpdate update) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
+    return GestureDetector(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => UpdateDetailPage(update: update, isAdmin: false))),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 20),
+        decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.grey[100]!),
@@ -431,7 +434,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                 Text(update.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 8),
                 Text(
-                  update.content,
+                  update.content.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' '),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(color: Colors.grey[600], fontSize: 13, height: 1.5),
@@ -461,22 +464,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
         const SizedBox(height: 12),
         SizedBox(
           height: 60,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: logos.length * 2, // Double for simple loop effect
-            separatorBuilder: (_, __) => const SizedBox(width: 32),
-            itemBuilder: (context, index) {
-              return Opacity(
-                opacity: 0.7,
-                child: Image.asset(
-                  logos[index % logos.length],
-                  height: 40,
-                  width: 80,
-                  fit: BoxFit.contain,
-                ),
-              );
-            },
-          ),
+          child: _AutoScrollingLogos(logos: logos),
         ),
       ],
     );
@@ -719,10 +707,17 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                             if (mounted) setState(() => _isSubmitSuccess = true);
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Failed to submit request')),
+                              const SnackBar(content: Text('Saved locally, but failed to sync to server')),
                             );
                           } finally {
                             if (mounted) setState(() => _isSubmitting = false);
+                            
+                            // Always try to open WhatsApp as a fallback/notification
+                            final msg = "Hello Naresh, I have submitted a Site Visit Request.\n*Name:* $_name\n*Phone:* $_phone\n*Date:* ${DateFormat('MMM dd, yyyy').format(_visitDate!)}";
+                            final uri = Uri.parse("https://wa.me/917435808031?text=${Uri.encodeComponent(msg)}");
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            }
                           }
                         } else if (_visitDate == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -738,6 +733,78 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                 ],
               ),
             ),
+    );
+  }
+}
+
+class _AutoScrollingLogos extends StatefulWidget {
+  final List<String> logos;
+  const _AutoScrollingLogos({required this.logos});
+
+  @override
+  State<_AutoScrollingLogos> createState() => _AutoScrollingLogosState();
+}
+
+class _AutoScrollingLogosState extends State<_AutoScrollingLogos> {
+  final ScrollController _scrollController = ScrollController();
+  bool _isScrolling = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startScrolling();
+    });
+  }
+
+  void _startScrolling() {
+    if (_isScrolling || !mounted) return;
+    _isScrolling = true;
+    _scrollLoop();
+  }
+
+  void _scrollLoop() async {
+    while (_isScrolling && mounted) {
+      await Future.delayed(const Duration(milliseconds: 50));
+      if (!_scrollController.hasClients) continue;
+      
+      double maxScroll = _scrollController.position.maxScrollExtent;
+      double currentScroll = _scrollController.position.pixels;
+      
+      if (currentScroll >= maxScroll - 50) {
+        _scrollController.jumpTo(0);
+      } else {
+        _scrollController.jumpTo(currentScroll + 1.0);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _isScrolling = false;
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      controller: _scrollController,
+      scrollDirection: Axis.horizontal,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(right: 32),
+          child: Opacity(
+            opacity: 0.7,
+            child: Image.asset(
+              widget.logos[index % widget.logos.length],
+              height: 40,
+              width: 80,
+              fit: BoxFit.contain,
+            ),
+          ),
+        );
+      },
     );
   }
 }
