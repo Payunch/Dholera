@@ -509,7 +509,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                     child: Image.network(
-                      project.imageUrl.startsWith('http') ? project.imageUrl : 'https://api.dholeraplatform.com${project.imageUrl}',
+                      (project.image ?? '').startsWith('http') ? (project.image ?? '') : 'https://api.dholeraplatform.com${project.image ?? ''}',
                       height: 140,
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -543,7 +543,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
-                                project.location,
+                                project.location ?? 'Dholera SIR',
                                 style: const TextStyle(color: Colors.grey, fontSize: 12),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,

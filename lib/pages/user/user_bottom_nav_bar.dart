@@ -5,7 +5,6 @@ import '../investor_landing_page.dart';
 import '../vault_page.dart';
 import '../about_page.dart';
 import '../tp_maps_page.dart';
-import '../secure_pdf_viewer_page.dart';
 import '../projects_page.dart';
 import '../portals_page.dart';
 import '../contact_page.dart';
@@ -27,7 +26,7 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
   final List<Widget> _pages = [
     const InvestorLandingPage(),
     const TpMapsPage(),
-    const SecurePdfViewerPage(),
+    const Scaffold(body: Center(child: Text('PDF Library Coming Soon'))),
     const ProjectsPage(),
     const UpdatesPage(),
     const VaultPage(),
