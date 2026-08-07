@@ -6,6 +6,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'dart:io';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'firebase_options.dart';
 import 'blocs/auth/auth_event.dart';
@@ -31,6 +33,13 @@ void main() async {
   
   // Load environment variables from .env
   await dotenv.load(fileName: ".env");
+
+  // Initialize HydratedBloc storage
+  HydratedBloc.storage = await HydratedStorage.build(
+    storageDirectory: kIsWeb
+        ? HydratedStorageDirectory.web
+        : HydratedStorageDirectory((await getApplicationDocumentsDirectory()).path),
+  );
   
   // Initialize services in parallel where possible, but don't let them crash the app
   await Future.wait([
@@ -100,15 +109,14 @@ class _MyAppState extends State<MyApp> {
         builder: (context, localizationState) {
           return BlocBuilder<ThemeBloc, ThemeState>(
             builder: (context, themeState) {
-              return OfflineWrapper(
-                child: MaterialApp(
-                  navigatorKey: _navigatorKey,
-                  title: 'Dholera Platform',
-                  debugShowCheckedModeBanner: false,
-                  theme: themeState.colors.toThemeData(),
-                  locale: localizationState.locale,
-                  home: const SplashPage(),
-                ),
+              return MaterialApp(
+                navigatorKey: _navigatorKey,
+                title: 'Dholera Platform',
+                debugShowCheckedModeBanner: false,
+                theme: themeState.colors.toThemeData(),
+                locale: localizationState.locale,
+                builder: (context, child) => OfflineWrapper(child: child ?? const SizedBox()),
+                home: const SplashPage(),
               );
             },
           );

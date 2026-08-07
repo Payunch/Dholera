@@ -6,6 +6,7 @@
   "nav_updates": "નવી માહિતી",
   "nav_contact": "સંપર્ક કરો",
   "nav_about": "અમારા વિશે",
+  "nav_vault": "વૉલ્ટ (Vault)",
   "nav_portals": "પોર્ટલ્સ",
   "start_here": "શરૂઆત કરો",
   "verify_desc": "પૂરી માહિતી જોવા માટે તમારી ઓળખ જણાવો",
@@ -13,5 +14,15 @@
   "mobile_number": "મોબાઇલ નંબર",
   "get_access": "આગળ વધો",
   "access_granted": "પહોંચ મળી ગઈ છે",
-  "talk_to_owner": "સીધા માલિક સાથે વાત કરો"
+  "talk_to_owner": "સીધા માલિક સાથે વાત કરો",
+  "institutional_anchors_title": "અમારા સંસ્થાકીય એન્કર્સ",
+  "exclusive_offer": "વિશેષ ઑફર",
+  "talk_to_owner_title": "માલિકો સાથે સીધી વાતચીત",
+  "pickup_service": "મફત પિકઅપ",
+  "premium_stay": "લક્ઝરી રોકાણ અને ભોજન",
+  "title_review": "દસ્તાવેજની સમીક્ષા",
+  "deployment_date": "પસંદીદા તારીખ",
+  "establish_conn": "મુલાકાતની વિનંતી",
+  "request_received": "વિનંતી પ્રાપ્ત થઈ",
+  "date_limit_msg": "આગામી 7 દિવસમાં"
 }

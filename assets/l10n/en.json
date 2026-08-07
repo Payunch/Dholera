@@ -6,6 +6,7 @@
   "nav_updates": "Latest Updates",
   "nav_contact": "Contact Us",
   "nav_about": "About Us",
+  "nav_vault": "Vault",
   "nav_portals": "Portals",
   "start_here": "Get Started",
   "verify_desc": "Please identify yourself to view details",
@@ -13,5 +14,15 @@
   "mobile_number": "Mobile Number",
   "get_access": "Continue",
   "access_granted": "Access Granted",
-  "talk_to_owner": "Talk to Owner"
+  "talk_to_owner": "Talk to Owner",
+  "institutional_anchors_title": "Our Institutional Anchors",
+  "exclusive_offer": "Exclusive Offer",
+  "talk_to_owner_title": "Direct Dialogue With Owners",
+  "pickup_service": "Complimentary Pickup",
+  "premium_stay": "Luxury Stay & Meals",
+  "title_review": "Title Clear Document Review",
+  "deployment_date": "Preferred Date",
+  "establish_conn": "Request Visit",
+  "request_received": "Request Received",
+  "date_limit_msg": "Within Next 7 Days"
 }

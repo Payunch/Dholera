@@ -4,6 +4,11 @@ import '../updates_page.dart';
 import '../investor_landing_page.dart';
 import '../vault_page.dart';
 import '../about_page.dart';
+import '../tp_maps_page.dart';
+import '../secure_pdf_viewer_page.dart';
+import '../projects_page.dart';
+import '../portals_page.dart';
+import '../contact_page.dart';
 import '../../blocs/localization/localization_bloc.dart';
 import '../../blocs/localization/localization_state.dart';
 import '../../widgets/custom_side_menu.dart';
@@ -21,8 +26,13 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
 
   final List<Widget> _pages = [
     const InvestorLandingPage(),
+    const TpMapsPage(),
+    const SecurePdfViewerPage(),
+    const ProjectsPage(),
     const UpdatesPage(),
     const VaultPage(),
+    const PortalsPage(),
+    const ContactPage(),
     const AboutPage(),
   ];
 
@@ -48,8 +58,13 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
             ),
             items: [
               SideMenuItem(icon: Icons.home_rounded, label: state.translate('nav_home')),
+              SideMenuItem(icon: Icons.map_rounded, label: state.translate('nav_tp_maps')),
+              SideMenuItem(icon: Icons.picture_as_pdf_rounded, label: state.translate('nav_pdf')),
+              SideMenuItem(icon: Icons.business_rounded, label: state.translate('nav_projects')),
               SideMenuItem(icon: Icons.feed_rounded, label: state.translate('nav_updates')),
               SideMenuItem(icon: Icons.account_balance_wallet_rounded, label: state.translate('nav_vault')),
+              SideMenuItem(icon: Icons.public_rounded, label: state.translate('nav_portals')),
+              SideMenuItem(icon: Icons.contact_support_rounded, label: state.translate('nav_contact')),
               SideMenuItem(icon: Icons.person_rounded, label: state.translate('nav_about')),
             ],
           ),

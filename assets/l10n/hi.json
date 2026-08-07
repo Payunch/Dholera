@@ -6,6 +6,7 @@
   "nav_updates": "नई जानकारी",
   "nav_contact": "संपर्क करें",
   "nav_about": "हमारे बारे में",
+  "nav_vault": "वौल्ट (Vault)",
   "nav_portals": "पोर्टल्स",
   "start_here": "शुरुआत करें",
   "verify_desc": "पूरी जानकारी देखने के लिए अपनी पहचान बताएं",
@@ -13,5 +14,15 @@
   "mobile_number": "मोबाइल नंबर",
   "get_access": "आगे बढ़ें",
   "access_granted": "पहुंच मिल गई है",
-  "talk_to_owner": "सीधे मालिक से बात करें"
+  "talk_to_owner": "सीधे मालिक से बात करें",
+  "institutional_anchors_title": "हमारे संस्थागत एंकर्स",
+  "exclusive_offer": "विशेष पेशकश",
+  "talk_to_owner_title": "मालिकों के साथ सीधा संवाद",
+  "pickup_service": "मुफ्त पिकअप",
+  "premium_stay": "लक्जरी ठहरने की व्यवस्था",
+  "title_review": "दस्तावेज़ की समीक्षा",
+  "deployment_date": "पसंदीदा तारीख",
+  "establish_conn": "मुलाकात का अनुरोध",
+  "request_received": "अनुरोध प्राप्त हुआ",
+  "date_limit_msg": "अगले 7 दिनों के भीतर"
 }
