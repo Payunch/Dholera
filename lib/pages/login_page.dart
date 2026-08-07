@@ -100,16 +100,22 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _handleSkip() async {
+    setState(() => _isLoading = true);
+    await _routeToApp(null, AppRole.userInvestor);
+    if (mounted) setState(() => _isLoading = false);
+  }
+
   Future<void> _routeToApp(Map<String, dynamic>? userData, AppRole role) async {
     String? token = await _apiService.getAuthToken();
-    if (token == null && userData != null) {
-      token = userData['token'] ?? userData['accessToken'] ?? 'temp_public_token';
+    if (token == null) {
+      token = userData?['token'] ?? userData?['accessToken'] ?? 'temp_public_token';
     }
     
     if (token != null && mounted) {
       context.read<AuthBloc>().add(AuthLoginRequested(
         token: token,
-        userName: userData?['name'] ?? 'Authorized User',
+        userName: userData?['name'] ?? 'Guest User',
         role: role,
       ));
 
@@ -227,6 +233,17 @@ class _LoginPageState extends State<LoginPage> {
                                     'CONTINUE',
                                     style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
                                   ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: _isLoading ? null : _handleSkip,
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white70,
+                          ),
+                          child: const Text(
+                            'Skip for now',
+                            style: TextStyle(decoration: TextDecoration.underline),
                           ),
                         ),
                       ],
