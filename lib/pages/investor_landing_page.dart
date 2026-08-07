@@ -23,7 +23,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'travel_lifestyle_page.dart';
 import 'privacy_policy_page.dart';
 import 'terms_page.dart';
-import '../widgets/interactive_hero_grid.dart';
+
 
 class InvestorLandingPage extends StatefulWidget {
   const InvestorLandingPage({super.key});
@@ -787,28 +787,34 @@ class _HeroSlider extends StatefulWidget {
   State<_HeroSlider> createState() => _HeroSliderState();
 }
 
-class _HeroSliderState extends State<_HeroSlider> {
+class _HeroSliderState extends State<_HeroSlider> with SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
+  late AnimationController _animationController;
   int _currentPage = 0;
   final List<String> _images = [
-    'assets/images/about_banner.png',
-    'assets/images/sub1.png',
-    'assets/images/larsen-toubro.png', // Fallback, normally more banners
+    'assets/images/arialviewdholeraexpress.webp',
+    'assets/images/airportVision.webp',
+    'assets/images/expressHighway.webp',
+    'assets/images/dholerasirGujrat.webp',
   ];
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 10),
+      vsync: this,
+    )..repeat(reverse: true);
     _startAutoScroll();
   }
 
   void _startAutoScroll() {
-    Future.delayed(const Duration(seconds: 4), () {
+    Future.delayed(const Duration(seconds: 5), () {
       if (!mounted) return;
       int nextPage = (_currentPage + 1) % _images.length;
       _pageController.animateToPage(
         nextPage,
-        duration: const Duration(milliseconds: 800),
+        duration: const Duration(milliseconds: 1200),
         curve: Curves.easeInOut,
       );
       _startAutoScroll();
@@ -817,6 +823,7 @@ class _HeroSliderState extends State<_HeroSlider> {
 
   @override
   void dispose() {
+    _animationController.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -826,15 +833,23 @@ class _HeroSliderState extends State<_HeroSlider> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        PageView.builder(
-          controller: _pageController,
-          onPageChanged: (idx) => setState(() => _currentPage = idx),
-          itemCount: _images.length,
-          itemBuilder: (context, index) {
-            return Image.asset(
-              _images[index],
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(color: Colors.black87),
+        AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: 1.05 + (_animationController.value * 0.05),
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: (idx) => setState(() => _currentPage = idx),
+                itemCount: _images.length,
+                itemBuilder: (context, index) {
+                  return Image.asset(
+                    _images[index],
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(color: Colors.black87),
+                  );
+                },
+              ),
             );
           },
         ),
@@ -843,7 +858,12 @@ class _HeroSliderState extends State<_HeroSlider> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Colors.black.withValues(alpha: 0.3), Colors.black.withValues(alpha: 0.8)],
+              colors: [
+                Colors.black.withValues(alpha: 0.6),
+                Colors.black.withValues(alpha: 0.1),
+                Colors.black.withValues(alpha: 0.4),
+              ],
+              stops: const [0.0, 0.5, 1.0],
             ),
           ),
         ),

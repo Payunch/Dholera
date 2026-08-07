@@ -38,7 +38,7 @@ class _AboutPageState extends State<AboutPage> {
                     fit: StackFit.expand,
                     children: [
                       Image.asset(
-                        'assets/images/futuristic_dholera.png',
+                        'assets/images/about_banner.png',
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
                       ),
@@ -138,9 +138,19 @@ class _AboutPageState extends State<AboutPage> {
       ),
       child: Column(
         children: [
-          const CircleAvatar(
-            radius: 60,
-            backgroundImage: AssetImage('assets/images/ng.png'),
+          ClipOval(
+            child: Image.asset(
+              'assets/images/ng.png',
+              width: 120,
+              height: 120,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                width: 120,
+                height: 120,
+                color: Colors.grey[200],
+                child: const Icon(Icons.person, size: 60, color: Colors.grey),
+              ),
+            ),
           ),
           const SizedBox(height: 20),
           const Text(

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:uuid/uuid.dart';
 import '../config/api_config.dart';
 
 /// API Service for handling all HTTP requests to the backend with session and security support
@@ -100,6 +101,16 @@ class ApiService {
     return null;
   }
 
+  // Lead Token (Guest Tracking)
+  Future<String> getLeadToken() async {
+    String? token = await _secureStorage.read(key: 'lead_token');
+    if (token == null) {
+      token = const Uuid().v4();
+      await _secureStorage.write(key: 'lead_token', value: token);
+    }
+    return token;
+  }
+
   // Header builder for GET requests
   Future<Map<String, String>> _getFetchHeaders() async {
     final token = await getAuthToken(); // This also loads _sessionCookie if null
@@ -108,7 +119,12 @@ class ApiService {
       'Accept': 'application/json',
       'User-Agent': 'DholeraAdminApp/1.0',
     };
-    if (token != null) headers['Authorization'] = 'Bearer $token';
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    } else {
+      final leadToken = await getLeadToken();
+      headers['Authorization'] = 'Bearer $leadToken';
+    }
     if (_sessionCookie != null) headers['cookie'] = _sessionCookie!;
     if (appCheckToken != null) headers['X-Firebase-AppCheck'] = appCheckToken;
     return headers;
@@ -124,7 +140,12 @@ class ApiService {
       'Accept': 'application/json',
       'User-Agent': 'DholeraAdminApp/1.0',
     };
-    if (token != null) headers['Authorization'] = 'Bearer $token';
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    } else {
+      final leadToken = await getLeadToken();
+      headers['Authorization'] = 'Bearer $leadToken';
+    }
     if (_sessionCookie != null) headers['cookie'] = _sessionCookie!;
     if (appCheckToken != null) headers['X-Firebase-AppCheck'] = appCheckToken;
     if (csrfToken != null) headers['X-CSRF-Token'] = csrfToken;
@@ -998,25 +1019,25 @@ class ApiService {
       'projects': [
         {
           'id': 1,
-          'title': 'Dholera Smart City Phase 1',
-          'description': 'The very first phase of the Dholera Smart City development encompassing core infrastructure.',
-          'image_url': 'assets/images/about_banner.png',
-          'status': 'In Progress',
-          'completion_percentage': 60,
-          'expected_completion': '2026-12-31',
-          'created_at': DateTime.now().toIso8601String(),
-          'updated_at': DateTime.now().toIso8601String(),
+          'slug': 'dholera-smart-city',
+          'name': 'Dholera Smart City Phase 1',
+          'category': 'Residential',
+          'taglineKey': 'smart_city_tagline',
+          'descKey': 'smart_city_desc',
+          'location': 'DSIR',
+          'image': 'assets/images/about_banner.png',
+          'reraApproved': true,
         },
         {
           'id': 2,
-          'title': 'Tata Solar Manufacturing Plant',
-          'description': 'India\'s largest solar cell and module manufacturing facility in Dholera SIR.',
-          'image_url': 'assets/images/tata.png',
-          'status': 'Completed',
-          'completion_percentage': 100,
-          'expected_completion': '2025-01-01',
-          'created_at': DateTime.now().toIso8601String(),
-          'updated_at': DateTime.now().toIso8601String(),
+          'slug': 'tata-solar',
+          'name': 'Tata Solar Plant',
+          'category': 'Industrial',
+          'taglineKey': 'tata_tagline',
+          'descKey': 'tata_desc',
+          'location': 'Industrial Zone',
+          'image': 'assets/images/tata.png',
+          'reraApproved': false,
         }
       ]
     };
@@ -1028,14 +1049,23 @@ class ApiService {
       'tpMaps': [
         {
           'id': 1,
+          'tp_id': 'TP1',
           'title': 'Town Planning Scheme 1',
-          'description': 'Official TP Map for Scheme 1 Residential and Commercial plots.',
-          'image_url': 'assets/images/sub1.png',
-          'pdf_url': null,
-          'version': '1.0',
-          'is_active': true,
-          'created_at': DateTime.now().toIso8601String(),
-          'updated_at': DateTime.now().toIso8601String(),
+          'area': 'Activation Area',
+          'focus': 'Residential & Commercial',
+          'badges': [
+            {'type': 'compliance', 'text': 'Approved'},
+          ]
+        },
+        {
+          'id': 2,
+          'tp_id': 'TP2',
+          'title': 'Town Planning Scheme 2',
+          'area': 'Phase 1',
+          'focus': 'Industrial',
+          'badges': [
+            {'type': 'compliance', 'text': 'Approved'},
+          ]
         }
       ]
     };

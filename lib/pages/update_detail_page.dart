@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/app_update.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_html/flutter_html.dart';
 
 class UpdateDetailPage extends StatelessWidget {
   final AppUpdate update;
@@ -182,13 +183,16 @@ class UpdateDetailPage extends StatelessWidget {
                   const SizedBox(height: 32),
                   
                   // Content
-                  Text(
-                    update.content.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' '),
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      height: 1.7,
-                      color: isDark ? Colors.blueGrey[300] : const Color(0xFF334155),
-                    ),
+                  Html(
+                    data: update.content,
+                    style: {
+                      "body": Style(
+                        fontSize: FontSize(16),
+                        lineHeight: LineHeight(1.7),
+                        color: isDark ? Colors.blueGrey[300] : const Color(0xFF334155),
+                        fontFamily: 'Inter',
+                      ),
+                    },
                   ),
                   
                   const SizedBox(height: 60),

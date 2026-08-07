@@ -206,7 +206,9 @@ class _ContactPageState extends State<ContactPage> {
             maxLength: 10,
             validator: (v) {
               if (v == null || v.isEmpty) return 'Required';
-              if (v.length != 10) return 'Phone number must be exactly 10 digits';
+              if (!RegExp(r'^[6-9]\d{9}$').hasMatch(v)) {
+                return 'Please enter a valid 10-digit mobile number';
+              }
               return null;
             }
           ),
