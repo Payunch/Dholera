@@ -65,8 +65,26 @@ class _SplashPageState extends State<SplashPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Hero(
-              tag: 'logo',
-              child: Image.asset('assets/images/logo.png', height: 120),
+              tag: 'splash_images',
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset('assets/images/futuristic_dholera.png', height: 80, width: 80, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.image, size: 80, color: Colors.white)),
+                  ),
+                  const SizedBox(width: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset('assets/images/strategic-location.png', height: 80, width: 80, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.image, size: 80, color: Colors.white)),
+                  ),
+                  const SizedBox(width: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset('assets/images/dholerasirGujrat.webp', height: 80, width: 80, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.image, size: 80, color: Colors.white)),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 40),
             const CircularProgressIndicator(
