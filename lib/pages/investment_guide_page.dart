@@ -31,7 +31,7 @@ class _InvestmentGuidePageState extends State<InvestmentGuidePage> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(
+                  Image.asset(
                     'https://api.dholeraplatform.com/uploads/images/futuristic_dholera.png',
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0B132B)),

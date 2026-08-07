@@ -35,8 +35,8 @@ class _InfrastructurePageState extends State<InfrastructurePage> {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.network(
-                        'https://api.dholeraplatform.com/uploads/images/arialviewdholeraexpress.webp',
+                      Image.asset(
+                        'assets/images/expressHighway.webp',
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
                       ),

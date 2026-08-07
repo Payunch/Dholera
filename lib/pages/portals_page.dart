@@ -53,19 +53,43 @@ class _PortalsPageState extends State<PortalsPage> {
   Widget build(BuildContext context) {
     return BlocBuilder<LocalizationBloc, LocalizationState>(
       builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('OFFICIAL PORTALS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-          ),
-          body: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : ListView(
-                  padding: const EdgeInsets.all(24),
-                  children: _groupedPortals.entries.map((entry) => _buildCategorySection(entry.key, entry.value)).toList(),
+          return Scaffold(
+            body: CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  expandedHeight: 250,
+                  pinned: true,
+                  flexibleSpace: FlexibleSpaceBar(
+                    title: const Text('OFFICIAL PORTALS', style: TextStyle(fontSize: 16)),
+                    background: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.asset(
+                          'assets/images/ui_finance.png',
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
+                        ),
+                        Container(color: Colors.black.withValues(alpha: 0.6)),
+                      ],
+                    ),
+                  ),
                 ),
-        );
+                if (_isLoading)
+                  const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.all(24),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate(
+                        _groupedPortals.entries.map((entry) => _buildCategorySection(entry.key, entry.value)).toList(),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
       },
     );
   }

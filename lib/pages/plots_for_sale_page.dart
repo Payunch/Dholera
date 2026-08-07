@@ -31,8 +31,8 @@ class _PlotsForSalePageState extends State<PlotsForSalePage> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(
-                    'https://api.dholeraplatform.com/uploads/images/futuristic_dholera.png',
+                  Image.asset(
+                    'assets/images/ui_blueprint.png',
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0B132B)),
                   ),

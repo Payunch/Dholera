@@ -31,8 +31,8 @@ class _SmartCityPageState extends State<SmartCityPage> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(
-                    'https://api.dholeraplatform.com/uploads/images/futuristic_dholera.png',
+                  Image.asset(
+                    'assets/images/dholerasirGujrat.webp',
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0B132B)),
                   ),

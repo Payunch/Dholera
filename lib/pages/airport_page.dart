@@ -35,8 +35,8 @@ class _AirportPageState extends State<AirportPage> {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.network(
-                        'https://api.dholeraplatform.com/uploads/images/airportVision.webp',
+                      Image.asset(
+                        'assets/images/airportVision.webp',
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
                       ),
