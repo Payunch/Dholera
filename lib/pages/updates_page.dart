@@ -68,7 +68,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
     );
 
     if (result == true) {
-      _fetchUpdates();
+      await _fetchUpdates();
     }
   }
 
@@ -130,10 +130,10 @@ class _UpdatesPageState extends State<UpdatesPage> {
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF0F172A) : Colors.white,
           borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.blueGrey[100]!),
+          border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.blueGrey[100]!),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.4 : 0.05),
+              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
               blurRadius: 30,
               offset: const Offset(0, 15),
             ),

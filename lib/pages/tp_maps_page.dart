@@ -4,8 +4,6 @@ import '../models/tp_map.dart';
 import '../services/api_service.dart';
 import '../blocs/localization/localization_bloc.dart';
 import '../blocs/localization/localization_state.dart';
-import 'pdf_manager_page.dart'; // Or a specific PDF viewer
-
 class TpMapsPage extends StatefulWidget {
   const TpMapsPage({super.key});
 

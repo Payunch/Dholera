@@ -101,7 +101,7 @@ class NotificationService {
       importance: Importance.max,
       priority: Priority.high,
       showWhen: true,
-      color: const Color(0xFFFF7A00),
+      color: Color(0xFFFF7A00),
     );
     
     const NotificationDetails details = NotificationDetails(android: androidDetails);

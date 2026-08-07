@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_state.dart';
 import '../blocs/preferences/preferences_bloc.dart';
-import '../blocs/preferences/preferences_state.dart';
 import 'language_page.dart';
 import 'onboarding_page.dart';
 import 'role_selection_page.dart';
@@ -25,9 +24,6 @@ class _SplashPageState extends State<SplashPage> {
 
   Future<void> _navigateToNext() async {
     try {
-      // Maximum time to wait in splash
-      final timeout = Future.delayed(const Duration(seconds: 5));
-      
       // Artificial delay for splash animation
       await Future.delayed(const Duration(seconds: 2));
       

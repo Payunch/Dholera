@@ -105,7 +105,7 @@ class _ProjectEditorPageState extends State<ProjectEditorPage> {
                     _buildTextField(_nameController, 'Project Name'),
                     _buildTextField(_slugController, 'URL Slug (e.g. satyaja-bliss)'),
                     DropdownButtonFormField<String>(
-                      value: _category,
+                      initialValue: _category,
                       decoration: const InputDecoration(labelText: 'Category'),
                       items: ['Residential', 'Commercial', 'Industrial'].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
                       onChanged: (val) => setState(() => _category = val!),

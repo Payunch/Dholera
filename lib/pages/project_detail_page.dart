@@ -171,7 +171,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
         children: [
           Expanded(
             child: ElevatedButton.icon(
-              onPressed: () => _launchWhatsapp(),
+              onPressed: _launchWhatsapp,
               icon: const Icon(Icons.chat_bubble),
               label: const Text('WHATSAPP INQUIRY'),
               style: ElevatedButton.styleFrom(

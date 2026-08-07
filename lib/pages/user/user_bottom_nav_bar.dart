@@ -67,11 +67,11 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
                     decoration: BoxDecoration(
                       color: Theme.of(context).scaffoldBackgroundColor.withAlpha(216),
                       shape: BoxShape.circle,
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
-                          color: const Color.fromARGB(25, 0, 0, 0),
+                          color: Color.fromARGB(25, 0, 0, 0),
                           blurRadius: 8,
-                          offset: const Offset(0, 4),
+                          offset: Offset(0, 4),
                         ),
                       ],
                     ),

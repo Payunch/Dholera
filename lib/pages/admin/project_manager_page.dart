@@ -60,7 +60,7 @@ class _ProjectManagerPageState extends State<ProjectManagerPage> {
         if (response['success'] == true) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Project deleted successfully')));
-            _fetchProjects();
+            await _fetchProjects();
           }
         } else {
           if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${response['error']}')));
@@ -147,6 +147,6 @@ class _ProjectManagerPageState extends State<ProjectManagerPage> {
       context,
       MaterialPageRoute(builder: (_) => ProjectEditorPage(project: project)),
     );
-    if (result == true) _fetchProjects();
+    if (result == true) await _fetchProjects();
   }
 }

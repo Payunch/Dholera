@@ -36,7 +36,7 @@ class _InvestmentGuidePageState extends State<InvestmentGuidePage> {
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0B132B)),
                   ),
-                  Container(color: Colors.black.withOpacity(0.6)),
+                  Container(color: Colors.black.withValues(alpha: 0.6)),
                 ],
               ),
             ),

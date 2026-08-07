@@ -8,17 +8,14 @@ import '../config/assets.dart';
 import '../theme/app_colors.dart';
 import 'leads_page.dart';
 import 'updates_page.dart';
-import 'settings_page.dart';
 import 'pdf_manager_page.dart';
 import 'analytics_overview_page.dart';
 import 'approvals_page.dart';
 import 'database_explorer_page.dart';
-import 'system_page.dart';
 import '../widgets/ad_banner.dart';
 import 'admin/project_manager_page.dart';
 import 'admin/tp_map_manager_page.dart';
 
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/leads/leads_bloc.dart';
 import '../blocs/leads/leads_event.dart';
 import '../models/lead.dart';
@@ -239,9 +236,9 @@ class _DashboardPageState extends State<DashboardPage> {
                     value: 'logout',
                     child: Row(
                       children: [
-                        const Icon(Icons.logout, color: Colors.red),
-                        const SizedBox(width: 8),
-                        const Text('Logout', style: TextStyle(color: Colors.red)),
+                        Icon(Icons.logout, color: Colors.red),
+                        SizedBox(width: 8),
+                        Text('Logout', style: TextStyle(color: Colors.red)),
                       ],
                     ),
                   ),

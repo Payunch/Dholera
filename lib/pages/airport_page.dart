@@ -40,7 +40,7 @@ class _AirportPageState extends State<AirportPage> {
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
                       ),
-                      Container(color: Colors.black.withOpacity(0.4)),
+                      Container(color: Colors.black.withValues(alpha: 0.4)),
                     ],
                   ),
                 ),
@@ -92,9 +92,9 @@ class _AirportPageState extends State<AirportPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
+        color: Colors.orange.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
       ),
       child: Text(
         text.toUpperCase(),

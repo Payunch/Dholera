@@ -53,7 +53,7 @@ class _AdminWebViewPageState extends State<AdminWebViewPage> {
     if (ApiConfig.useLocalBackend) {
        baseUrl = 'http://${ApiConfig.localIp}:3000';
     }
-    _controller.loadRequest(Uri.parse('\$baseUrl\$path'));
+    _controller.loadRequest(Uri.parse('$baseUrl$path'));
     Navigator.pop(context); // close drawer
   }
 

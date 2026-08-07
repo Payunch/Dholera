@@ -86,7 +86,7 @@ class _PortalsPageState extends State<PortalsPage> {
               style: TextStyle(color: Colors.grey[500], fontSize: 12),
             ),
           ),
-        ...portals.map((p) => _buildPortalCard(p)),
+        ...portals.map(_buildPortalCard),
         const SizedBox(height: 32),
       ],
     );

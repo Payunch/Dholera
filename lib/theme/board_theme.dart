@@ -77,7 +77,7 @@ class BoardThemeData {
       scaffoldBackgroundColor: background,
       cardColor: card,
       dividerColor: divider,
-      dialogBackgroundColor: dialog,
+      dialogTheme: DialogThemeData(backgroundColor: dialog),
       textTheme: TextTheme(
         bodyLarge: TextStyle(color: textPrimary),
         bodyMedium: TextStyle(color: textPrimary),

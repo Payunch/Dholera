@@ -41,7 +41,7 @@ class UpdateDetailPage extends StatelessWidget {
         catBg = Colors.blueGrey[50]!;
     }
 
-    if (isDark) catBg = catColor.withOpacity(0.1);
+    if (isDark) catBg = catColor.withValues(alpha: 0.1);
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF020617) : Colors.white,
@@ -56,7 +56,7 @@ class UpdateDetailPage extends StatelessWidget {
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -88,7 +88,7 @@ class UpdateDetailPage extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: catBg,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: catColor.withOpacity(0.2)),
+                          border: Border.all(color: catColor.withValues(alpha: 0.2)),
                         ),
                         child: Text(
                           update.category.toUpperCase(),
@@ -197,7 +197,7 @@ class UpdateDetailPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(32),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withOpacity(0.03) : Colors.blueGrey[50],
+                      color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.blueGrey[50],
                       borderRadius: BorderRadius.circular(32),
                       border: Border.all(color: Colors.grey[isDark ? 900 : 100]!),
                     ),

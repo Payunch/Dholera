@@ -40,7 +40,7 @@ class _ContactPageState extends State<ContactPage> {
       _nameController.clear();
       _phoneController.clear();
       _messageController.clear();
-      Navigator.pushReplacement(
+      await Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const AdminWebViewPage()),
       );
@@ -70,7 +70,7 @@ class _ContactPageState extends State<ContactPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit: \${e.toString()}')),
+          SnackBar(content: Text('Failed to submit: ${e.toString()}')),
         );
       }
     } finally {

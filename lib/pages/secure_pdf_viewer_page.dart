@@ -71,7 +71,9 @@ class _SecurePdfViewerPageState extends State<SecurePdfViewerPage> {
   void dispose() {
     // Delete temp file on exit for security
     if (_localPath != null) {
-      File(_localPath!).delete().catchError((_) => null);
+      try {
+        File(_localPath!).deleteSync();
+      } catch (_) {}
     }
     super.dispose();
   }

@@ -87,7 +87,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                               color: lead.isVerified ? Colors.green : Colors.orange,
                             ),
                           ),
-                          DataCell(Text(lead.source ?? 'Web')),
+                          DataCell(Text(lead.source)),
                           DataCell(Text(DateFormat('dd/MM/yy HH:mm').format(lead.createdAt))),
                         ]);
                       }).toList(),

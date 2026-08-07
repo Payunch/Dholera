@@ -45,5 +45,5 @@ class PreferencesBloc extends Bloc<PreferencesEvent, PreferencesState> {
 class LoadPreferences extends PreferencesEvent {
   final bool isLanguageSelected;
   final bool isOnboardingDone;
-  LoadPreferences({required this.isLanguageSelected, required this.isOnboardingDone});
+  const LoadPreferences({required this.isLanguageSelected, required this.isOnboardingDone});
 }

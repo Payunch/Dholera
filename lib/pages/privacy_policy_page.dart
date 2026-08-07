@@ -23,11 +23,11 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
+          const SliverAppBar(
             expandedHeight: 60,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text('Privacy Policy', style: TextStyle(fontSize: 16)),
+              title: Text('Privacy Policy', style: TextStyle(fontSize: 16)),
               
             ),
           ),

@@ -23,11 +23,11 @@ class _TermsPageState extends State<TermsPage> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
+          const SliverAppBar(
             expandedHeight: 60,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text('Terms & Conditions', style: TextStyle(fontSize: 16)),
+              title: Text('Terms & Conditions', style: TextStyle(fontSize: 16)),
               
             ),
           ),

@@ -41,7 +41,7 @@ class _AboutPageState extends State<AboutPage> {
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
                       ),
-                      Container(color: Colors.black.withOpacity(0.5)),
+                      Container(color: Colors.black.withValues(alpha: 0.5)),
                     ],
                   ),
                 ),
@@ -118,7 +118,7 @@ class _AboutPageState extends State<AboutPage> {
       mainAxisSpacing: 16,
       crossAxisSpacing: 16,
       childAspectRatio: 0.8,
-      children: items.map((item) => _buildInfoCard(item)).toList(),
+      children: items.map(_buildInfoCard).toList(),
     );
   }
 

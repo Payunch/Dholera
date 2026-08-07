@@ -190,7 +190,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
         child: const Icon(Icons.logout_rounded, color: Colors.red),
       ),
       title: const Text('Sign Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
@@ -213,14 +213,17 @@ class _SettingsPageState extends State<SettingsPage> {
                 // Delete from Firebase
                 final user = FirebaseAuth.instance.currentUser;
                 await user?.delete();
+                if (!dialogContext.mounted) return;
+                Navigator.pop(dialogContext);
                 if (mounted) {
                   context.read<AuthBloc>().add(AuthLogoutRequested());
-                  Navigator.of(context).pushAndRemoveUntil(
+                  await Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (_) => const LoginPage()),
                     (route) => false,
                   );
                 }
               } catch (e) {
+                if (!dialogContext.mounted) return;
                 Navigator.pop(dialogContext);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to delete account. You may need to sign in again to perform this action.')));
@@ -239,7 +242,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
         child: const Icon(Icons.person_remove_rounded, color: Colors.red),
       ),
       title: const Text('Delete Account', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),

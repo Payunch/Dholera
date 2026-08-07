@@ -124,7 +124,7 @@ class _TpMapManagerPageState extends State<TpMapManagerPage> {
         if (response['success'] == true) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Scheme deleted successfully')));
-            _fetchMaps();
+            await _fetchMaps();
           }
         } else {
           if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${response['error']}')));
@@ -142,6 +142,6 @@ class _TpMapManagerPageState extends State<TpMapManagerPage> {
       context,
       MaterialPageRoute(builder: (_) => TpMapEditorPage(tpMap: map)),
     );
-    if (result == true) _fetchMaps();
+    if (result == true) await _fetchMaps();
   }
 }

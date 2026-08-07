@@ -76,14 +76,14 @@ class _LoginPageState extends State<LoginPage> {
         // Send the secret admin username to the backend (matches ADMIN_USER)
         final response = await _apiService.login(username, password);
         if (response['success'] == true) {
-          _routeToApp(response['user'], AppRole.adminOwner);
+          await _routeToApp(response['user'], AppRole.adminOwner);
         } else {
           setState(() => _error = response['error'] ?? 'Admin authentication failed.');
         }
       } else {
         // Handle Normal User (Public App)
         // In a real app, you might hit /api/leads/onboard with just name and phone here
-        _routeToApp({'name': username, 'phone': phone}, AppRole.userInvestor);
+        await _routeToApp({'name': username, 'phone': phone}, AppRole.userInvestor);
       }
     } catch (e) {
       setState(() => _error = 'Connection Error: Unable to reach the server.');
@@ -107,12 +107,14 @@ class _LoginPageState extends State<LoginPage> {
 
       await NotificationService().syncTokenWithBackend();
 
+      if (!mounted) return;
+
       if (role == AppRole.adminOwner) {
-        Navigator.of(context).pushReplacement(
+        await Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const AdminBottomNavBar()),
         );
       } else {
-        Navigator.of(context).pushReplacement(
+        await Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const UserBottomNavBar()),
         );
       }
@@ -142,10 +144,10 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 48),
                 Card(
                   elevation: 0,
-                  color: Colors.white.withOpacity(0.05),
+                  color: Colors.white.withValues(alpha: 0.05),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(32),
-                    side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(32.0),
@@ -243,27 +245,27 @@ class _LoginPageState extends State<LoginPage> {
       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 2),
+        labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 2),
         prefixIcon: Icon(icon, color: const Color(0xFFFF7A00)),
         suffixIcon: isPassword
             ? IconButton(
                 icon: Icon(
                   _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                 ),
                 onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
               )
             : null,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Color(0xFFFF7A00)),
         ),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.02),
+        fillColor: Colors.white.withValues(alpha: 0.02),
       ),
     );
   }

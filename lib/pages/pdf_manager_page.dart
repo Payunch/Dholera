@@ -322,7 +322,7 @@ class _PdfManagerPageState extends State<PdfManagerPage> {
                             leading: const Icon(Icons.picture_as_pdf, color: Colors.red, size: 36),
                             title: Text(pdf.title, style: const TextStyle(fontWeight: FontWeight.bold)),
                             subtitle: Text(
-                              'Category: ${pdf.category ?? 'General'}\nUploaded: ${_formatUploadedAt(pdf.createdAt)}',
+                              'Category: ${pdf.category}\nUploaded: ${_formatUploadedAt(pdf.createdAt)}',
                             ),
                             trailing: const Icon(Icons.open_in_new, color: Colors.blue),
                             onTap: () => _viewPdf(pdf.id),

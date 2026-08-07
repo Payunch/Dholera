@@ -28,13 +28,12 @@ class DeepLinkService {
 
   void _handleUri(Uri uri, GlobalKey<NavigatorState> navigatorKey) async {
     final path = uri.path;
-    final params = uri.queryParameters;
 
     if (path.contains('/pdf/view/')) {
       final idStr = path.split('/').last;
       final id = int.tryParse(idStr);
       if (id != null) {
-        navigatorKey.currentState?.push(
+        await navigatorKey.currentState?.push(
           MaterialPageRoute(builder: (_) => SecurePdfViewerPage(pdfId: id, title: 'Secured Document')),
         );
       }
@@ -47,7 +46,7 @@ class DeepLinkService {
         final List projects = response['projects'];
         final projectJson = projects.firstWhere((p) => p['slug'] == slug, orElse: () => null);
         if (projectJson != null) {
-          navigatorKey.currentState?.push(
+          await navigatorKey.currentState?.push(
             MaterialPageRoute(builder: (_) => ProjectDetailPage(project: Project.fromJson(projectJson))),
           );
         }

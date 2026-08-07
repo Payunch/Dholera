@@ -41,7 +41,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     await NotificationService().syncTokenWithBackend();
 
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
+    await Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const RoleSelectionPage()),
     );
   }
