@@ -46,6 +46,7 @@ class _VaultPageState extends State<VaultPage> {
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
+            centerTitle: true,
             title: Text(state.translate('nav_vault'), style: const TextStyle(fontWeight: FontWeight.bold)),
             elevation: 0,
             backgroundColor: Colors.transparent,

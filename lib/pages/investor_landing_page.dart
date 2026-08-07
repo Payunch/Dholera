@@ -569,11 +569,6 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
       decoration: BoxDecoration(
         color: const Color(0xFF0B132B),
         borderRadius: BorderRadius.circular(24),
-        image: DecorationImage(
-          image: const AssetImage('assets/images/ng1.png'),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.8), BlendMode.dstATop),
-        ),
       ),
       child: _isSubmitSuccess
           ? Center(

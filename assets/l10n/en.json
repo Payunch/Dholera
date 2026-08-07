@@ -24,5 +24,15 @@
   "deployment_date": "Preferred Date",
   "establish_conn": "Request Visit",
   "request_received": "Request Received",
-  "date_limit_msg": "Within Next 7 Days"
+  "date_limit_msg": "Within Next 7 Days",
+  "hero_title": "Dholera SIR Investment",
+  "benefits_title": "Benefits",
+  "verified_maps": "Verified TP Maps",
+  "realtime_updates": "Realtime Updates",
+  "fee_calculator": "Fee Calculator",
+  "tp_maps_title": "TP Maps",
+  "strategic_loc_desc": "Access authentic maps",
+  "featured_insights_desc": "Stay updated",
+  "compliance_verification": "Verify fees",
+  "dholera_platform": "Dholera Platform"
 }

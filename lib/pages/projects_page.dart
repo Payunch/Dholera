@@ -60,6 +60,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
+            centerTitle: true,
             title: Text(state.translate('nav_projects'), style: const TextStyle(fontWeight: FontWeight.bold)),
             elevation: 0,
             backgroundColor: Colors.transparent,

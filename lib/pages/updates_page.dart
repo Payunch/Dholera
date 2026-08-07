@@ -191,7 +191,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    update.content,
+                    update.content.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' '),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.inter(

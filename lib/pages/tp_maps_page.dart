@@ -43,6 +43,7 @@ class _TpMapsPageState extends State<TpMapsPage> {
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
+            centerTitle: true,
             title: Text(state.translate('tp_maps_title'), style: const TextStyle(fontWeight: FontWeight.bold)),
             elevation: 0,
             backgroundColor: Colors.transparent,
