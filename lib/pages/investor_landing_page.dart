@@ -383,7 +383,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                 height: 150,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                errorBuilder: (_, __, ___) => Image.asset('assets/images/ui_infrastructure.png', height: 150, width: double.infinity, fit: BoxFit.cover),
               ),
             ),
           Padding(
@@ -474,7 +474,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                       height: 140,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(height: 140, color: Colors.grey[200], child: const Icon(Icons.business)),
+                      errorBuilder: (_, __, ___) => Image.asset('assets/images/ui_blueprint.png', height: 140, width: double.infinity, fit: BoxFit.cover),
                     ),
                   ),
                   Padding(

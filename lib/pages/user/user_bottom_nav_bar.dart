@@ -7,6 +7,7 @@ import '../tp_maps_page.dart';
 import '../projects_page.dart';
 import '../portals_page.dart';
 import '../contact_page.dart';
+import '../vault_page.dart';
 import '../../blocs/localization/localization_bloc.dart';
 import '../../blocs/localization/localization_state.dart';
 import '../../widgets/custom_side_menu.dart';
@@ -25,7 +26,7 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
   final List<Widget> _pages = [
     const InvestorLandingPage(),
     const TpMapsPage(),
-    const Scaffold(body: Center(child: Text('PDF Library Coming Soon'))),
+    const VaultPage(),
     const ProjectsPage(),
     const UpdatesPage(),
     const PortalsPage(),

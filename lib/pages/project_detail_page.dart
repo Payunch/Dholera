@@ -40,6 +40,10 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
                         ? widget.project.image!
                         : 'https://api.dholeraplatform.com${widget.project.image}',
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Image.asset(
+                      'assets/images/ui_blueprint.png',
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
