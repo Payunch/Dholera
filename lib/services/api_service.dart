@@ -418,10 +418,11 @@ class ApiService {
     ).timeout(const Duration(minutes: 1));
   }
 
-  Future<Map<String, dynamic>> getUpdates() async {
+  Future<Map<String, dynamic>> getUpdates([String? lang]) async {
     try {
+      final query = lang != null ? '?all=true&lang=$lang' : '?all=true';
       final response = await http.get(
-        Uri.parse('${ApiConfig.updatesEndpoint}?all=true'),
+        Uri.parse('${ApiConfig.updatesEndpoint}$query'),
         headers: await _getFetchHeaders(),
       ).timeout(const Duration(seconds: 15));
       return _handleJsonResponse(response, 'updates');

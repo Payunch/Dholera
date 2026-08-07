@@ -38,7 +38,7 @@ class _AboutPageState extends State<AboutPage> {
                     fit: StackFit.expand,
                     children: [
                       Image.asset(
-                        'assets/images/about_banner.png',
+                        'assets/images/dholerasirGujrat.webp',
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
                       ),

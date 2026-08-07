@@ -23,6 +23,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'travel_lifestyle_page.dart';
 import 'privacy_policy_page.dart';
 import 'terms_page.dart';
+import 'settings_page.dart';
 
 
 class InvestorLandingPage extends StatefulWidget {
@@ -55,7 +56,8 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
 
   Future<void> _fetchInsights() async {
     try {
-      final updatesResponse = await _apiService.getUpdates();
+      final lang = context.read<LocalizationBloc>().state.locale.languageCode;
+      final updatesResponse = await _apiService.getUpdates(lang);
       final projectsResponse = await _apiService.getProjects();
       
       if (mounted) {
@@ -97,6 +99,12 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                   expandedHeight: 500.0,
                   floating: false,
                   pinned: true,
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.settings, color: Colors.white),
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage())),
+                    ),
+                  ],
                   flexibleSpace: FlexibleSpaceBar(
                     centerTitle: true,
                     title: Text(

@@ -6,6 +6,7 @@ import '../services/api_service.dart';
 import '../models/app_update.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_state.dart';
+import '../blocs/localization/localization_bloc.dart';
 import 'blog_editor_page.dart';
 import 'update_detail_page.dart';
 
@@ -36,7 +37,8 @@ class _UpdatesPageState extends State<UpdatesPage> {
     });
 
     try {
-      final response = await _apiService.getUpdates();
+      final lang = context.read<LocalizationBloc>().state.locale.languageCode;
+      final response = await _apiService.getUpdates(lang);
       if (!mounted) return;
       if (response['success'] == true) {
         final List<dynamic> updatesData = response['updates'] ?? [];
