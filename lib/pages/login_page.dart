@@ -42,6 +42,12 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => _error = 'Username and Phone Number are required.');
       return;
     }
+    
+    // 10-digit mobile number validation
+    if (phone.length != 10 || !RegExp(r'^[6-9]\d{9}$').hasMatch(phone)) {
+      setState(() => _error = 'Please enter a valid 10-digit Indian mobile number.');
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -49,7 +55,6 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     // Check for Hidden Admin Trigger
-    // Completely hidden: Requires EXACT name and EXACT phone from ApiConfig
     final isAdminTriggered = (username == ApiConfig.secretAdminName && phone == ApiConfig.secretAdminMobile);
 
     if (isAdminTriggered && !_showPasswordField) {
@@ -73,7 +78,6 @@ class _LoginPageState extends State<LoginPage> {
           return;
         }
 
-        // Send the secret admin username to the backend (matches ADMIN_USER)
         final response = await _apiService.login(username, password);
         if (response['success'] == true) {
           await _routeToApp(response['user'], AppRole.adminOwner);
@@ -81,9 +85,13 @@ class _LoginPageState extends State<LoginPage> {
           setState(() => _error = response['error'] ?? 'Admin authentication failed.');
         }
       } else {
-        // Handle Normal User (Public App)
-        // In a real app, you might hit /api/leads/onboard with just name and phone here
-        await _routeToApp({'name': username, 'phone': phone}, AppRole.userInvestor);
+        // Handle Normal User (Public App) - Register Lead
+        final response = await _apiService.createLead({'name': username, 'phone': phone, 'source': 'App'});
+        if (response['success'] == true) {
+          await _routeToApp({'name': username, 'phone': phone}, AppRole.userInvestor);
+        } else {
+          setState(() => _error = response['error'] ?? 'Failed to register. Please try again.');
+        }
       }
     } catch (e) {
       setState(() => _error = 'Connection Error: Unable to reach the server.');

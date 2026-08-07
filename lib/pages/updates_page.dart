@@ -211,15 +211,36 @@ class _UpdatesPageState extends State<UpdatesPage> {
 
   Widget _buildErrorView() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline_rounded, size: 48, color: Colors.redAccent),
-          const SizedBox(height: 16),
-          Text('Error: $_error', textAlign: TextAlign.center),
-          const SizedBox(height: 24),
-          ElevatedButton(onPressed: _fetchUpdates, child: const Text('RETRY')),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.cloud_off_rounded, size: 48, color: Colors.orange),
+            const SizedBox(height: 16),
+            const Text(
+              'Content Temporarily Unavailable',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'We are currently performing maintenance or experiencing high traffic. Please check back later.',
+              style: TextStyle(color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _fetchUpdates,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('RETRY'),
+            ),
+          ],
+        ),
       ),
     );
   }

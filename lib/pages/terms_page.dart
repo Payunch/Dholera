@@ -59,7 +59,7 @@ class _TermsPageState extends State<TermsPage> {
                     style: TextStyle(color: Colors.grey[600], fontSize: 16, height: 1.6),
                   ),
                   const SizedBox(height: 40),
-                  _buildContentPlaceholder(),
+                  _buildContent(),
                   const SizedBox(height: 40),
                   _buildCTA(),
                   const SizedBox(height: 40),
@@ -86,25 +86,39 @@ class _TermsPageState extends State<TermsPage> {
     );
   }
 
-  Widget _buildContentPlaceholder() {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
+  Widget _buildContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('1. Acceptance of Terms'),
+        _buildSectionText('By accessing or using the Dholera Platform, you agree to be bound by these Terms of Service. If you disagree with any part of the terms, you may not access the service.'),
+        
+        _buildSectionTitle('2. User-Generated Content & Safe Harbor'),
+        _buildSectionText('The Dholera Platform operates strictly as an intermediary and hosting provider under applicable Safe Harbor laws. We do not create or endorse user-generated content, including property listings, blogs, or comments.'),
+        _buildSectionText('You agree that you are solely responsible for any content you upload, post, or transmit through our platform. Dholera Platform claims no liability for inaccurate, offensive, or illegal user-generated content.'),
+        
+        _buildSectionTitle('3. No Investment Liability'),
+        _buildSectionText('Any information provided on this platform regarding real estate or smart city investments is for informational purposes only. We do not offer financial advice, and we are not liable for any financial losses or damages resulting from your investment decisions based on platform content.'),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 24, bottom: 8),
+      child: Text(
+        title,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
       ),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(Icons.construction, size: 48, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              "Detailed content coming soon.",
-              style: TextStyle(color: Colors.grey[500], fontWeight: FontWeight.bold),
-            )
-          ],
-        ),
+    );
+  }
+
+  Widget _buildSectionText(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 15, color: Colors.grey[700], height: 1.5),
       ),
     );
   }

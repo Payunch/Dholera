@@ -59,7 +59,7 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
                     style: TextStyle(color: Colors.grey[600], fontSize: 16, height: 1.6),
                   ),
                   const SizedBox(height: 40),
-                  _buildContentPlaceholder(),
+                  _buildContent(),
                   const SizedBox(height: 40),
                   _buildCTA(),
                   const SizedBox(height: 40),
@@ -86,25 +86,39 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
     );
   }
 
-  Widget _buildContentPlaceholder() {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
+  Widget _buildContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('1. Information Collection'),
+        _buildSectionText('We collect personal data (such as your name, mobile number, and email) when you register on the Dholera Platform to provide you with a personalized experience and grant access to investment resources. By using this platform, you consent to the collection and use of this information.'),
+        
+        _buildSectionTitle('2. User-Generated Content & Safe Harbor'),
+        _buildSectionText('The Dholera Platform allows users to post, upload, or share content. We act strictly as a hosting provider (Safe Harbor provision) and do not manually review all content before it goes live. Users are solely responsible for the legality, accuracy, and appropriateness of the content they upload.'),
+        _buildSectionText('We reserve the right to remove any content that violates applicable laws or our guidelines, either through automated systems or admin moderation.'),
+        
+        _buildSectionTitle('3. Data Security'),
+        _buildSectionText('We implement strict security measures to protect your data, including JWT authentication and rate limiting on our servers to prevent unauthorized access.'),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 24, bottom: 8),
+      child: Text(
+        title,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
       ),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(Icons.construction, size: 48, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              "Detailed content coming soon.",
-              style: TextStyle(color: Colors.grey[500], fontWeight: FontWeight.bold),
-            )
-          ],
-        ),
+    );
+  }
+
+  Widget _buildSectionText(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 15, color: Colors.grey[700], height: 1.5),
       ),
     );
   }
