@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/preferences/preferences_bloc.dart';
 import '../blocs/preferences/preferences_event.dart';
 import '../services/notification_service.dart';
-import 'role_selection_page.dart';
+import 'login_page.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -42,7 +42,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
     if (!mounted) return;
     await Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const RoleSelectionPage()),
+      MaterialPageRoute(builder: (_) => const LoginPage()),
     );
   }
 

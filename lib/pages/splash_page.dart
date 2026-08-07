@@ -5,7 +5,7 @@ import '../blocs/auth/auth_state.dart';
 import '../blocs/preferences/preferences_bloc.dart';
 import 'language_page.dart';
 import 'onboarding_page.dart';
-import 'role_selection_page.dart';
+import 'login_page.dart';
 import 'dashboard_page.dart';
 
 class SplashPage extends StatefulWidget {
@@ -39,13 +39,13 @@ class _SplashPageState extends State<SplashPage> {
       } else if (authState.status == AuthStatus.authenticated) {
         _replacePage(const DashboardPage());
       } else {
-        _replacePage(const RoleSelectionPage());
+        _replacePage(const LoginPage());
       }
     } catch (e) {
       debugPrint('Splash Navigation Error: $e');
-      // Fallback to role selection if everything fails
+      // Fallback to login if everything fails
       if (mounted) {
-        _replacePage(const RoleSelectionPage());
+        _replacePage(const LoginPage());
       }
     }
   }
