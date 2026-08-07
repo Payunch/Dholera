@@ -32,7 +32,7 @@ class _PlotsForSalePageState extends State<PlotsForSalePage> {
                 fit: StackFit.expand,
                 children: [
                   Image.asset(
-                    'assets/images/ui_blueprint.png',
+                    'assets/images/dream-world-city.jpg',
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0B132B)),
                   ),

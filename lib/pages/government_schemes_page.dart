@@ -32,7 +32,7 @@ class _GovernmentSchemesPageState extends State<GovernmentSchemesPage> {
                 fit: StackFit.expand,
                 children: [
                   Image.asset(
-                    'assets/images/ui_finance.png',
+                    'assets/images/dholerasirGujrat.webp',
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0B132B)),
                   ),

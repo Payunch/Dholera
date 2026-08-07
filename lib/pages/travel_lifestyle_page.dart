@@ -32,7 +32,7 @@ class _TravelLifestylePageState extends State<TravelLifestylePage> {
                 fit: StackFit.expand,
                 children: [
                   Image.asset(
-                    'assets/images/ui_lifestyle.png',
+                    'assets/images/dholera_lifestyle_square.png',
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0B132B)),
                   ),

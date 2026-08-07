@@ -65,7 +65,7 @@ class _PortalsPageState extends State<PortalsPage> {
                       fit: StackFit.expand,
                       children: [
                         Image.asset(
-                          'assets/images/ui_finance.png',
+                          'assets/images/about_banner.png',
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
                         ),

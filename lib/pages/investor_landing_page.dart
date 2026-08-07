@@ -426,6 +426,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
       'assets/images/larsen-toubro.png',
       'assets/images/torrent.png',
       'assets/images/renew.png',
+      'assets/images/vedanta.png',
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -792,10 +793,12 @@ class _HeroSliderState extends State<_HeroSlider> with SingleTickerProviderState
   late AnimationController _animationController;
   int _currentPage = 0;
   final List<String> _images = [
-    'assets/images/arialviewdholeraexpress.webp',
+    'assets/images/dholera_landscape_wide.png',
+    'assets/images/futuristic_dholera.png',
+    'assets/images/airportFeatureimage.webp',
     'assets/images/airportVision.webp',
     'assets/images/expressHighway.webp',
-    'assets/images/dholerasirGujrat.webp',
+    'assets/images/bliss_grandeur.jpg',
   ];
 
   @override

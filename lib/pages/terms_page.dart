@@ -32,7 +32,7 @@ class _TermsPageState extends State<TermsPage> {
                 fit: StackFit.expand,
                 children: [
                   Image.asset(
-                    'assets/images/ui_finance.png',
+                    'assets/images/arialviewdholeraexpress.webp',
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
                   ),

@@ -32,7 +32,7 @@ class _SmartCityPageState extends State<SmartCityPage> {
                 fit: StackFit.expand,
                 children: [
                   Image.asset(
-                    'assets/images/dholerasirGujrat.webp',
+                    'assets/images/futuristic_dholera.png',
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0B132B)),
                   ),

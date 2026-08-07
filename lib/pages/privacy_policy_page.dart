@@ -32,7 +32,7 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
                 fit: StackFit.expand,
                 children: [
                   Image.asset(
-                    'assets/images/ui_finance.png',
+                    'assets/images/dholeraexpress.webp',
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
                   ),
