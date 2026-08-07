@@ -3,7 +3,9 @@ import '../dashboard_page.dart';
 import '../leads_page.dart';
 import '../updates_page.dart';
 import '../settings_page.dart';
+import '../../widgets/custom_side_menu.dart';
 
+// TODO: Rename class to AdminMainLayout
 class AdminBottomNavBar extends StatefulWidget {
   const AdminBottomNavBar({super.key});
 
@@ -24,23 +26,58 @@ class _AdminBottomNavBarState extends State<AdminBottomNavBar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
+      extendBodyBehindAppBar: true,
+      drawer: CustomSideMenu(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Theme.of(context).primaryColor,
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        elevation: 8,
+        header: Container(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          child: Text(
+            'Admin Panel',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: Theme.of(context).primaryColor,
+            ),
+          ),
+        ),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard_rounded), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.people_alt_rounded), label: 'Leads'),
-          BottomNavigationBarItem(icon: Icon(Icons.article_rounded), label: 'Blogs'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings_suggest_rounded), label: 'Settings'),
+          SideMenuItem(icon: Icons.dashboard_rounded, label: 'Dashboard'),
+          SideMenuItem(icon: Icons.people_alt_rounded, label: 'Leads'),
+          SideMenuItem(icon: Icons.article_rounded, label: 'Blogs'),
+          SideMenuItem(icon: Icons.settings_suggest_rounded, label: 'Settings'),
+        ],
+      ),
+      body: Stack(
+        children: [
+          IndexedStack(
+            index: _currentIndex,
+            children: _pages,
+          ),
+          Positioned(
+            top: 48,
+            left: 16,
+            child: Builder(
+              builder: (ctx) => Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.85),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.menu_rounded, size: 28),
+                  color: Theme.of(context).iconTheme.color,
+                  onPressed: () => Scaffold.of(ctx).openDrawer(),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

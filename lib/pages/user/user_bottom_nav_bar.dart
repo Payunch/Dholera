@@ -8,7 +8,9 @@ import '../vault_page.dart';
 import '../about_page.dart';
 import '../../blocs/localization/localization_bloc.dart';
 import '../../blocs/localization/localization_state.dart';
+import '../../widgets/custom_side_menu.dart';
 
+// TODO: Rename class to UserMainLayout since it no longer uses a BottomNavBar
 class UserBottomNavBar extends StatefulWidget {
   const UserBottomNavBar({super.key});
 
@@ -31,34 +33,57 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
     return BlocBuilder<LocalizationBloc, LocalizationState>(
       builder: (context, state) {
         return Scaffold(
-          body: IndexedStack(
-            index: _currentIndex,
-            children: _pages,
-          ),
-          bottomNavigationBar: BottomNavigationBar(
+          extendBodyBehindAppBar: true,
+          drawer: CustomSideMenu(
             currentIndex: _currentIndex,
             onTap: (index) => setState(() => _currentIndex = index),
-            type: BottomNavigationBarType.fixed,
-            selectedItemColor: Theme.of(context).primaryColor,
-            unselectedItemColor: Colors.grey,
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            elevation: 8,
+            header: Container(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+              child: Text(
+                'Dholera Platform',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+            ),
             items: [
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.home_rounded),
-                label: state.translate('nav_home'),
+              SideMenuItem(icon: Icons.home_rounded, label: state.translate('nav_home')),
+              SideMenuItem(icon: Icons.feed_rounded, label: state.translate('nav_updates')),
+              SideMenuItem(icon: Icons.account_balance_wallet_rounded, label: state.translate('nav_vault')),
+              SideMenuItem(icon: Icons.person_rounded, label: state.translate('nav_about')),
+            ],
+          ),
+          body: Stack(
+            children: [
+              IndexedStack(
+                index: _currentIndex,
+                children: _pages,
               ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.feed_rounded),
-                label: state.translate('nav_updates'),
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.account_balance_wallet_rounded),
-                label: state.translate('nav_vault'),
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.person_rounded),
-                label: state.translate('nav_about'),
+              Positioned(
+                top: 48,
+                left: 16,
+                child: Builder(
+                  builder: (ctx) => Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.85),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.menu_rounded, size: 28),
+                      color: Theme.of(context).iconTheme.color,
+                      onPressed: () => Scaffold.of(ctx).openDrawer(),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
