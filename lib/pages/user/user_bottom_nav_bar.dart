@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../user_dashboard_page.dart';
 import '../updates_page.dart';
-import '../settings_page.dart';
 import '../investor_landing_page.dart';
 import '../vault_page.dart';
 import '../about_page.dart';
@@ -67,11 +65,11 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
                 child: Builder(
                   builder: (ctx) => Container(
                     decoration: BoxDecoration(
-                      color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.85),
+                      color: Theme.of(context).scaffoldBackgroundColor.withAlpha(216),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: const Color.fromARGB(25, 0, 0, 0),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),

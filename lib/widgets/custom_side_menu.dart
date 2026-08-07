@@ -44,13 +44,13 @@ class CustomSideMenu extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: isDark 
-                  ? Colors.black.withOpacity(0.6) 
-                  : Colors.white.withOpacity(0.7),
+                  ? const Color.fromARGB(153, 0, 0, 0) 
+                  : const Color.fromARGB(178, 255, 255, 255),
               border: Border(
                 right: BorderSide(
                   color: isDark 
-                      ? Colors.white.withOpacity(0.1) 
-                      : Colors.black.withOpacity(0.05),
+                      ? const Color.fromARGB(25, 255, 255, 255) 
+                      : const Color.fromARGB(13, 0, 0, 0),
                   width: 1,
                 ),
               ),
@@ -63,8 +63,8 @@ class CustomSideMenu extends StatelessWidget {
                     header!,
                     Divider(
                       color: isDark 
-                          ? Colors.white.withOpacity(0.1) 
-                          : Colors.black.withOpacity(0.1),
+                          ? const Color.fromARGB(25, 255, 255, 255) 
+                          : const Color.fromARGB(25, 0, 0, 0),
                       height: 32,
                     ),
                   ] else ...[
@@ -97,11 +97,11 @@ class CustomSideMenu extends StatelessWidget {
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(16),
                                 color: isSelected
-                                    ? theme.primaryColor.withOpacity(0.15)
+                                    ? theme.primaryColor.withAlpha(38)
                                     : Colors.transparent,
                                 border: Border.all(
                                   color: isSelected
-                                      ? theme.primaryColor.withOpacity(0.3)
+                                      ? theme.primaryColor.withAlpha(76)
                                       : Colors.transparent,
                                   width: 1,
                                 ),
@@ -138,7 +138,7 @@ class CustomSideMenu extends StatelessWidget {
                                         borderRadius: BorderRadius.circular(3),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: theme.primaryColor.withOpacity(0.5),
+                                            color: theme.primaryColor.withAlpha(127),
                                             blurRadius: 8,
                                             offset: const Offset(0, 0),
                                           ),

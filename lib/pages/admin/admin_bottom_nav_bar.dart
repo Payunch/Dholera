@@ -60,11 +60,11 @@ class _AdminBottomNavBarState extends State<AdminBottomNavBar> {
             child: Builder(
               builder: (ctx) => Container(
                 decoration: BoxDecoration(
-                  color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.85),
+                  color: Theme.of(context).scaffoldBackgroundColor.withAlpha(216),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: const Color.fromARGB(25, 0, 0, 0),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
