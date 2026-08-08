@@ -129,7 +129,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    - .env
     - assets/images/
     - assets/l10n/
 

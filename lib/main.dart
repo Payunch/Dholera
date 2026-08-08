@@ -26,13 +26,8 @@ import 'consent.dart';
 
 import 'pages/splash_page.dart';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Load environment variables from .env
-  await dotenv.load(fileName: ".env");
 
   // Initialize HydratedBloc storage
   HydratedBloc.storage = await HydratedStorage.build(

@@ -6,7 +6,8 @@ import '../blocs/preferences/preferences_bloc.dart';
 import 'language_page.dart';
 import 'onboarding_page.dart';
 import 'login_page.dart';
-import 'dashboard_page.dart';
+import 'admin/admin_bottom_nav_bar.dart';
+import 'user/user_bottom_nav_bar.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -37,7 +38,11 @@ class _SplashPageState extends State<SplashPage> {
       } else if (!prefState.isOnboardingDone) {
         _replacePage(const OnboardingPage());
       } else if (authState.status == AuthStatus.authenticated) {
-        _replacePage(const DashboardPage());
+        _replacePage(
+          authState.role == AppRole.adminOwner
+              ? const AdminBottomNavBar()
+              : const UserBottomNavBar(),
+        );
       } else {
         _replacePage(const LoginPage());
       }

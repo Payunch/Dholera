@@ -20,10 +20,6 @@ class ApiConfig {
   // Admin WhatsApp Number for contact
   static const String adminWhatsApp = '917435808031';
   
-  // Secret Admin Backdoor Credentials
-  static const String secretAdminName = 'admin';
-  static const String secretAdminMobile = '7435808031';
-
   static String get apiBaseUrl => useLocalBackend 
       ? 'http://$localIp:3001/api' 
       : productionUrl;

@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
 import '../blocs/auth/auth_state.dart';
-import '../config/api_config.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
 import 'admin/admin_bottom_nav_bar.dart';
@@ -20,9 +19,6 @@ class _LoginPageState extends State<LoginPage> {
   final ApiService _apiService = ApiService();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  bool _isPasswordVisible = false;
-  bool _showPasswordField = false;
   bool _isLoading = false;
   String? _error;
 
@@ -30,7 +26,6 @@ class _LoginPageState extends State<LoginPage> {
   void dispose() {
     _usernameController.dispose();
     _phoneController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -54,44 +49,14 @@ class _LoginPageState extends State<LoginPage> {
       _error = null;
     });
 
-    // Check for Hidden Admin Trigger
-    final isAdminTriggered = (username == ApiConfig.secretAdminName && phone == ApiConfig.secretAdminMobile);
-
-    if (isAdminTriggered && !_showPasswordField) {
-      // Reveal the password field
-      setState(() {
-        _showPasswordField = true;
-        _isLoading = false;
-      });
-      return;
-    }
-
     try {
-      if (isAdminTriggered && _showPasswordField) {
-        // Handle Admin Login
-        final password = _passwordController.text.trim();
-        if (password.isEmpty) {
-          setState(() {
-            _error = 'Admin password required.';
-            _isLoading = false;
-          });
-          return;
-        }
-
-        final response = await _apiService.login(username, password);
-        if (response['success'] == true) {
-          await _routeToApp(response['user'], AppRole.adminOwner);
-        } else {
-          setState(() => _error = response['error'] ?? 'Admin authentication failed.');
-        }
+      // Public access collects a lead. OTP-based identity verification will be
+      // added later; this flow must not be used to grant protected content.
+      final response = await _apiService.createLead({'name': username, 'phone': phone, 'source': 'App'});
+      if (response['success'] == true) {
+        await _routeToApp({'name': username, 'phone': phone}, AppRole.userInvestor);
       } else {
-        // Handle Normal User (Public App) - Register Lead
-        final response = await _apiService.createLead({'name': username, 'phone': phone, 'source': 'App'});
-        if (response['success'] == true) {
-          await _routeToApp({'name': username, 'phone': phone}, AppRole.userInvestor);
-        } else {
-          setState(() => _error = response['error'] ?? 'Failed to register. Please try again.');
-        }
+        setState(() => _error = response['error'] ?? 'Failed to register. Please try again.');
       }
     } catch (e) {
       setState(() => _error = 'Connection Error: Unable to reach the server.');
@@ -100,17 +65,9 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _handleSkip() async {
-    setState(() => _isLoading = true);
-    await _routeToApp(null, AppRole.userInvestor);
-    if (mounted) setState(() => _isLoading = false);
-  }
-
   Future<void> _routeToApp(Map<String, dynamic>? userData, AppRole role) async {
     String? token = await _apiService.getAuthToken();
-    if (token == null) {
-      token = userData?['token'] ?? userData?['accessToken'] ?? 'temp_public_token';
-    }
+    token ??= userData?['token'] ?? userData?['accessToken'] ?? 'temp_public_token';
     
     if (token != null && mounted) {
       context.read<AuthBloc>().add(AuthLoginRequested(
@@ -189,15 +146,6 @@ class _LoginPageState extends State<LoginPage> {
                           label: 'PHONE NUMBER',
                           icon: Icons.phone_android,
                         ),
-                        if (_showPasswordField) ...[
-                          const SizedBox(height: 20),
-                          _buildTextField(
-                            controller: _passwordController,
-                            label: 'ADMIN PASSCODE',
-                            icon: Icons.lock_outline,
-                            isPassword: true,
-                          ),
-                        ],
                         if (_error != null) ...[
                           const SizedBox(height: 20),
                           Text(
@@ -235,17 +183,6 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        TextButton(
-                          onPressed: _isLoading ? null : _handleSkip,
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.white70,
-                          ),
-                          child: const Text(
-                            'Skip for now',
-                            style: TextStyle(decoration: TextDecoration.underline),
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -262,25 +199,14 @@ class _LoginPageState extends State<LoginPage> {
     required TextEditingController controller,
     required String label,
     required IconData icon,
-    bool isPassword = false,
   }) {
     return TextField(
       controller: controller,
-      obscureText: isPassword && !_isPasswordVisible,
       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 2),
         prefixIcon: Icon(icon, color: const Color(0xFFFF7A00)),
-        suffixIcon: isPassword
-            ? IconButton(
-                icon: Icon(
-                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                  color: Colors.white.withValues(alpha: 0.3),
-                ),
-                onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
-              )
-            : null,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),

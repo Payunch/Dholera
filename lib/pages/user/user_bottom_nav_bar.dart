@@ -6,6 +6,8 @@ import '../about_page.dart';
 import '../tp_maps_page.dart';
 import '../projects_page.dart';
 import '../portals_page.dart';
+import '../airport_page.dart';
+import '../infrastructure_page.dart';
 import '../contact_page.dart';
 import '../vault_page.dart';
 import '../../blocs/localization/localization_bloc.dart';
@@ -27,11 +29,13 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
     const InvestorLandingPage(),
     const TpMapsPage(),
     const VaultPage(),
-    const ProjectsPage(),
-    const UpdatesPage(),
     const PortalsPage(),
-    const ContactPage(),
+    const ProjectsPage(),
+    const AirportPage(),
+    const InfrastructurePage(),
+    const UpdatesPage(),
     const AboutPage(),
+    const ContactPage(),
   ];
 
   @override
@@ -58,11 +62,13 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
               SideMenuItem(icon: Icons.home_rounded, label: state.translate('nav_home')),
               SideMenuItem(icon: Icons.map_rounded, label: state.translate('nav_tp_maps')),
               SideMenuItem(icon: Icons.picture_as_pdf_rounded, label: state.translate('nav_pdf')),
-              SideMenuItem(icon: Icons.business_rounded, label: state.translate('nav_projects')),
-              SideMenuItem(icon: Icons.feed_rounded, label: state.translate('nav_updates')),
               SideMenuItem(icon: Icons.public_rounded, label: state.translate('nav_portals')),
-              SideMenuItem(icon: Icons.contact_support_rounded, label: state.translate('nav_contact')),
+              SideMenuItem(icon: Icons.business_rounded, label: state.translate('nav_projects')),
+              SideMenuItem(icon: Icons.flight_takeoff_rounded, label: state.translate('nav_airport')),
+              SideMenuItem(icon: Icons.construction_rounded, label: state.translate('nav_infrastructure')),
+              SideMenuItem(icon: Icons.feed_rounded, label: state.translate('nav_updates')),
               SideMenuItem(icon: Icons.person_rounded, label: state.translate('nav_about')),
+              SideMenuItem(icon: Icons.contact_support_rounded, label: state.translate('nav_contact')),
             ],
           ),
           body: Stack(
