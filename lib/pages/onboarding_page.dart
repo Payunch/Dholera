@@ -20,7 +20,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     OnboardingItem(
       title: 'Verified Intelligence',
       description: 'Access real-time TP maps and land records cross-checked with official data.',
-      image: 'assets/images/sub1.png',
+      image: 'assets/images/345-1-e1777985454613-300x271.jpeg',
     ),
     OnboardingItem(
       title: 'Smart Analytics',

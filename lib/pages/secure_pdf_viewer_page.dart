@@ -1,8 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_pdfview/flutter_pdfview.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
 import '../services/api_service.dart';
 
 class SecurePdfViewerPage extends StatefulWidget {
@@ -17,82 +15,42 @@ class SecurePdfViewerPage extends StatefulWidget {
 
 class _SecurePdfViewerPageState extends State<SecurePdfViewerPage> {
   final ApiService _apiService = ApiService();
-  String? _localPath;
   bool _isLoading = true;
   String? _error;
+  String? _pdfUrl;
 
   @override
   void initState() {
     super.initState();
-    _downloadPdf();
+    _openPdfExternal();
   }
 
-  Future<void> _downloadPdf() async {
+  Future<void> _openPdfExternal() async {
     try {
-      final token = await _apiService.getAuthToken();
       final url = await _apiService.getPdfViewUrl(widget.pdfId);
+      final uri = Uri.parse(url);
       
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/pdf',
-        },
-      ).timeout(const Duration(seconds: 30));
+      if (mounted) {
+        setState(() {
+          _pdfUrl = url;
+        });
+      }
 
-      if (response.statusCode == 200) {
-        final dir = await getTemporaryDirectory();
-        final file = File('${dir.path}/temp_pdf_${widget.pdfId}.pdf');
-        await file.writeAsBytes(response.bodyBytes);
-        
+      // Force launch without checking canLaunchUrl to avoid Android 11+ intent visibility issues
+      final launched = await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+      
+      if (launched && mounted) {
+        // Go back automatically if it successfully launched the browser
+        Navigator.of(context).pop();
+      } else {
         if (mounted) {
           setState(() {
-            _localPath = file.path;
+            _error = 'Could not automatically open the browser. Please tap the button below.';
             _isLoading = false;
           });
         }
-      } else {
-        // Fallback for mock PDF if API is not available
-        try {
-          final fallbackUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
-          final fallbackResponse = await http.get(Uri.parse(fallbackUrl));
-          if (fallbackResponse.statusCode == 200) {
-            final dir = await getTemporaryDirectory();
-            final file = File('${dir.path}/temp_pdf_mock.pdf');
-            await file.writeAsBytes(fallbackResponse.bodyBytes);
-            if (mounted) {
-              setState(() {
-                _localPath = file.path;
-                _isLoading = false;
-              });
-            }
-            return;
-          }
-        } catch (_) {}
-        
-        setState(() {
-          _error = 'Failed to load document (Status: ${response.statusCode})';
-          _isLoading = false;
-        });
       }
     } catch (e) {
-      try {
-        final fallbackUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
-        final fallbackResponse = await http.get(Uri.parse(fallbackUrl));
-        if (fallbackResponse.statusCode == 200) {
-          final dir = await getTemporaryDirectory();
-          final file = File('${dir.path}/temp_pdf_mock.pdf');
-          await file.writeAsBytes(fallbackResponse.bodyBytes);
-          if (mounted) {
-            setState(() {
-              _localPath = file.path;
-              _isLoading = false;
-            });
-          }
-          return;
-        }
-      } catch (_) {}
-      
       if (mounted) {
         setState(() {
           _error = 'Error: ${e.toString()}';
@@ -103,17 +61,6 @@ class _SecurePdfViewerPageState extends State<SecurePdfViewerPage> {
   }
 
   @override
-  void dispose() {
-    // Delete temp file on exit for security
-    if (_localPath != null) {
-      try {
-        File(_localPath!).deleteSync();
-      } catch (_) {}
-    }
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -121,23 +68,59 @@ class _SecurePdfViewerPageState extends State<SecurePdfViewerPage> {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.orange))
-          : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
-              : PDFView(
-                  filePath: _localPath,
-                  enableSwipe: true,
-                  swipeHorizontal: false,
-                  autoSpacing: false,
-                  pageFling: false,
-                  onError: (error) {
-                    setState(() => _error = error.toString());
-                  },
-                  onPageError: (page, error) {
-                    setState(() => _error = error.toString());
-                  },
+      body: Center(
+        child: _isLoading
+            ? const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: Colors.orange),
+                  SizedBox(height: 16),
+                  Text('Opening in external browser...', style: TextStyle(color: Colors.grey)),
+                ],
+              )
+            : Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _error != null ? Icons.warning_amber_rounded : Icons.check_circle_outline, 
+                      color: _error != null ? Colors.orange : Colors.green, 
+                      size: 64
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _error ?? 'Document ready.', 
+                      style: const TextStyle(fontSize: 16), 
+                      textAlign: TextAlign.center
+                    ),
+                    const SizedBox(height: 32),
+                    if (_pdfUrl != null) ...[
+                      ElevatedButton.icon(
+                        onPressed: () => launchUrl(Uri.parse(_pdfUrl!), mode: LaunchMode.inAppBrowserView),
+                        icon: const Icon(Icons.open_in_browser, color: Colors.white),
+                        label: const Text('Open Document', style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton.icon(
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: _pdfUrl!));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('URL copied to clipboard')),
+                          );
+                        },
+                        icon: const Icon(Icons.copy, color: Colors.grey),
+                        label: const Text('Copy Link', style: TextStyle(color: Colors.grey)),
+                      ),
+                    ]
+                  ],
                 ),
+              ),
+      ),
     );
   }
 }
