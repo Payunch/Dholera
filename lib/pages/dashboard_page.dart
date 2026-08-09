@@ -43,8 +43,12 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _apiService = ApiService();
-    _initDashboard();
     _setupNotificationListener();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _initDashboard();
+      }
+    });
   }
 
   Future<void> _initDashboard() async {
@@ -95,7 +99,11 @@ class _DashboardPageState extends State<DashboardPage> {
       if (result['success'] == true) {
         final newCount = result['count'] ?? 0;
         
-        if (newCount > _pendingApprovalsCount && mounted) {
+        if (!mounted) {
+          return;
+        }
+
+        if (newCount > _pendingApprovalsCount) {
            ScaffoldMessenger.of(context).showSnackBar(
              SnackBar(
                content: const Text('🔔 NEW PAYMENT: A user is awaiting approval!', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -120,6 +128,9 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _loadAnalytics() async {
+    if (!mounted) {
+      return;
+    }
     setState(() => _isLoadingAnalytics = true);
     try {
       final result = _selectedDateRange == null

@@ -314,6 +314,20 @@ class ApiService {
     });
   }
 
+  Future<Map<String, dynamic>> getAppInfo() async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse(ApiConfig.appInfoEndpoint),
+            headers: await _getFetchHeaders(),
+          )
+          .timeout(const Duration(seconds: 10));
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
   Future<Map<String, dynamic>> deleteUserAccount() async {
     try {
       final token = await getAuthToken();
