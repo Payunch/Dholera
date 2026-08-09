@@ -40,6 +40,14 @@ class _LoginPageState extends State<LoginPage> {
       _loading = false;
   String? _error, _message;
 
+  @override
+  void initState() {
+    super.initState();
+    for (final controller in [_name, _phone, _email, _password, _confirmPassword, _otp]) {
+      controller.addListener(_rebuildForInputChange);
+    }
+  }
+
   double _clampDouble(double value, double min, double max) {
     if (value < min) return min;
     if (value > max) return max;
@@ -48,6 +56,9 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
+    for (final controller in [_name, _phone, _email, _password, _confirmPassword, _otp]) {
+      controller.removeListener(_rebuildForInputChange);
+    }
     for (final c in [
       _name,
       _phone,
@@ -69,6 +80,12 @@ class _LoginPageState extends State<LoginPage> {
       f.dispose();
     }
     super.dispose();
+  }
+
+  void _rebuildForInputChange() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _clearAuthFields({
@@ -165,6 +182,7 @@ class _LoginPageState extends State<LoginPage> {
         FocusScope.of(context).requestFocus(_emailFocus);
         return;
       }
+      _error = null;
       final signupPassword = await _collectSignupPassword();
       if (signupPassword == null) {
         if (mounted) {
@@ -366,7 +384,6 @@ class _LoginPageState extends State<LoginPage> {
                           _modePill('SIGN UP', !_adminMode && _signUp && !_forgotPassword),
                           _modePill('SIGN IN', !_adminMode && !_signUp && !_forgotPassword),
                           _modePill('ADMIN', _adminMode),
-                          if (!_adminMode) _modePill('FORGOT', _forgotPassword),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -577,7 +594,7 @@ class _LoginPageState extends State<LoginPage> {
                         width: double.infinity,
                         height: 54,
                         child: ElevatedButton(
-                          onPressed: _loading ? null : _submit,
+                          onPressed: _loading || !_canContinueSignup ? null : _submit,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFFF7A00),
                             foregroundColor: Colors.white,
@@ -990,13 +1007,52 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   bool _isValidEmail(String value) {
-    return RegExp(
-      r'^(?![.])(?!.*[.]{2})[A-Za-z0-9._%+-]{1,64}(?<![.])@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$',
-    ).hasMatch(value);
+    final email = value.trim();
+    if (email.isEmpty || email.contains(' ')) {
+      return false;
+    }
+
+    final parts = email.split('@');
+    if (parts.length != 2) {
+      return false;
+    }
+
+    final localPart = parts[0];
+    final domainPart = parts[1];
+    if (localPart.isEmpty || domainPart.isEmpty) {
+      return false;
+    }
+
+    if (localPart.startsWith('.') ||
+        localPart.endsWith('.') ||
+        localPart.contains('..') ||
+        domainPart.startsWith('.') ||
+        domainPart.endsWith('.') ||
+        domainPart.contains('..')) {
+      return false;
+    }
+
+    final localValid = RegExp(r'^[A-Za-z0-9._%+-]{1,64}$').hasMatch(localPart);
+    final domainValid = RegExp(r'^[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$').hasMatch(domainPart);
+    if (!localValid || !domainValid) {
+      return false;
+    }
+
+    final topLevelDomain = domainPart.split('.').last;
+    return topLevelDomain.length >= 2;
   }
 
   bool _isValidMobile(String value) {
     return RegExp(r'^[0-9]{10}$').hasMatch(value);
+  }
+
+  bool get _canContinueSignup {
+    if (!_signUp || _adminMode) {
+      return true;
+    }
+    return _name.text.trim().isNotEmpty &&
+        _isValidMobile(_phone.text.trim()) &&
+        _isValidEmail(_email.text.trim());
   }
 
   String? _extractEmail(Map<String, dynamic> result) {
