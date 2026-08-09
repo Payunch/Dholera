@@ -8,12 +8,14 @@ class AuthState extends Equatable {
   final AppRole role;
   final String? token;
   final String? userName;
+  final String? userEmail;
 
   const AuthState({
     this.status = AuthStatus.loading,
     this.role = AppRole.unknown,
     this.token,
     this.userName,
+    this.userEmail,
   });
 
   AuthState copyWith({
@@ -21,17 +23,19 @@ class AuthState extends Equatable {
     AppRole? role,
     String? token,
     String? userName,
+    String? userEmail,
   }) {
     return AuthState(
       status: status ?? this.status,
       role: role ?? this.role,
       token: token ?? this.token,
       userName: userName ?? this.userName,
+      userEmail: userEmail ?? this.userEmail,
     );
   }
 
   @override
-  List<Object?> get props => [status, role, token, userName];
+  List<Object?> get props => [status, role, token, userName, userEmail];
 
   Map<String, dynamic> toJson() {
     return {
@@ -39,6 +43,7 @@ class AuthState extends Equatable {
       'role': role.index,
       'token': token,
       'userName': userName,
+      'userEmail': userEmail,
     };
   }
 
@@ -48,6 +53,7 @@ class AuthState extends Equatable {
       role: AppRole.values[json['role'] as int? ?? AppRole.unknown.index],
       token: json['token'] as String?,
       userName: json['userName'] as String?,
+      userEmail: json['userEmail'] as String?,
     );
   }
 }

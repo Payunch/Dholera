@@ -12,11 +12,13 @@ class AuthBloc extends HydratedBloc<AuthEvent, AuthState> {
       await _api.saveUserInfo(
         name: event.userName,
         role: event.role.name,
+        email: event.userEmail,
       );
       emit(state.copyWith(
         status: AuthStatus.authenticated,
         token: event.token,
         userName: event.userName,
+        userEmail: event.userEmail,
         role: event.role,
       ));
     });
@@ -39,6 +41,7 @@ class AuthBloc extends HydratedBloc<AuthEvent, AuthState> {
 
       final userInfo = await _api.getUserInfo();
       final savedName = userInfo['name'] ?? state.userName ?? 'User';
+      final savedEmail = userInfo['email'] ?? state.userEmail;
       final savedRoleStr = userInfo['role'] ?? state.role.name;
       AppRole role = AppRole.userInvestor;
       if (savedRoleStr == AppRole.adminOwner.name) {
@@ -50,10 +53,12 @@ class AuthBloc extends HydratedBloc<AuthEvent, AuthState> {
       if (meResult['success'] == true) {
         final userData = meResult['user'] ?? meResult['data'] ?? {};
         final name = userData['name']?.toString() ?? userData['username']?.toString() ?? savedName;
+        final email = userData['email']?.toString() ?? savedEmail;
         emit(state.copyWith(
           status: AuthStatus.authenticated,
           token: token,
           userName: name,
+          userEmail: email,
           role: role,
         ));
       } else if (meResult['error'] != null &&
@@ -69,6 +74,7 @@ class AuthBloc extends HydratedBloc<AuthEvent, AuthState> {
           status: AuthStatus.authenticated,
           token: token,
           userName: savedName,
+          userEmail: savedEmail,
           role: role,
         ));
       }

@@ -27,8 +27,11 @@ class _VaultPageState extends State<VaultPage> {
   }
 
   Future<void> _fetchVault() async {
+    setState(() => _isLoading = true);
     final response = await _apiService.getMyVaultPdfs();
-    if (response['success'] == true) {
+    if (response['success'] == true &&
+        response['pdfs'] is List &&
+        (response['pdfs'] as List).isNotEmpty) {
       setState(() {
         _pdfs = (response['pdfs'] as List)
             .map((json) => PdfDocument.fromJson(json))
@@ -36,7 +39,17 @@ class _VaultPageState extends State<VaultPage> {
         _isLoading = false;
       });
     } else {
-      setState(() => _isLoading = false);
+      final catalog = await _apiService.getPdfs();
+      if (catalog['success'] == true && catalog['pdfs'] is List) {
+        setState(() {
+          _pdfs = (catalog['pdfs'] as List)
+              .map((json) => PdfDocument.fromJson(json))
+              .toList();
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -104,55 +117,158 @@ class _VaultPageState extends State<VaultPage> {
       ),
     );
   }
-
-  Widget _buildPdfCard(PdfDocument pdf, LocalizationState state) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      elevation: 2,
-      shadowColor: Colors.black12,
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => SecurePdfViewerPage(pdfId: pdf.id, title: pdf.title)),
-        ),
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red[50],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.picture_as_pdf, color: Colors.red, size: 28),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      pdf.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${pdf.category} • ${DateFormat('MMM dd, yyyy').format(pdf.createdAt)}',
-                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right, color: Colors.grey),
-            ],
+Widget _buildPdfCard(PdfDocument pdf, LocalizationState state) {
+  return Card(
+    margin: const EdgeInsets.only(bottom: 16),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+    ),
+    elevation: 2,
+    shadowColor: Colors.black12,
+    child: InkWell(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => SecurePdfViewerPage(
+            pdfId: pdf.id,
+            title: pdf.title,
           ),
         ),
       ),
-    );
-  }
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.picture_as_pdf,
+                color: Colors.red,
+                size: 28,
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    pdf.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  Text(
+                    'PDF Document',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Text(
+                    'Added: ${DateFormat('dd MMM yyyy').format(pdf.createdAt)}',
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            const Icon(
+              Icons.chevron_right,
+              color: Colors.grey,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
+}
+
+//   Widget _buildPdfCard(PdfDocument pdf, LocalizationState state) {
+//     return Card(
+//       margin: const EdgeInsets.only(bottom: 16),
+//       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+//       elevation: 2,
+//       shadowColor: Colors.black12,
+//       child: InkWell(
+//         onTap: () => Navigator.push(
+//           context,
+//           MaterialPageRoute(builder: (_) => SecurePdfViewerPage(pdfId: pdf.id, title: pdf.title)),
+//         ),
+//         borderRadius: BorderRadius.circular(20),
+//         child: Padding(
+//           padding: const EdgeInsets.all(16.0),
+//           child: Row(
+//             children: [
+//               Container(
+//                 padding: const EdgeInsets.all(12),
+//                 decoration: BoxDecoration(
+//                   color: Colors.red[50],
+//                   borderRadius: BorderRadius.circular(12),
+//                 ),
+//                 child: const Icon(Icons.picture_as_pdf, color: Colors.red, size: 28),
+//               ),
+//               const SizedBox(width: 16),
+//               Expanded(
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     Text(
+//                       pdf.title,
+//                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+//                       maxLines: 1,
+//                       overflow: TextOverflow.ellipsis,
+//                     ),
+//                     const SizedBox(height: 4),
+//                     Text(
+//                       pdf.description ?? 'No description',
+//                       style: TextStyle(color: Colors.grey[600], fontSize: 14),
+//                       maxLines: 2,
+//                       overflow: TextOverflow.ellipsis,
+//                     ),
+//                     ),
+//                     const SizedBox(height: 8),
+//                     Text(
+//                     'Added: ${DateFormat('dd MMM yyyy').format(pdf.createdAt)}',
+//                     style: TextStyle(color: Colors.grey[500], fontSize: 12),
+//                     ),
+//                     // Text(
+//                     //   'Added: ${DateFormat('dd MMM yyyy').format(DateTime.parse(pdf.createdAt))}',
+//                     //   style: TextStyle(color: Colors.grey[500], fontSize: 12),
+//                     // ),
+//                   ],
+//                 ),
+//               ),
+//               const SizedBox(width: 12),
+//               const Icon(Icons.chevron_right, color: Colors.grey),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }

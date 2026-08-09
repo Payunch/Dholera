@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_state.dart';
 import '../blocs/preferences/preferences_bloc.dart';
+import '../services/api_service.dart';
 import 'language_page.dart';
 import 'onboarding_page.dart';
 import 'login_page.dart';
@@ -17,6 +18,8 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+  final ApiService _apiService = ApiService();
+
   @override
   void initState() {
     super.initState();
@@ -53,7 +56,18 @@ class _SplashPageState extends State<SplashPage> {
               : const UserBottomNavBar(),
         );
       } else {
-        _replacePage(const LoginPage());
+        final token = await _apiService.getAuthToken();
+        final storedInfo = await _apiService.getUserInfo();
+        final storedRole = storedInfo['role'];
+        if (token != null && token.isNotEmpty) {
+          _replacePage(
+            storedRole == AppRole.adminOwner.name
+                ? const AdminBottomNavBar()
+                : const UserBottomNavBar(),
+          );
+        } else {
+          _replacePage(const LoginPage());
+        }
       }
     } catch (e) {
       debugPrint('Splash Navigation Error: $e');

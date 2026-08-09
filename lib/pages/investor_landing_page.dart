@@ -675,6 +675,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                       ),
                       onPressed: _isSubmitting ? null : () async {
                         if (_formKey.currentState!.validate() && _visitDate != null) {
+                          final messenger = ScaffoldMessenger.of(context);
                           _formKey.currentState!.save();
                           setState(() => _isSubmitting = true);
                           try {
@@ -685,10 +686,10 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                               'source': 'App Site Visit Request',
                               'notes': 'Requested site visit for: ${_visitDate!.toIso8601String()}',
                             });
-                            _apiService.trackActivity('Lead Submitted');
+                            await _apiService.trackActivity('Lead Submitted');
                             if (mounted) setState(() => _isSubmitSuccess = true);
                           } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            messenger.showSnackBar(
                               const SnackBar(content: Text('Saved locally, but failed to sync to server')),
                             );
                           } finally {
@@ -750,8 +751,8 @@ class _AutoScrollingLogosState extends State<_AutoScrollingLogos> {
       await Future.delayed(const Duration(milliseconds: 50));
       if (!_scrollController.hasClients) continue;
       
-      double maxScroll = _scrollController.position.maxScrollExtent;
-      double currentScroll = _scrollController.position.pixels;
+      final double maxScroll = _scrollController.position.maxScrollExtent;
+      final double currentScroll = _scrollController.position.pixels;
       
       if (currentScroll >= maxScroll - 50) {
         _scrollController.jumpTo(0);
@@ -822,7 +823,7 @@ class _HeroSliderState extends State<_HeroSlider> with SingleTickerProviderState
   void _startAutoScroll() {
     Future.delayed(const Duration(seconds: 5), () {
       if (!mounted) return;
-      int nextPage = (_currentPage + 1) % _images.length;
+      final int nextPage = (_currentPage + 1) % _images.length;
       _pageController.animateToPage(
         nextPage,
         duration: const Duration(milliseconds: 1200),

@@ -5,15 +5,18 @@ import '../updates_page.dart';
 import '../settings_page.dart';
 import '../../widgets/custom_side_menu.dart';
 
-// TODO: Rename class to AdminMainLayout
-class AdminBottomNavBar extends StatefulWidget {
-  const AdminBottomNavBar({super.key});
+class AdminMainLayout extends StatefulWidget {
+  const AdminMainLayout({super.key});
 
   @override
-  State<AdminBottomNavBar> createState() => _AdminBottomNavBarState();
+  State<AdminMainLayout> createState() => _AdminMainLayoutState();
 }
 
-class _AdminBottomNavBarState extends State<AdminBottomNavBar> {
+class AdminBottomNavBar extends AdminMainLayout {
+  const AdminBottomNavBar({super.key});
+}
+
+class _AdminMainLayoutState extends State<AdminMainLayout> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = [

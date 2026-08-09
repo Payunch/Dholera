@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -52,10 +53,19 @@ class ApiService {
     }
   }
 
-  Future<void> saveUserInfo({required String name, required String role}) async {
+  Future<void> saveUserInfo({
+    required String name,
+    required String role,
+    String? email,
+  }) async {
     try {
       await _secureStorage.write(key: 'user_name', value: name);
       await _secureStorage.write(key: 'user_role', value: role);
+      if (email != null && email.trim().isNotEmpty) {
+        await _secureStorage.write(key: 'user_email', value: email.trim());
+      } else {
+        await _secureStorage.delete(key: 'user_email');
+      }
     } catch (_) {}
   }
 
@@ -63,9 +73,10 @@ class ApiService {
     try {
       final name = await _secureStorage.read(key: 'user_name');
       final role = await _secureStorage.read(key: 'user_role');
-      return {'name': name, 'role': role};
+      final email = await _secureStorage.read(key: 'user_email');
+      return {'name': name, 'role': role, 'email': email};
     } catch (_) {
-      return {'name': null, 'role': null};
+      return {'name': null, 'role': null, 'email': null};
     }
   }
 
@@ -75,6 +86,7 @@ class ApiService {
       await _secureStorage.delete(key: 'session_cookie');
       await _secureStorage.delete(key: 'user_name');
       await _secureStorage.delete(key: 'user_role');
+      await _secureStorage.delete(key: 'user_email');
     } catch (e) {
       try {
         await _secureStorage.deleteAll();
@@ -160,6 +172,11 @@ class ApiService {
     return headers;
   }
 
+  // Backwards-compatible alias for existing call sites.
+  Future<Map<String, String>> _getHeaders({bool requiresAuth = false}) async {
+    return _getFetchHeaders();
+  }
+
   // Header builder for POST/PUT/DELETE requests (Includes CSRF)
   Future<Map<String, String>> getMutationHeaders() async {
     final token =
@@ -234,11 +251,16 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> getMe() async {
+  Future<Map<String, dynamic>> getMe({String? role}) async {
     try {
+      final userInfo = await getUserInfo();
+      final userRole = role ?? userInfo['role'];
+      final endpoint = (userRole == 'adminOwner' || userRole == 'admin')
+          ? ApiConfig.meEndpoint
+          : ApiConfig.userMeEndpoint;
       final response = await http
           .get(
-            Uri.parse(ApiConfig.meEndpoint),
+            Uri.parse(endpoint),
             headers: await _getFetchHeaders(),
           )
           .timeout(const Duration(seconds: 15));
@@ -253,12 +275,16 @@ class ApiService {
     required String phone,
     required String email,
     required String password,
+    bool acceptedTerms = false,
+    bool acceptedPrivacy = false,
   }) async {
     return _userAuthPost(ApiConfig.userSignupEndpoint, {
       'name': name,
       'phone': phone,
       'email': email,
       'password': password,
+      'acceptedTerms': acceptedTerms,
+      'acceptedPrivacy': acceptedPrivacy,
     });
   }
 
@@ -286,6 +312,28 @@ class ApiService {
       'otp': otp,
       'password': password,
     });
+  }
+
+  Future<Map<String, dynamic>> deleteUserAccount() async {
+    try {
+      final token = await getAuthToken();
+      if (token == null || token.isEmpty) {
+        return {'success': false, 'error': 'Your session has expired. Please sign in again.'};
+      }
+      final response = await http
+          .delete(
+            Uri.parse('${ApiConfig.apiBaseUrl}/user-auth/delete-account'),
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent': 'DholeraAdminApp/1.0',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
+      return _handleJsonResponse(response);
+    } catch (e) {
+      return _handleRequestError(e);
+    }
   }
 
   Future<Map<String, dynamic>> _userAuthPost(
@@ -687,12 +735,12 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 15));
       final result = _handleJsonResponse(response, 'pdfs');
-      if (result['success'] != true ||
-          (result['pdfs'] as List?)?.isEmpty == true ||
-          result['pdfs'] == null) {
-        return _getMockPdfs();
+      if (result['success'] == true &&
+          result['pdfs'] is List &&
+          (result['pdfs'] as List).isNotEmpty) {
+        return result;
       }
-      return result;
+      return _getMockPdfs();
     } catch (e) {
       return _getMockPdfs();
     }
@@ -706,9 +754,15 @@ class ApiService {
             headers: await _getFetchHeaders(),
           )
           .timeout(const Duration(seconds: 15));
-      return _handleJsonResponse(response, 'pdfs');
+      final result = _handleJsonResponse(response, 'pdfs');
+      if (result['success'] == true &&
+          result['pdfs'] is List &&
+          (result['pdfs'] as List).isNotEmpty) {
+        return result;
+      }
+      return await getPdfs();
     } catch (e) {
-      return _handleRequestError(e);
+      return await getPdfs();
     }
   }
 
@@ -756,6 +810,32 @@ class ApiService {
     final baseUrl = ApiConfig.apiBaseUrl;
     return '$baseUrl/pdf/view/$pdfId?token=$token';
   }
+
+  Future<Uint8List> getPdfBytes(int pdfId) async {
+    try {
+      final token = await getAuthToken();
+      final baseUrl = ApiConfig.apiBaseUrl;
+      final uri = Uri.parse('$baseUrl/pdf/view/$pdfId');
+
+      final headers = await _getHeaders(requiresAuth: true);
+      if (token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(uri, headers: headers).timeout(
+        const Duration(seconds: 30),
+      );
+
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      } else {
+        throw Exception('Failed to fetch PDF document (Status Code: ${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('Failed to load secure PDF document: $e');
+    }
+  }
+
 
   Future<Map<String, dynamic>> getSettings() async {
     try {
@@ -1374,13 +1454,19 @@ class ApiService {
       'pdfs': [
         {
           'id': 1,
-          'title': 'Dholera Master Plan',
-          'file_path':
-              'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          'category': 'Brochure',
-          'is_protected': false,
-          'created_at': DateTime.now().toIso8601String(),
-          'updated_at': DateTime.now().toIso8601String(),
+          'title': 'Dholera Master Plan 2041',
+          'description': 'Comprehensive master plan for Dholera Smart City.',
+          'url': 'https://dholerasir.com/assets/pdf/masterplan.pdf',
+          'category': 'Plans',
+          'created_at': '2023-01-01T00:00:00Z',
+        },
+        {
+          'id': 2,
+          'title': 'Dholera Industrial Zone Map',
+          'description': 'Detailed map of industrial plots and zones.',
+          'url': 'https://dholerasir.com/assets/pdf/industrial_map.pdf',
+          'category': 'Maps',
+          'created_at': '2023-02-01T00:00:00Z',
         },
       ],
     };
