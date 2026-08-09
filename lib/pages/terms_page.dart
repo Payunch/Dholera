@@ -55,8 +55,18 @@ class _TermsPageState extends State<TermsPage> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Please read these terms and conditions carefully before using our services.',
+                    'These terms explain the rules for using Dholera Platform, your account, and your responsibilities.',
                     style: TextStyle(color: Colors.grey[600], fontSize: 16, height: 1.6),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Effective date: August 9, 2026',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12, height: 1.4),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Contact: gohelnaresh7707@gmail.com',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12, height: 1.4),
                   ),
                   const SizedBox(height: 40),
                   _buildContent(),
@@ -91,14 +101,36 @@ class _TermsPageState extends State<TermsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionTitle('1. Acceptance of Terms'),
-        _buildSectionText('By accessing or using the Dholera Platform, you agree to be bound by these Terms of Service. If you disagree with any part of the terms, you may not access the service.'),
-        
-        _buildSectionTitle('2. User-Generated Content & Safe Harbor'),
-        _buildSectionText('The Dholera Platform operates strictly as an intermediary and hosting provider under applicable Safe Harbor laws. We do not create or endorse user-generated content, including property listings, blogs, or comments.'),
-        _buildSectionText('You agree that you are solely responsible for any content you upload, post, or transmit through our platform. Dholera Platform claims no liability for inaccurate, offensive, or illegal user-generated content.'),
-        
-        _buildSectionTitle('3. No Investment Liability'),
-        _buildSectionText('Any information provided on this platform regarding real estate or smart city investments is for informational purposes only. We do not offer financial advice, and we are not liable for any financial losses or damages resulting from your investment decisions based on platform content.'),
+        _buildSectionText('By creating an account or using the app, you agree to these Terms. If you do not agree, do not use the service.'),
+
+        _buildSectionTitle('2. Accounts and passwords'),
+        _buildSectionText('You are responsible for keeping your login credentials confidential and for all activity under your account. You must provide accurate information and update it when it changes.'),
+        _buildSectionText('If you believe your account was accessed without permission, contact us immediately so we can help secure it.'),
+
+        _buildSectionTitle('3. Acceptable use'),
+        _buildSectionText('You agree not to misuse the platform, including by uploading unlawful, harmful, defamatory, misleading, or infringing content; attempting unauthorized access; scraping or abusing the service; or interfering with the app, backend, or security controls.'),
+
+        _buildSectionTitle('4. User content'),
+        _buildSectionText('You keep ownership of the content you submit, but you give us the limited right to host, store, display, and process it so the app can function. You are responsible for making sure your content is lawful and accurate. We may remove or restrict content that violates these terms or applicable law.'),
+
+        _buildSectionTitle('5. Information provided in the app'),
+        _buildSectionText('Content in the app is for general information only. It is not legal, financial, tax, or investment advice. You should verify important information independently before making decisions.'),
+
+        _buildSectionTitle('6. Third-party services'),
+        _buildSectionText('The app may use third-party providers for authentication, hosting, messaging, storage, analytics, and notifications. Their use is subject to their own terms and privacy policies.'),
+
+        _buildSectionTitle('7. Suspension and deletion'),
+        _buildSectionText('We may suspend or terminate access if we believe the account or content violates these terms, causes security risk, or creates legal exposure. You may also delete your account from the app settings or request deletion through our contact channels.'),
+
+        _buildSectionTitle('8. Disclaimer and limitation of liability'),
+        _buildSectionText('The service is provided on an as-is and as-available basis. To the maximum extent permitted by law, we disclaim warranties of uninterrupted availability, accuracy, and fitness for a particular purpose.'),
+        _buildSectionText('To the maximum extent permitted by law, Dholera Platform is not liable for indirect, incidental, special, or consequential damages arising from your use of the app.'),
+
+        _buildSectionTitle('9. Changes to these terms'),
+        _buildSectionText('We may update these terms from time to time. Continued use of the app after an update means you accept the revised terms.'),
+
+        _buildSectionTitle('10. Contact'),
+        _buildSectionText('For questions about these terms or account deletion, contact gohelnaresh7707@gmail.com or use the in-app Contact Us page.'),
       ],
     );
   }
@@ -145,6 +177,12 @@ class _TermsPageState extends State<TermsPage> {
             style: TextStyle(color: Colors.white54, fontSize: 14, letterSpacing: 0.5),
           ),
           const SizedBox(height: 32),
+          const Text(
+            'If you want to delete your account, use the app settings or contact us using the details above.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+          ),
+          const SizedBox(height: 20),
           ElevatedButton(
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactPage())),
             style: ElevatedButton.styleFrom(

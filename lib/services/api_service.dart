@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -356,6 +356,9 @@ class ApiService {
         if (data['token'] != null) await setAuthToken(data['token'].toString());
         return {'success': true, ...data};
       }
+      debugPrint(
+        '[api:${endpoint.split("/").last}] status=${response.statusCode} body=${response.body}',
+      );
       return {'success': false, 'error': data['error'] ?? 'Request failed.'};
     } catch (_) {
       return {'success': false, 'error': 'Connection error. Please try again.'};
@@ -614,10 +617,12 @@ class ApiService {
       request.fields['published'] = (data['published'] == true).toString();
       request.fields['imagePosition'] =
           data['imagePosition']?.toString() ?? 'top';
-      if (data['publishedAt'] != null)
+      if (data['publishedAt'] != null) {
         request.fields['publishedAt'] = data['publishedAt'].toString();
-      if (data['imageUrl'] != null)
+      }
+      if (data['imageUrl'] != null) {
         request.fields['imageUrl'] = data['imageUrl'].toString();
+      }
 
       if (data['imagePath'] != null &&
           data['imagePath'].toString().isNotEmpty) {
@@ -667,20 +672,27 @@ class ApiService {
       if (_sessionCookie != null) request.headers['cookie'] = _sessionCookie!;
       if (csrfToken != null) request.headers['X-CSRF-Token'] = csrfToken;
 
-      if (data['title'] != null)
+      if (data['title'] != null) {
         request.fields['title'] = data['title'].toString();
-      if (data['content'] != null)
+      }
+      if (data['content'] != null) {
         request.fields['content'] = data['content'].toString();
-      if (data['category'] != null)
+      }
+      if (data['category'] != null) {
         request.fields['category'] = data['category'].toString();
-      if (data['published'] != null)
+      }
+      if (data['published'] != null) {
         request.fields['published'] = data['published'].toString();
-      if (data['imagePosition'] != null)
+      }
+      if (data['imagePosition'] != null) {
         request.fields['imagePosition'] = data['imagePosition'].toString();
-      if (data['publishedAt'] != null)
+      }
+      if (data['publishedAt'] != null) {
         request.fields['publishedAt'] = data['publishedAt'].toString();
-      if (data['imageUrl'] != null)
+      }
+      if (data['imageUrl'] != null) {
         request.fields['imageUrl'] = data['imageUrl'].toString();
+      }
 
       if (data['imagePath'] != null &&
           data['imagePath'].toString().isNotEmpty) {
@@ -1290,12 +1302,15 @@ class ApiService {
       if (isSuccess) {
         if (arrayKey != null) {
           if (data is List) return {'success': true, arrayKey: data};
-          if (data is Map && data.containsKey(arrayKey))
+          if (data is Map && data.containsKey(arrayKey)) {
             return {'success': true, arrayKey: data[arrayKey]};
-          if (data is Map && data.containsKey('data'))
+          }
+          if (data is Map && data.containsKey('data')) {
             return {'success': true, arrayKey: data['data']};
-          if (data is Map && data.containsKey('analytics'))
+          }
+          if (data is Map && data.containsKey('analytics')) {
             return {'success': true, arrayKey: data['analytics']};
+          }
           return {'success': true, arrayKey: data};
         }
         return {'success': true, 'data': data};
@@ -1314,16 +1329,19 @@ class ApiService {
 
       if (response.body.contains('<!DOCTYPE html>') ||
           response.body.contains('<html')) {
-        if (response.statusCode == 404)
+        if (response.statusCode == 404) {
           return {'success': false, 'error': 'API endpoint not found (404).'};
-        if (response.statusCode == 401)
+        }
+        if (response.statusCode == 401) {
           return {'success': false, 'error': 'Unauthorized access (401).'};
-        if (response.statusCode == 502)
+        }
+        if (response.statusCode == 502) {
           return {
             'success': false,
             'error':
                 'Backend is starting up or temporarily unavailable (502). Please try again in a minute.',
           };
+        }
         return {
           'success': false,
           'error': 'Server Error (HTML). Status: ${response.statusCode}',

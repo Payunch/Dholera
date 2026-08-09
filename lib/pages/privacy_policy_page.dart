@@ -55,8 +55,18 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'How we collect, use, and protect your personal information on the Dholera Platform.',
+                    'This policy explains how Dholera Platform collects, uses, stores, and deletes user data.',
                     style: TextStyle(color: Colors.grey[600], fontSize: 16, height: 1.6),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Effective date: August 9, 2026',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12, height: 1.4),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Privacy contact: gohelnaresh7707@gmail.com',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12, height: 1.4),
                   ),
                   const SizedBox(height: 40),
                   _buildContent(),
@@ -90,15 +100,33 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('1. Information Collection'),
-        _buildSectionText('We collect personal data (such as your name, mobile number, and email) when you register on the Dholera Platform to provide you with a personalized experience and grant access to investment resources. By using this platform, you consent to the collection and use of this information.'),
-        
-        _buildSectionTitle('2. User-Generated Content & Safe Harbor'),
-        _buildSectionText('The Dholera Platform allows users to post, upload, or share content. We act strictly as a hosting provider (Safe Harbor provision) and do not manually review all content before it goes live. Users are solely responsible for the legality, accuracy, and appropriateness of the content they upload.'),
-        _buildSectionText('We reserve the right to remove any content that violates applicable laws or our guidelines, either through automated systems or admin moderation.'),
-        
-        _buildSectionTitle('3. Data Security'),
-        _buildSectionText('We implement strict security measures to protect your data, including JWT authentication and rate limiting on our servers to prevent unauthorized access.'),
+        _buildSectionTitle('1. Information we collect'),
+        _buildSectionText('Account information: name, mobile number, email address, password hash, account role, and profile details you provide during sign-up or profile updates.'),
+        _buildSectionText('Support and inquiry information: messages, contact form submissions, lead details, and any files or content you choose to upload.'),
+        _buildSectionText('Device and usage information: IP address, device/user-agent information, timestamps, login events, session activity, notification token, and basic analytics needed to keep the app stable and secure.'),
+
+        _buildSectionTitle('2. How we use your information'),
+        _buildSectionText('We use your data to create and secure your account, authenticate sign-ins, keep you signed in on trusted devices, send password reset or verification emails, and show personalized account details such as your initials and profile data.'),
+        _buildSectionText('We also use data to respond to support requests, moderate content, prevent abuse, improve app stability, and deliver app notifications.'),
+
+        _buildSectionTitle('3. Sharing with service providers'),
+        _buildSectionText('We do not sell your personal data. We may share data with trusted service providers only when needed to run the service, such as hosting, authentication, email delivery, storage, push notifications, and analytics. Examples may include Firebase, Cloudinary, Resend, Google services, and our backend hosting providers.'),
+        _buildSectionText('We may also disclose data if required by law or to protect the rights, safety, and security of our users and platform.'),
+
+        _buildSectionTitle('4. Retention and deletion'),
+        _buildSectionText('We keep account data only as long as needed for the service, legal obligations, security, and legitimate business purposes. You can request deletion from the app settings or by contacting us at the privacy contact above. When an account is deleted, we remove associated personal data unless we must keep a limited record for fraud prevention, security, or legal compliance.'),
+
+        _buildSectionTitle('5. Security'),
+        _buildSectionText('We use reasonable technical and organizational safeguards such as encrypted transport, hashed passwords, access controls, and rate limiting. No method of transmission or storage is completely secure, so we cannot guarantee absolute security.'),
+
+        _buildSectionTitle('6. Your choices'),
+        _buildSectionText('You can review or update account information in the app, sign out of the app, delete your account, and contact us if you want help with privacy-related requests.'),
+
+        _buildSectionTitle('7. Children'),
+        _buildSectionText('The app is not intended for children under 13, and we do not knowingly collect personal data from children under 13. If you believe a child has provided personal data, contact us so we can review and delete it where appropriate.'),
+
+        _buildSectionTitle('8. Changes to this policy'),
+        _buildSectionText('We may update this policy from time to time. If we make material changes, we will update the policy in the app and revise the effective date above.'),
       ],
     );
   }
@@ -145,6 +173,12 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
             style: TextStyle(color: Colors.white54, fontSize: 14, letterSpacing: 0.5),
           ),
           const SizedBox(height: 32),
+          const Text(
+            'To request account deletion or ask a privacy question, use the in-app Contact Us page or email gohelnaresh7707@gmail.com.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+          ),
+          const SizedBox(height: 20),
           ElevatedButton(
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactPage())),
             style: ElevatedButton.styleFrom(

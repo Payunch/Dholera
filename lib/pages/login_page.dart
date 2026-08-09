@@ -139,13 +139,30 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
     } else if (_signUp) {
-      if (_name.text.trim().isEmpty ||
-          !_isValidMobile(_phone.text.trim()) ||
-          !_isValidEmail(identifier)) {
+      final nameText = _name.text.trim();
+      final phoneText = _phone.text.trim();
+      if (nameText.isEmpty) {
         setState(() {
-          _error = 'Enter a valid name, email, and 10-digit mobile number.';
+          _error = 'Enter your full name.';
           _loading = false;
         });
+        FocusScope.of(context).requestFocus(_nameFocus);
+        return;
+      }
+      if (!_isValidMobile(phoneText)) {
+        setState(() {
+          _error = 'Enter a valid 10-digit mobile number.';
+          _loading = false;
+        });
+        FocusScope.of(context).requestFocus(_phoneFocus);
+        return;
+      }
+      if (!_isValidEmail(identifier)) {
+        setState(() {
+          _error = 'Enter a valid email like name@example.com.';
+          _loading = false;
+        });
+        FocusScope.of(context).requestFocus(_emailFocus);
         return;
       }
       final signupPassword = await _collectSignupPassword();
@@ -155,14 +172,20 @@ class _LoginPageState extends State<LoginPage> {
         }
         return;
       }
+      debugPrint(
+        '[signup] submit name="$nameText" phone="$phoneText" email="$identifier" '
+        'terms=${signupPassword['acceptedTerms'] == true} privacy=${signupPassword['acceptedPrivacy'] == true} '
+        'pinLen=${signupPassword['password']?.toString().length ?? 0}',
+      );
       result = await _api.userSignup(
-        name: _name.text.trim(),
-        phone: _phone.text.trim(),
+        name: nameText,
+        phone: phoneText,
         email: identifier,
         password: signupPassword['password']?.toString() ?? '',
         acceptedTerms: signupPassword['acceptedTerms'] == true,
         acceptedPrivacy: signupPassword['acceptedPrivacy'] == true,
       );
+      debugPrint('[signup] response => $result');
     } else {
       final isEmail = _isValidEmail(identifier);
       final isMobile = _isValidMobile(identifier);
@@ -197,7 +220,12 @@ class _LoginPageState extends State<LoginPage> {
         userEmail: resolvedEmail,
       );
     } else if (mounted) {
-      setState(() => _error = result['error'] ?? 'Please try again.');
+      final serverError = result['error']?.toString().trim();
+      setState(() {
+        _error = (serverError != null && serverError.isNotEmpty)
+            ? serverError
+            : 'Signup failed. Check your details and try again.';
+      });
     }
     if (mounted) {
       setState(() => _loading = false);
@@ -443,10 +471,6 @@ class _LoginPageState extends State<LoginPage> {
                               )
                             : null,
                       ),
-                      if (_signUp && !_adminMode) ...[
-                        const SizedBox(height: 14),
-                        _buildConsentRow(context),
-                      ],
                       if (!_adminMode && !_forgotPassword && !_signUp) ...[
                         const SizedBox(height: 8),
                         Align(
@@ -691,39 +715,6 @@ class _LoginPageState extends State<LoginPage> {
     ),
   );
 
-  Widget _buildConsentRow(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Wrap(
-          spacing: 12,
-          runSpacing: 8,
-          children: [
-            TextButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const PrivacyPolicyPage()),
-              ),
-              child: const Text('Privacy Policy'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const TermsPage()),
-              ),
-              child: const Text('Terms & Conditions'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'You must accept both before creating your account.',
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.72), fontSize: 12),
-        ),
-      ],
-    );
-  }
-
   Future<Map<String, dynamic>?> _collectSignupPassword() async {
     final passwordController = TextEditingController();
     final confirmController = TextEditingController();
@@ -763,225 +754,227 @@ class _LoginPageState extends State<LoginPage> {
               ),
               child: SafeArea(
                 top: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 48,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.white24,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Create 4-digit password',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Numbers only. Three invalid attempts will lock this step briefly.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
-                    ),
-                    const SizedBox(height: 18),
-                    TextField(
-                      controller: passwordController,
-                      obscureText: true,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(4),
-                      ],
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        labelText: 'PASSWORD (4 DIGITS)',
-                        labelStyle: TextStyle(color: Colors.white70),
-                        prefixIcon: Icon(Icons.lock_outline, color: Color(0xFFFF7A00)),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white24, width: 1.2),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xFFFF7A00), width: 2.6),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.redAccent, width: 1.6),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.redAccent, width: 2.2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: confirmController,
-                      obscureText: true,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(4),
-                      ],
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        labelText: 'CONFIRM PASSWORD',
-                        labelStyle: TextStyle(color: Colors.white70),
-                        prefixIcon: Icon(Icons.lock_outline, color: Color(0xFFFF7A00)),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white24, width: 1.2),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xFFFF7A00), width: 2.6),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.redAccent, width: 1.6),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.redAccent, width: 2.2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    CheckboxListTile(
-                      value: acceptedPrivacy,
-                      onChanged: isLocked
-                          ? null
-                          : (value) => setModalState(() {
-                              acceptedPrivacy = value ?? false;
-                            }),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      contentPadding: EdgeInsets.zero,
-                      checkColor: Colors.white,
-                      activeColor: const Color(0xFFFF7A00),
-                      side: const BorderSide(color: Colors.white54),
-                      title: Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 4,
-                        children: [
-                          const Text('I agree to the', style: TextStyle(color: Colors.white)),
-                          GestureDetector(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const PrivacyPolicyPage()),
-                            ),
-                            child: const Text(
-                              'Privacy Policy',
-                              style: TextStyle(
-                                color: Color(0xFFFF7A00),
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 48,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.white24,
+                            borderRadius: BorderRadius.circular(999),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                    CheckboxListTile(
-                      value: acceptedTerms,
-                      onChanged: isLocked
-                          ? null
-                          : (value) => setModalState(() {
-                              acceptedTerms = value ?? false;
-                            }),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      contentPadding: EdgeInsets.zero,
-                      checkColor: Colors.white,
-                      activeColor: const Color(0xFFFF7A00),
-                      side: const BorderSide(color: Colors.white54),
-                      title: Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 4,
-                        children: [
-                          const Text('I agree to the', style: TextStyle(color: Colors.white)),
-                          GestureDetector(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const TermsPage()),
-                            ),
-                            child: const Text(
-                              'Terms & Conditions',
-                              style: TextStyle(
-                                color: Color(0xFFFF7A00),
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Create 4-digit password',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Numbers only. Three invalid attempts will lock this step briefly.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                      ),
+                      const SizedBox(height: 18),
+                      TextField(
+                        controller: passwordController,
+                        obscureText: true,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(4),
+                        ],
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          labelText: 'PASSWORD (4 DIGITS)',
+                          labelStyle: TextStyle(color: Colors.white70),
+                          prefixIcon: Icon(Icons.lock_outline, color: Color(0xFFFF7A00)),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white24, width: 1.2),
                           ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFFFF7A00), width: 2.6),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.redAccent, width: 1.6),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.redAccent, width: 2.2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: confirmController,
+                        obscureText: true,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(4),
                         ],
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          labelText: 'CONFIRM PASSWORD',
+                          labelStyle: TextStyle(color: Colors.white70),
+                          prefixIcon: Icon(Icons.lock_outline, color: Color(0xFFFF7A00)),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white24, width: 1.2),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFFFF7A00), width: 2.6),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.redAccent, width: 1.6),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.redAccent, width: 2.2),
+                          ),
+                        ),
                       ),
-                    ),
-                    if (errorText != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        errorText!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.redAccent, fontSize: 12),
-                      ),
-                    ],
-                    if (isLocked) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        'Try again in ${remainingSeconds}s.',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.orangeAccent, fontSize: 12),
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: isLocked
+                      const SizedBox(height: 12),
+                      CheckboxListTile(
+                        value: acceptedPrivacy,
+                        onChanged: isLocked
                             ? null
-                            : () {
-                                final password = passwordController.text.trim();
-                                final confirm = confirmController.text.trim();
-                                String? validationError;
-                                if (!RegExp(r'^\d{4}$').hasMatch(password)) {
-                                  validationError = 'Password must be exactly 4 digits.';
-                                } else if (confirm != password) {
-                                  validationError = 'Passwords do not match.';
-                              } else if (!acceptedPrivacy || !acceptedTerms) {
-                                  validationError = 'Accept both Privacy Policy and Terms & Conditions.';
-                                }
-
-                                if (validationError != null) {
-                                  attempts += 1;
-                                  if (attempts >= 3) {
-                                    blockedUntil = DateTime.now().add(const Duration(minutes: 2));
-                                    attempts = 0;
-                                  }
-                                  setModalState(() {
-                                    errorText = validationError;
-                                  });
-                                  return;
-                                }
-
-                                Navigator.pop(sheetContext, {
-                                  'password': password,
-                                  'acceptedPrivacy': acceptedPrivacy,
-                                  'acceptedTerms': acceptedTerms,
-                                });
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF7A00),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            : (value) => setModalState(() {
+                                acceptedPrivacy = value ?? false;
+                              }),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                        checkColor: Colors.white,
+                        activeColor: const Color(0xFFFF7A00),
+                        side: const BorderSide(color: Colors.white54),
+                        title: Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 4,
+                          children: [
+                            const Text('I agree to the', style: TextStyle(color: Colors.white)),
+                            GestureDetector(
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const PrivacyPolicyPage()),
+                              ),
+                              child: const Text(
+                                'Privacy Policy',
+                                style: TextStyle(
+                                  color: Color(0xFFFF7A00),
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        child: Text(isLocked ? 'LOCKED' : 'CONFIRM PASSWORD'),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: () => Navigator.pop(sheetContext),
-                      child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
-                    ),
-                  ],
+                      CheckboxListTile(
+                        value: acceptedTerms,
+                        onChanged: isLocked
+                            ? null
+                            : (value) => setModalState(() {
+                                acceptedTerms = value ?? false;
+                              }),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                        checkColor: Colors.white,
+                        activeColor: const Color(0xFFFF7A00),
+                        side: const BorderSide(color: Colors.white54),
+                        title: Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 4,
+                          children: [
+                            const Text('I agree to the', style: TextStyle(color: Colors.white)),
+                            GestureDetector(
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const TermsPage()),
+                              ),
+                              child: const Text(
+                                'Terms & Conditions',
+                                style: TextStyle(
+                                  color: Color(0xFFFF7A00),
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (errorText != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          errorText!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                        ),
+                      ],
+                      if (isLocked) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'Try again in ${remainingSeconds}s.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.orangeAccent, fontSize: 12),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: isLocked
+                              ? null
+                              : () {
+                                  final password = passwordController.text.trim();
+                                  final confirm = confirmController.text.trim();
+                                  String? validationError;
+                                  if (!RegExp(r'^\d{4}$').hasMatch(password)) {
+                                    validationError = 'Password must be exactly 4 digits.';
+                                  } else if (confirm != password) {
+                                    validationError = 'Passwords do not match.';
+                                  } else if (!acceptedPrivacy || !acceptedTerms) {
+                                    validationError = 'Accept both Privacy Policy and Terms & Conditions.';
+                                  }
+
+                                  if (validationError != null) {
+                                    attempts += 1;
+                                    if (attempts >= 3) {
+                                      blockedUntil = DateTime.now().add(const Duration(minutes: 2));
+                                      attempts = 0;
+                                    }
+                                    setModalState(() {
+                                      errorText = validationError;
+                                    });
+                                    return;
+                                  }
+
+                                  Navigator.pop(sheetContext, {
+                                    'password': password,
+                                    'acceptedPrivacy': acceptedPrivacy,
+                                    'acceptedTerms': acceptedTerms,
+                                  });
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF7A00),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          child: Text(isLocked ? 'LOCKED' : 'CONFIRM PASSWORD'),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -990,6 +983,7 @@ class _LoginPageState extends State<LoginPage> {
       },
     );
 
+    await Future<void>.delayed(const Duration(milliseconds: 300));
     passwordController.dispose();
     confirmController.dispose();
     return result;

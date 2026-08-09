@@ -16,7 +16,6 @@ import '../../blocs/localization/localization_state.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../widgets/custom_side_menu.dart';
 
-// TODO: Rename class to UserMainLayout since it no longer uses a BottomNavBar
 class UserBottomNavBar extends StatefulWidget {
   const UserBottomNavBar({super.key});
 

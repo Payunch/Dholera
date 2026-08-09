@@ -188,7 +188,7 @@ class UpdateDetailPage extends StatelessWidget {
                     style: {
                       "body": Style(
                         fontSize: FontSize(16),
-                        lineHeight: LineHeight(1.7),
+                        lineHeight: const LineHeight(1.7),
                         color: isDark ? Colors.blueGrey[300] : const Color(0xFF334155),
                         fontFamily: 'Inter',
                       ),
