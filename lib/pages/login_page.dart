@@ -22,7 +22,7 @@ class _LoginPageState extends State<LoginPage> {
   final _password = TextEditingController();
   final _confirmPassword = TextEditingController();
   final _otp = TextEditingController();
-  bool _signUp = false,
+  bool _signUp = true,
       _adminMode = false,
       _forgotPassword = false,
       _resetCodeSent = false,

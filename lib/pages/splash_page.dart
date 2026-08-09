@@ -30,6 +30,15 @@ class _SplashPageState extends State<SplashPage> {
       
       if (!mounted) return;
 
+      // Wait if auth is still loading (up to 3 seconds max)
+      int waitCount = 0;
+      while (mounted && context.read<AuthBloc>().state.status == AuthStatus.loading && waitCount < 15) {
+        await Future.delayed(const Duration(milliseconds: 200));
+        waitCount++;
+      }
+
+      if (!mounted) return;
+
       final prefState = context.read<PreferencesBloc>().state;
       final authState = context.read<AuthBloc>().state;
 
@@ -48,7 +57,6 @@ class _SplashPageState extends State<SplashPage> {
       }
     } catch (e) {
       debugPrint('Splash Navigation Error: $e');
-      // Fallback to login if everything fails
       if (mounted) {
         _replacePage(const LoginPage());
       }

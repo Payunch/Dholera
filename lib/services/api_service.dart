@@ -30,12 +30,14 @@ class ApiService {
 
   Future<String?> getAuthToken() async {
     try {
-      _sessionCookie ??= await _secureStorage.read(key: 'session_cookie');
-      return await _secureStorage.read(key: 'auth_token');
+      final token = await _secureStorage.read(key: 'auth_token');
+      if (_sessionCookie == null) {
+        try {
+          _sessionCookie = await _secureStorage.read(key: 'session_cookie');
+        } catch (_) {}
+      }
+      return token;
     } catch (e) {
-      try {
-        await _secureStorage.deleteAll();
-      } catch (_) {}
       return null;
     }
   }
@@ -45,9 +47,25 @@ class ApiService {
       await _secureStorage.write(key: 'auth_token', value: token);
     } catch (e) {
       try {
-        await _secureStorage.deleteAll();
         await _secureStorage.write(key: 'auth_token', value: token);
       } catch (_) {}
+    }
+  }
+
+  Future<void> saveUserInfo({required String name, required String role}) async {
+    try {
+      await _secureStorage.write(key: 'user_name', value: name);
+      await _secureStorage.write(key: 'user_role', value: role);
+    } catch (_) {}
+  }
+
+  Future<Map<String, String?>> getUserInfo() async {
+    try {
+      final name = await _secureStorage.read(key: 'user_name');
+      final role = await _secureStorage.read(key: 'user_role');
+      return {'name': name, 'role': role};
+    } catch (_) {
+      return {'name': null, 'role': null};
     }
   }
 
@@ -55,6 +73,8 @@ class ApiService {
     try {
       await _secureStorage.delete(key: 'auth_token');
       await _secureStorage.delete(key: 'session_cookie');
+      await _secureStorage.delete(key: 'user_name');
+      await _secureStorage.delete(key: 'user_role');
     } catch (e) {
       try {
         await _secureStorage.deleteAll();
