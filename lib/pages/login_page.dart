@@ -5,95 +5,167 @@ import '../blocs/auth/auth_event.dart';
 import '../blocs/auth/auth_state.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
-import 'admin/admin_bottom_nav_bar.dart';
 import 'user/user_bottom_nav_bar.dart';
+import 'admin/admin_bottom_nav_bar.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
-
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final ApiService _apiService = ApiService();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  bool _isLoading = false;
-  String? _error;
+  final _api = ApiService();
+  final _name = TextEditingController();
+  final _phone = TextEditingController();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  final _confirmPassword = TextEditingController();
+  final _otp = TextEditingController();
+  bool _signUp = false,
+      _adminMode = false,
+      _forgotPassword = false,
+      _resetCodeSent = false,
+      _loading = false;
+  String? _error, _message;
 
   @override
   void dispose() {
-    _usernameController.dispose();
-    _phoneController.dispose();
+    for (final c in [
+      _name,
+      _phone,
+      _email,
+      _password,
+      _confirmPassword,
+      _otp,
+    ]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    final username = _usernameController.text.trim();
-    final phone = _phoneController.text.trim();
-    
-    if (username.isEmpty || phone.isEmpty) {
-      setState(() => _error = 'Username and Phone Number are required.');
-      return;
-    }
-    
-    // 10-digit mobile number validation
-    if (phone.length != 10 || !RegExp(r'^[6-9]\d{9}$').hasMatch(phone)) {
-      setState(() => _error = 'Please enter a valid 10-digit Indian mobile number.');
-      return;
-    }
-
+  Future<void> _submit() async {
+    final email = _email.text.trim();
     setState(() {
-      _isLoading = true;
+      _loading = true;
       _error = null;
+      _message = null;
     });
-
-    try {
-      // Public access collects a lead. OTP-based identity verification will be
-      // added later; this flow must not be used to grant protected content.
-      final response = await _apiService.createLead({'name': username, 'phone': phone, 'source': 'App'});
-      if (response['success'] == true) {
-        await _routeToApp({'name': username, 'phone': phone}, AppRole.userInvestor);
+    Map<String, dynamic> result;
+    if (_adminMode) {
+      result = await _api.login(email, _password.text);
+    } else if (_forgotPassword) {
+      if (_resetCodeSent) {
+        if (_password.text.length < 8 ||
+            _password.text != _confirmPassword.text) {
+          setState(() {
+            _error = 'Use matching passwords of at least 8 characters.';
+            _loading = false;
+          });
+          return;
+        }
+        result = await _api.resetPassword(
+          email: email,
+          otp: _otp.text.trim(),
+          password: _password.text,
+        );
       } else {
-        setState(() => _error = response['error'] ?? 'Failed to register. Please try again.');
+        result = await _api.requestPasswordReset(email);
+        if (result['success'] == true) {
+          setState(() {
+            _resetCodeSent = true;
+            _message = 'Verification code sent. Check your email.';
+          });
+        }
       }
-    } catch (e) {
-      setState(() => _error = 'Connection Error: Unable to reach the server.');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+    } else if (_signUp) {
+      if (_name.text.trim().isEmpty ||
+          _phone.text.trim().length != 10 ||
+          _password.text.length < 8 ||
+          _password.text != _confirmPassword.text) {
+        setState(() {
+          _error = 'Enter your details and matching 8-character password.';
+          _loading = false;
+        });
+        return;
+      }
+      result = await _api.userSignup(
+        name: _name.text.trim(),
+        phone: _phone.text.trim(),
+        email: email,
+        password: _password.text,
+      );
+    } else {
+      result = await _api.userLogin(
+        identifier: email,
+        password: _password.text,
+      );
+    }
+    if (result['success'] == true && (_adminMode || result['token'] != null)) {
+      await _enterApp(result, isAdmin: _adminMode);
+    } else if (mounted) {
+      setState(() => _error = result['error'] ?? 'Please try again.');
+    }
+    if (mounted) {
+      setState(() => _loading = false);
     }
   }
 
-  Future<void> _routeToApp(Map<String, dynamic>? userData, AppRole role) async {
-    String? token = await _apiService.getAuthToken();
-    token ??= userData?['token'] ?? userData?['accessToken'] ?? 'temp_public_token';
-    
-    if (token != null && mounted) {
-      context.read<AuthBloc>().add(AuthLoginRequested(
+  Future<void> _enterApp(
+    Map<String, dynamic> result, {
+    bool isAdmin = false,
+  }) async {
+    final user = Map<String, dynamic>.from(result['user'] ?? {});
+    final token = await _api.getAuthToken() ?? result['token']?.toString();
+    if (token == null) {
+      if (mounted)
+        setState(() => _error = 'Unable to create a secure session.');
+      return;
+    }
+    context.read<AuthBloc>().add(
+      AuthLoginRequested(
         token: token,
-        userName: userData?['name'] ?? 'Guest User',
-        role: role,
-      ));
-
-      await NotificationService().syncTokenWithBackend();
-
-      if (!mounted) return;
-
-      if (role == AppRole.adminOwner) {
-        await Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const AdminBottomNavBar()),
-        );
-      } else {
-        await Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const UserBottomNavBar()),
-        );
-      }
+        userName:
+            user['name']?.toString() ?? user['username']?.toString() ?? 'User',
+        role: isAdmin ? AppRole.adminOwner : AppRole.userInvestor,
+      ),
+    );
+    await NotificationService().syncTokenWithBackend();
+    if (mounted) {
+      await Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) =>
+              isAdmin ? const AdminBottomNavBar() : const UserBottomNavBar(),
+        ),
+        (_) => false,
+      );
     }
   }
+
+  void _switchMode() => setState(() {
+    _signUp = !_signUp;
+    _adminMode = false;
+    _forgotPassword = false;
+    _resetCodeSent = false;
+    _error = null;
+    _message = null;
+  });
+  void _openForgot() => setState(() {
+    _forgotPassword = true;
+    _adminMode = false;
+    _signUp = false;
+    _resetCodeSent = false;
+    _error = null;
+    _message = null;
+  });
 
   @override
   Widget build(BuildContext context) {
+    final title = _adminMode
+        ? 'ADMIN SIGN IN'
+        : _forgotPassword
+        ? (_resetCodeSent ? 'RESET PASSWORD' : 'FORGOT PASSWORD')
+        : (_signUp ? 'CREATE ACCOUNT' : 'SIGN IN');
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -105,89 +177,145 @@ class _LoginPageState extends State<LoginPage> {
         ),
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              children: [
-                Hero(
-                  tag: 'logo',
-                  child: Image.asset('assets/images/logo.png', height: 100),
-                ),
-                const SizedBox(height: 48),
-                Card(
-                  elevation: 0,
-                  color: Colors.white.withValues(alpha: 0.05),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(32),
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          'ENTER APP',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-                        _buildTextField(
-                          controller: _usernameController,
-                          label: 'FULL NAME',
-                          icon: Icons.person_outline,
-                        ),
-                        const SizedBox(height: 20),
-                        _buildTextField(
-                          controller: _phoneController,
-                          label: 'PHONE NUMBER',
-                          icon: Icons.phone_android,
-                        ),
-                        if (_error != null) ...[
-                          const SizedBox(height: 20),
-                          Text(
-                            _error!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                        const SizedBox(height: 40),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _handleLogin,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFF7A00),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    height: 24,
-                                    width: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 3,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                    ),
-                                  )
-                                : const Text(
-                                    'CONTINUE',
-                                    style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
-                                  ),
-                          ),
+            padding: const EdgeInsets.all(24),
+            child: Card(
+              color: Colors.white.withValues(alpha: .06),
+              child: Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset('assets/images/logo.png', height: 84),
+                    const SizedBox(height: 24),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    if (_signUp && !_adminMode) ...[
+                      _field(_name, 'FULL NAME', Icons.person_outline),
+                      const SizedBox(height: 12),
+                      _field(
+                        _phone,
+                        'MOBILE NUMBER',
+                        Icons.phone_android,
+                        keyboard: TextInputType.phone,
+                      ),
+                    ],
+                    if (_signUp && !_adminMode) const SizedBox(height: 12),
+                    _field(
+                      _email,
+                      _adminMode ? 'ADMIN USERNAME' : 'EMAIL ADDRESS',
+                      Icons.email_outlined,
+                      keyboard: TextInputType.emailAddress,
+                    ),
+                    if (_forgotPassword && _resetCodeSent) ...[
+                      const SizedBox(height: 12),
+                      _field(
+                        _otp,
+                        '6-DIGIT EMAIL CODE',
+                        Icons.password_outlined,
+                        keyboard: TextInputType.number,
+                      ),
+                    ],
+                    if (_adminMode || !_forgotPassword || _resetCodeSent) ...[
+                      const SizedBox(height: 12),
+                      _field(
+                        _password,
+                        'PASSWORD',
+                        Icons.lock_outline,
+                        secret: true,
+                      ),
+                      if (_signUp || _resetCodeSent) ...[
+                        const SizedBox(height: 12),
+                        _field(
+                          _confirmPassword,
+                          'CONFIRM PASSWORD',
+                          Icons.lock_outline,
+                          secret: true,
                         ),
                       ],
+                    ],
+                    if (_error != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Text(
+                          _error!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.redAccent),
+                        ),
+                      ),
+                    if (_message != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Text(
+                          _message!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.lightGreenAccent,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: _loading ? null : _submit,
+                        child: _loading
+                            ? const CircularProgressIndicator()
+                            : Text(
+                                _forgotPassword
+                                    ? (_resetCodeSent
+                                          ? 'RESET PASSWORD'
+                                          : 'SEND CODE')
+                                    : (_signUp ? 'CREATE ACCOUNT' : 'SIGN IN'),
+                              ),
+                      ),
                     ),
-                  ),
+                    if (!_forgotPassword && !_adminMode)
+                      if (!_adminMode)
+                        TextButton(
+                          onPressed: _loading ? null : _openForgot,
+                          child: const Text(
+                            'Forgot password?',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                    TextButton(
+                      onPressed: _loading ? null : _switchMode,
+                      child: Text(
+                        _forgotPassword
+                            ? 'Back to sign in'
+                            : (_signUp
+                                  ? 'Already have an account? Sign in'
+                                  : 'New here? Create an account'),
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
+              TextButton(
+                onPressed: _loading
+                    ? null
+                    : () => setState(() {
+                        _adminMode = !_adminMode;
+                        _signUp = false;
+                        _forgotPassword = false;
+                        _resetCodeSent = false;
+                        _error = null;
+                        _message = null;
+                      }),
+                child: Text(
+                  _adminMode ? 'Back to user sign in' : 'Administrator sign in',
+                  style: const TextStyle(color: Colors.white54),
+                ),
+              ),
             ),
           ),
         ),
@@ -195,29 +323,27 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-  }) {
-    return TextField(
-      controller: controller,
-      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 2),
-        prefixIcon: Icon(icon, color: const Color(0xFFFF7A00)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFFF7A00)),
-        ),
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.02),
+  Widget _field(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    bool secret = false,
+    TextInputType? keyboard,
+  }) => TextField(
+    controller: controller,
+    obscureText: secret,
+    keyboardType: keyboard,
+    style: const TextStyle(color: Colors.white),
+    decoration: InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.white70),
+      prefixIcon: Icon(icon, color: const Color(0xFFFF7A00)),
+      enabledBorder: const OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.white24),
       ),
-    );
-  }
+      focusedBorder: const OutlineInputBorder(
+        borderSide: BorderSide(color: Color(0xFFFF7A00)),
+      ),
+    ),
+  );
 }

@@ -9,14 +9,14 @@ class AuthProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
   final BiometricService _biometricService = BiometricService();
   final _secureStorage = const FlutterSecureStorage();
-  
+
   bool _isAuthenticated = false;
   Map<String, dynamic>? _user;
   String? _error;
   bool _isLoading = true; // Start with loading true
   bool _canUseBiometrics = false;
   bool _hasSavedCredentials = false;
-  
+
   // Getters
   bool get isAuthenticated => _isAuthenticated;
   Map<String, dynamic>? get user => _user;
@@ -24,19 +24,19 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get canUseBiometrics => _canUseBiometrics;
   bool get hasSavedCredentials => _hasSavedCredentials;
-  
+
   /// Initialize auth state (check if token exists and is valid)
   Future<void> initAuth() async {
     _isLoading = true;
     notifyListeners();
-    
+
     // Check biometric availability
     _canUseBiometrics = await _biometricService.isBiometricAvailable();
-    
-    // Check if we have saved email/pass for auto-login
-    final savedEmail = await _secureStorage.read(key: 'saved_email');
-    final savedPass = await _secureStorage.read(key: 'saved_passcode');
-    _hasSavedCredentials = savedEmail != null && savedPass != null;
+
+    // Passwords must never be retained on the device. Existing installations
+    // may have a legacy value, so remove it once and use the session token.
+    await _secureStorage.delete(key: 'saved_passcode');
+    _hasSavedCredentials = false;
 
     final token = await _apiService.getAuthToken();
     if (token != null) {
@@ -58,30 +58,30 @@ class AuthProvider extends ChangeNotifier {
     } else {
       _isAuthenticated = false;
     }
-    
+
     _isLoading = false;
     notifyListeners();
   }
-  
+
   /// Login with email and password
-  Future<bool> login(String email, String password, {bool rememberMe = true}) async {
+  Future<bool> login(
+    String email,
+    String password, {
+    bool rememberMe = true,
+  }) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
-    
+
     try {
       final result = await _apiService.login(email, password);
-      
+
       if (result['success'] == true) {
         _user = result['user'];
         _isAuthenticated = true;
         _error = null;
 
-        if (rememberMe) {
-          await _secureStorage.write(key: 'saved_email', value: email);
-          await _secureStorage.write(key: 'saved_passcode', value: password);
-          _hasSavedCredentials = true;
-        }
+        // ApiService persists the server-issued session token in secure storage.
 
         try {
           // Log login event and set user id for analytics
@@ -109,27 +109,21 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Biometric Login using saved credentials
+  /// Biometric login requires a valid saved session, never a saved password.
   Future<bool> loginWithBiometrics() async {
-    if (!_canUseBiometrics || !_hasSavedCredentials) return false;
+    if (!_canUseBiometrics) return false;
 
     final authenticated = await _biometricService.authenticate();
     if (!authenticated) return false;
 
-    final email = await _secureStorage.read(key: 'saved_email');
-    final pass = await _secureStorage.read(key: 'saved_passcode');
-
-    if (email != null && pass != null) {
-      return await login(email, pass, rememberMe: true);
-    }
-    return false;
+    return await _apiService.getAuthToken() != null;
   }
-  
+
   /// Logout
   Future<void> logout() async {
     _isLoading = true;
     notifyListeners();
-    
+
     try {
       await _apiService.logout();
       // Note: We keep the saved credentials for biometric login even after logout
@@ -144,20 +138,19 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
+
   /// Completely clear all saved credentials (Forget Me)
   Future<void> forgetMe() async {
-    await _secureStorage.delete(key: 'saved_email');
     await _secureStorage.delete(key: 'saved_passcode');
     _hasSavedCredentials = false;
     notifyListeners();
   }
-  
+
   /// Fetch current user info
   Future<void> fetchCurrentUser() async {
     try {
       final result = await _apiService.getMe();
-      
+
       if (result['success'] == true) {
         _user = result['data'];
         _isAuthenticated = true;
