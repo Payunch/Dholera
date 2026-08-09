@@ -297,23 +297,23 @@ class _LoginPageState extends State<LoginPage> {
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),
+                    TextButton(
+                      onPressed: _loading
+                          ? null
+                          : () => setState(() {
+                              _adminMode = !_adminMode;
+                              _signUp = false;
+                              _forgotPassword = false;
+                              _resetCodeSent = false;
+                              _error = null;
+                              _message = null;
+                            }),
+                      child: Text(
+                        _adminMode ? 'Back to user sign in' : 'Administrator sign in',
+                        style: const TextStyle(color: Colors.white54),
+                      ),
+                    ),
                   ],
-                ),
-              ),
-              TextButton(
-                onPressed: _loading
-                    ? null
-                    : () => setState(() {
-                        _adminMode = !_adminMode;
-                        _signUp = false;
-                        _forgotPassword = false;
-                        _resetCodeSent = false;
-                        _error = null;
-                        _message = null;
-                      }),
-                child: Text(
-                  _adminMode ? 'Back to user sign in' : 'Administrator sign in',
-                  style: const TextStyle(color: Colors.white54),
                 ),
               ),
             ),
