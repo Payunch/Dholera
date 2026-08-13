@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/auth_provider.dart';
+import '../models/app_update.dart';
 import '../services/api_service.dart';
 import '../config/assets.dart';
 import '../theme/app_colors.dart';
@@ -18,6 +19,7 @@ import 'admin/tp_map_manager_page.dart';
 
 import '../blocs/leads/leads_bloc.dart';
 import '../blocs/leads/leads_event.dart';
+import '../blocs/localization/localization_bloc.dart';
 import '../models/lead.dart';
 import '../services/notification_service.dart';
 
@@ -33,6 +35,8 @@ class _DashboardPageState extends State<DashboardPage> {
   late ApiService _apiService;
   Map<String, dynamic>? _analytics;
   bool _isLoadingAnalytics = false;
+  List<AppUpdate> _latestUpdates = [];
+  bool _isLoadingUpdates = false;
   DateTimeRange? _selectedDateRange;
   
   // Notification / Approvals state
@@ -53,12 +57,34 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> _initDashboard() async {
     await _loadAnalytics();
+    await _loadLatestUpdates();
     await _startNotificationPolling();
   }
 
   void _setupNotificationListener() {
     _notificationSubscription = NotificationService.dataStream.listen((data) {
       if (mounted) {
+        final notificationType = data['type']?.toString();
+        if (notificationType == 'insight') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('New update published: ${data['title'] ?? 'Latest insight'}'),
+              backgroundColor: Colors.orange,
+              action: SnackBarAction(
+                label: 'OPEN',
+                textColor: Colors.white,
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UpdatesPage())),
+              ),
+            ),
+          );
+          _loadLatestUpdates();
+          return;
+        }
+
+        if (notificationType != null && notificationType != 'lead' && data['lead_id'] == null) {
+          return;
+        }
+
         final lead = Lead(
           id: int.tryParse(data['lead_id']?.toString() ?? '0') ?? 0,
           name: data['name'] ?? 'New Lead',
@@ -145,6 +171,28 @@ class _DashboardPageState extends State<DashboardPage> {
     } finally {
       if (mounted) {
         setState(() => _isLoadingAnalytics = false);
+      }
+    }
+  }
+
+  Future<void> _loadLatestUpdates() async {
+    if (!mounted) {
+      return;
+    }
+    setState(() => _isLoadingUpdates = true);
+    try {
+      final lang = context.read<LocalizationBloc>().state.locale.languageCode;
+      final result = await _apiService.getUpdates(lang);
+      if (result['success'] == true) {
+        setState(() {
+          _latestUpdates = AppUpdate.fromList((result['updates'] ?? []) as List<dynamic>).take(3).toList();
+        });
+      }
+    } catch (e) {
+      // Keep dashboard resilient if the updates feed is unavailable.
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingUpdates = false);
       }
     }
   }
@@ -311,6 +359,85 @@ class _DashboardPageState extends State<DashboardPage> {
                               ],
                             ),
                           const SizedBox(height: 32),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Latest Updates',
+                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                              ),
+                              TextButton(
+                                onPressed: _loadLatestUpdates,
+                                child: const Text('Refresh', style: TextStyle(color: AppColors.primary)),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          if (_isLoadingUpdates)
+                            const Center(child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 24),
+                              child: CircularProgressIndicator(color: AppColors.primary),
+                            ))
+                          else if (_latestUpdates.isEmpty)
+                            const Text(
+                              'No published updates yet.',
+                              style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                            )
+                          else
+                            Column(
+                              children: _latestUpdates.map((update) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: InkWell(
+                                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UpdatesPage())),
+                                    borderRadius: BorderRadius.circular(18),
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface,
+                                        borderRadius: BorderRadius.circular(18),
+                                        border: Border.all(color: AppColors.border),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 52,
+                                            height: 52,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary.withAlpha(20),
+                                              borderRadius: BorderRadius.circular(14),
+                                            ),
+                                            child: const Icon(Icons.article_outlined, color: AppColors.primary),
+                                          ),
+                                          const SizedBox(width: 14),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  update.title,
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  update.category,
+                                                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          const SizedBox(height: 24),
                           const Text(
                             'Management',
                             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),

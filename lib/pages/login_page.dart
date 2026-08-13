@@ -265,13 +265,25 @@ class _LoginPageState extends State<LoginPage> {
       }
       return;
     }
+
+    final resolvedName =
+        user['name']?.toString() ?? user['username']?.toString() ?? 'User';
+    final resolvedEmail = userEmail ?? user['email']?.toString();
+    final resolvedRole = isAdmin ? AppRole.adminOwner : AppRole.userInvestor;
+
+    await _api.setAuthToken(token);
+    await _api.saveUserInfo(
+      name: resolvedName,
+      role: resolvedRole.name,
+      email: resolvedEmail,
+    );
+
     authBloc.add(
       AuthLoginRequested(
         token: token,
-        userName:
-            user['name']?.toString() ?? user['username']?.toString() ?? 'User',
-        userEmail: userEmail ?? user['email']?.toString(),
-        role: isAdmin ? AppRole.adminOwner : AppRole.userInvestor,
+        userName: resolvedName,
+        userEmail: resolvedEmail,
+        role: resolvedRole,
       ),
     );
     await NotificationService().syncTokenWithBackend();

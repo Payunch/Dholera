@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -6,6 +7,7 @@ import '../blocs/localization/localization_state.dart';
 import '../models/app_update.dart';
 import '../models/project.dart';
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 import 'projects_page.dart';
 import 'project_detail_page.dart';
 import 'tp_maps_page.dart';
@@ -35,6 +37,7 @@ class InvestorLandingPage extends StatefulWidget {
 
 class _InvestorLandingPageState extends State<InvestorLandingPage> {
   final ApiService _apiService = ApiService();
+  StreamSubscription? _notificationSubscription;
   List<AppUpdate> _latestInsights = [];
   List<Project> _featuredProjects = [];
   bool _isInsightsLoading = true;
@@ -51,7 +54,39 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
   void initState() {
     super.initState();
     _fetchInsights();
+    _setupNotificationListener();
     _apiService.trackActivity('Investor Home');
+  }
+
+  void _setupNotificationListener() {
+    _notificationSubscription = NotificationService.dataStream.listen((data) {
+      if (!mounted) return;
+
+      final notificationType = data['type']?.toString();
+      if (notificationType != 'insight') {
+        return;
+      }
+
+      _fetchInsights();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(data['title']?.toString() ?? 'A new update is available'),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 6),
+          action: SnackBarAction(
+            label: 'VIEW',
+            textColor: Colors.white,
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UpdatesPage())),
+          ),
+        ),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchInsights() async {
