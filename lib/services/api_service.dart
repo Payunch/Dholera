@@ -605,10 +605,14 @@ class ApiService {
   /// through the protected admin endpoint.
   Future<Map<String, dynamic>> getUpdates({
     String? lang,
+    String audience = 'web',
     bool includeAll = false,
   }) async {
     try {
-      final query = lang != null ? '?lang=$lang' : '';
+      final params = <String, String>{};
+      if (lang != null) params['lang'] = lang;
+      if (!includeAll) params['audience'] = audience;
+      final query = params.isNotEmpty ? '?${Uri(queryParameters: params).query}' : '';
       final endpoint = includeAll
           ? '${ApiConfig.updatesEndpoint}/admin/all$query'
           : '${ApiConfig.updatesEndpoint}$query';

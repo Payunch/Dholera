@@ -96,7 +96,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
   Future<void> _fetchInsights() async {
     try {
       final lang = context.read<LocalizationBloc>().state.locale.languageCode;
-      final updatesResponse = await _apiService.getUpdates(lang: lang);
+      final updatesResponse = await _apiService.getUpdates(lang: lang, audience: 'app');
       final projectsResponse = await _apiService.getProjects();
 
       if (mounted) {
@@ -702,6 +702,28 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                   ),
                 ),
               ),
+              if (update?.isExclusive == true) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Text(
+                    'APP ONLY',
+                    style: TextStyle(
+                      color: Colors.amber,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                ),
+              ],
               const Spacer(),
               Icon(
                 Icons.notifications_active_outlined,

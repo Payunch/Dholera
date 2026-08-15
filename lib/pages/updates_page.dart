@@ -38,7 +38,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
 
     try {
       final lang = context.read<LocalizationBloc>().state.locale.languageCode;
-      final response = await _apiService.getUpdates(lang: lang);
+      final response = await _apiService.getUpdates(lang: lang, audience: 'app');
       if (!mounted) return;
       if (response['success'] == true) {
         final List<dynamic> updatesData = response['updates'] ?? [];
@@ -191,6 +191,26 @@ class _UpdatesPageState extends State<UpdatesPage> {
                           letterSpacing: 1.2,
                         ),
                       ),
+                      if (update.isExclusive)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: const Text(
+                            'APP ONLY',
+                            style: TextStyle(
+                              color: Colors.orange,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
                       Text(
                         DateFormat('MMM d, yyyy').format(update.createdAt),
                         style: GoogleFonts.inter(

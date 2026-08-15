@@ -101,6 +101,28 @@ class UpdateDetailPage extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (update.isExclusive) ...[
+                        const SizedBox(width: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            'APP ONLY',
+                            style: TextStyle(
+                              color: Colors.orange,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(width: 16),
                       Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey[500]),
                       const SizedBox(width: 6),
@@ -172,7 +194,9 @@ class UpdateDetailPage extends StatelessWidget {
                         IconButton(
                           icon: const Icon(Icons.share_outlined),
                           onPressed: () {
-                            Share.share('Read this latest update: ${update.title}\n\nhttps://dholeraplatform.com/updates/${update.id}');
+                            Share.share(
+                              'Read this latest update: ${update.title}\n\nhttps://dholeraplatform.com/blogs/${update.id}${update.isExclusive ? "?audience=app" : ""}',
+                            );
                           },
                           color: Colors.grey[400],
                         ),

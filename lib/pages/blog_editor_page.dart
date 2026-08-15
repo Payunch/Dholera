@@ -24,6 +24,7 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
   late TextEditingController _contentController;
   late String _category;
   late bool _published;
+  late bool _isExclusive;
   late DateTime _publishedAt;
   late String _imagePosition;
   XFile? _pickedFile;
@@ -49,6 +50,7 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
     _contentController = TextEditingController(text: widget.update?.content ?? '');
     _category = widget.update?.category ?? 'General';
     _published = widget.update?.published ?? true;
+    _isExclusive = widget.update?.isExclusive ?? false;
     _publishedAt = widget.update?.publishedAt ?? widget.update?.createdAt ?? DateTime.now();
     _imagePosition = widget.update?.imagePosition ?? 'top';
     _existingImageUrl = widget.update?.imageUrl;
@@ -81,6 +83,7 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
       'content': _contentController.text.trim(),
       'category': _category,
       'published': _published,
+      'isExclusive': _isExclusive,
       'publishedAt': _publishedAt.toIso8601String(),
       'imagePosition': _imagePosition,
       if (_pickedFile != null) 'imagePath': _pickedFile!.path,
@@ -120,7 +123,11 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.update == null ? 'Create Blog' : 'Edit Blog'),
+        title: Text(
+          widget.update == null
+              ? (_isExclusive ? 'Create App Only Blog' : 'Create Blog')
+              : (_isExclusive ? 'Edit App Only Blog' : 'Edit Blog'),
+        ),
         backgroundColor: Colors.orange,
         bottom: TabBar(
           controller: _tabController,
@@ -267,6 +274,13 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
               title: const Text('Published'),
               value: _published,
               onChanged: (v) => setState(() => _published = v),
+              contentPadding: EdgeInsets.zero,
+            ),
+            SwitchListTile(
+              title: const Text('App Only Blog'),
+              subtitle: const Text('Visible only inside the mobile app'),
+              value: _isExclusive,
+              onChanged: (v) => setState(() => _isExclusive = v),
               contentPadding: EdgeInsets.zero,
             ),
             const SizedBox(height: 16),

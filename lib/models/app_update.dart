@@ -6,6 +6,7 @@ class AppUpdate {
   final String? imageUrl;
   final String imagePosition;
   final bool published;
+  final bool isExclusive;
   final DateTime? publishedAt;
   final DateTime createdAt;
 
@@ -17,6 +18,7 @@ class AppUpdate {
     this.imageUrl,
     this.imagePosition = 'top',
     required this.published,
+    this.isExclusive = false,
     this.publishedAt,
     required this.createdAt,
   });
@@ -29,10 +31,23 @@ class AppUpdate {
       category: json['category'] ?? 'General',
       imageUrl: json['imageUrl'],
       imagePosition: json['imagePosition'] ?? 'top',
-      published: json['published'] ?? true,
+      published: _asBool(json['published'], fallback: true),
+      isExclusive: _asBool(json['isExclusive']),
       publishedAt: json['publishedAt'] != null ? DateTime.parse(json['publishedAt']) : null,
       createdAt: DateTime.parse(json['createdAt']),
     );
+  }
+
+  static bool _asBool(dynamic value, {bool fallback = false}) {
+    if (value == null) return fallback;
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final normalized = value.toLowerCase().trim();
+      if (normalized == 'true' || normalized == '1') return true;
+      if (normalized == 'false' || normalized == '0') return false;
+    }
+    return fallback;
   }
 
   static List<AppUpdate> fromList(List<dynamic> list) {
