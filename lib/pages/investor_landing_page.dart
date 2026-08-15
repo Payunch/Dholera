@@ -27,7 +27,6 @@ import 'privacy_policy_page.dart';
 import 'terms_page.dart';
 import 'settings_page.dart';
 
-
 class InvestorLandingPage extends StatefulWidget {
   const InvestorLandingPage({super.key});
 
@@ -41,7 +40,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
   List<AppUpdate> _latestInsights = [];
   List<Project> _featuredProjects = [];
   bool _isInsightsLoading = true;
-  
+
   // Site visit form state
   final _formKey = GlobalKey<FormState>();
   String _name = '';
@@ -70,13 +69,18 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
       _fetchInsights();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(data['title']?.toString() ?? 'A new update is available'),
+          content: Text(
+            data['title']?.toString() ?? 'A new update is available',
+          ),
           backgroundColor: Colors.orange,
           duration: const Duration(seconds: 6),
           action: SnackBarAction(
             label: 'VIEW',
             textColor: Colors.white,
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UpdatesPage())),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const UpdatesPage()),
+            ),
           ),
         ),
       );
@@ -92,14 +96,17 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
   Future<void> _fetchInsights() async {
     try {
       final lang = context.read<LocalizationBloc>().state.locale.languageCode;
-      final updatesResponse = await _apiService.getUpdates(lang);
+      final updatesResponse = await _apiService.getUpdates(lang: lang);
       final projectsResponse = await _apiService.getProjects();
-      
+
       if (mounted) {
         setState(() {
           if (updatesResponse['success'] == true) {
             final allUpdates = AppUpdate.fromList(updatesResponse['updates']);
-            _latestInsights = allUpdates.where((u) => u.published).take(3).toList();
+            _latestInsights = allUpdates
+                .where((u) => u.published)
+                .take(3)
+                .toList();
           }
           if (projectsResponse['success'] == true) {
             final allProjects = (projectsResponse['projects'] as List)
@@ -137,14 +144,21 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                   actions: [
                     IconButton(
                       icon: const Icon(Icons.settings, color: Colors.white),
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage())),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SettingsPage()),
+                      ),
                     ),
                   ],
                   flexibleSpace: FlexibleSpaceBar(
                     centerTitle: true,
                     title: Text(
                       state.translate('dholera_platform'),
-                      style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 16),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                        fontSize: 16,
+                      ),
                     ),
                     background: _HeroSlider(),
                   ),
@@ -157,28 +171,46 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                       children: [
                         _buildTrustBanner(context, state),
                         const SizedBox(height: 32),
-                        _buildSectionTitle(context, state.translate('benefits_title')),
+                        _buildSectionTitle(
+                          context,
+                          state.translate('benefits_title'),
+                        ),
                         const SizedBox(height: 16),
                         _buildFeatureCard(
                           context,
                           Icons.map,
                           state.translate('verified_maps'),
                           state.translate('strategic_loc_desc'),
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TpMapsPage())),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const TpMapsPage(),
+                            ),
+                          ),
                         ),
                         _buildFeatureCard(
                           context,
                           Icons.trending_up,
                           state.translate('realtime_updates'),
                           state.translate('featured_insights_desc'),
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProjectsPage())),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ProjectsPage(),
+                            ),
+                          ),
                         ),
                         _buildFeatureCard(
                           context,
                           Icons.calculate,
                           state.translate('fee_calculator'),
                           state.translate('compliance_verification'),
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClearanceEnginePage())),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ClearanceEnginePage(),
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 32),
                         _buildSectionTitle(context, 'Investment Resources'),
@@ -190,7 +222,12 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                                 context,
                                 Icons.real_estate_agent,
                                 'Plots for Sale',
-                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PlotsForSalePage())),
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const PlotsForSalePage(),
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -199,7 +236,12 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                                 context,
                                 Icons.menu_book,
                                 'Investment Guide',
-                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InvestmentGuidePage())),
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const InvestmentGuidePage(),
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -210,7 +252,12 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                           Icons.account_balance_wallet,
                           'Government Schemes',
                           'Explore Gujarat Government and Central Government subsidies for Dholera.',
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GovernmentSchemesPage())),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const GovernmentSchemesPage(),
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 32),
                         _buildSectionTitle(context, 'Core Infrastructure'),
@@ -222,7 +269,12 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                                 context,
                                 Icons.airplanemode_active,
                                 'Airport',
-                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AirportPage())),
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const AirportPage(),
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -231,7 +283,12 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                                 context,
                                 Icons.construction,
                                 'Trunk Infra',
-                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InfrastructurePage())),
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const InfrastructurePage(),
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -244,7 +301,12 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                                 context,
                                 Icons.location_city,
                                 'Smart City Features',
-                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SmartCityPage())),
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const SmartCityPage(),
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -253,7 +315,12 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                                 context,
                                 Icons.directions_car,
                                 'Travel & Lifestyle',
-                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TravelLifestylePage())),
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const TravelLifestylePage(),
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -266,15 +333,28 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                           Icons.account_balance,
                           'Government Portals',
                           'Direct access to DSIRDA, RERA, and Land Records.',
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PortalsPage())),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const PortalsPage(),
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 40),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _buildSectionTitle(context, state.translate('featured_insights')),
+                            _buildSectionTitle(
+                              context,
+                              state.translate('featured_insights'),
+                            ),
                             TextButton(
-                              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UpdatesPage())),
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const UpdatesPage(),
+                                ),
+                              ),
                               child: const Text('SEE ALL'),
                             ),
                           ],
@@ -285,25 +365,49 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                         else if (_latestInsights.isEmpty)
                           const Text('No recent updates available.')
                         else
-                          ..._latestInsights.map((u) => _buildInsightCard(context, u)),
+                          ..._latestInsights.map(
+                            (u) => _buildInsightCard(context, u),
+                          ),
                         const SizedBox(height: 40),
                         Center(
                           child: Wrap(
                             spacing: 16,
                             children: [
                               TextButton(
-                                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyPolicyPage())),
-                                child: const Text('Privacy Policy', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const PrivacyPolicyPage(),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Privacy Policy',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ),
                               TextButton(
-                                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TermsPage())),
-                                child: const Text('Terms of Service', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const TermsPage(),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Terms of Service',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 40),
-                        
+
                         _buildSectionTitle(context, 'Featured Developments'),
                         const SizedBox(height: 16),
                         if (_isInsightsLoading)
@@ -312,7 +416,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                           const Text('No projects available.')
                         else
                           _buildFeaturedProjects(context, state),
-                          
+
                         const SizedBox(height: 40),
                         _buildSiteVisitForm(context, state),
                         const SizedBox(height: 40),
@@ -332,13 +436,19 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
     return Text(
       title,
       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).primaryColor,
-          ),
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).primaryColor,
+      ),
     );
   }
 
-  Widget _buildFeatureCard(BuildContext context, IconData icon, String title, String desc, {VoidCallback? onTap}) {
+  Widget _buildFeatureCard(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String desc, {
+    VoidCallback? onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Card(
@@ -367,7 +477,10 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -384,7 +497,12 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
     );
   }
 
-  Widget _buildSmallCard(BuildContext context, IconData icon, String title, {VoidCallback? onTap}) {
+  Widget _buildSmallCard(
+    BuildContext context,
+    IconData icon,
+    String title, {
+    VoidCallback? onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -398,7 +516,14 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
           children: [
             Icon(icon, color: Colors.orange, size: 28),
             const SizedBox(height: 12),
-            Text(title.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
+            Text(
+              title.toUpperCase(),
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
+            ),
           ],
         ),
       ),
@@ -407,58 +532,98 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
 
   Widget _buildInsightCard(BuildContext context, AppUpdate update) {
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => UpdateDetailPage(update: update, isAdmin: false))),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => UpdateDetailPage(update: update, isAdmin: false),
+        ),
+      ),
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey[100]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (update.imageUrl != null)
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-              child: Image.network(
-                update.imageUrl!.startsWith('http') ? update.imageUrl! : 'https://api.dholeraplatform.com${update.imageUrl}',
-                height: 150,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Image.asset('assets/images/ui_infrastructure.png', height: 150, width: double.infinity, fit: BoxFit.cover),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey[100]!),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (update.imageUrl != null)
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
+                child: Image.network(
+                  update.imageUrl!.startsWith('http')
+                      ? update.imageUrl!
+                      : 'https://api.dholeraplatform.com${update.imageUrl}',
+                  height: 150,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Image.asset(
+                    'assets/images/ui_infrastructure.png',
+                    height: 150,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          update.category.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        DateFormat('MMM dd').format(update.createdAt),
+                        style: TextStyle(color: Colors.grey[400], fontSize: 10),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    update.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    update.content.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' '),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(6)),
-                      child: Text(update.category.toUpperCase(), style: const TextStyle(color: Colors.blue, fontSize: 8, fontWeight: FontWeight.bold)),
-                    ),
-                    Text(DateFormat('MMM dd').format(update.createdAt), style: TextStyle(color: Colors.grey[400], fontSize: 10)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(update.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 8),
-                Text(
-                  update.content.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' '),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 13, height: 1.5),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -476,13 +641,15 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
       children: [
         Text(
           state.translate('institutional_anchors_title').toUpperCase(),
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2),
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+            letterSpacing: 1.2,
+          ),
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 60,
-          child: _AutoScrollingLogos(logos: logos),
-        ),
+        SizedBox(height: 60, child: _AutoScrollingLogos(logos: logos)),
       ],
     );
   }
@@ -497,7 +664,12 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
         itemBuilder: (context, index) {
           final project = _featuredProjects[index];
           return GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProjectDetailPage(project: project))),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ProjectDetailPage(project: project),
+              ),
+            ),
             child: Container(
               width: 260,
               decoration: BoxDecoration(
@@ -505,20 +677,33 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
                     child: Image.network(
-                      (project.image ?? '').startsWith('http') ? (project.image ?? '') : 'https://api.dholeraplatform.com${project.image ?? ''}',
+                      (project.image ?? '').startsWith('http')
+                          ? (project.image ?? '')
+                          : 'https://api.dholeraplatform.com${project.image ?? ''}',
                       height: 140,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Image.asset('assets/images/ui_blueprint.png', height: 140, width: double.infinity, fit: BoxFit.cover),
+                      errorBuilder: (_, __, ___) => Image.asset(
+                        'assets/images/ui_blueprint.png',
+                        height: 140,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                   Padding(
@@ -527,29 +712,49 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
                           child: Text(
                             project.category.toUpperCase(),
-                            style: const TextStyle(color: Colors.orange, fontSize: 8, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: Colors.orange,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           project.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.location_on, size: 12, color: Colors.grey),
+                            const Icon(
+                              Icons.location_on,
+                              size: 12,
+                              color: Colors.grey,
+                            ),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 project.location ?? 'Dholera SIR',
-                                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 12,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -580,16 +785,26 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.check_circle_outline, color: Colors.greenAccent, size: 64),
+                  const Icon(
+                    Icons.check_circle_outline,
+                    color: Colors.greenAccent,
+                    size: 64,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     state.translate('request_received'),
-                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'We will contact you shortly.',
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
                   ),
                   const SizedBox(height: 24),
                   TextButton(
@@ -599,8 +814,11 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                       _phone = '';
                       _visitDate = null;
                     }),
-                    child: const Text('BOOK ANOTHER', style: TextStyle(color: Colors.orange)),
-                  )
+                    child: const Text(
+                      'BOOK ANOTHER',
+                      style: TextStyle(color: Colors.orange),
+                    ),
+                  ),
                 ],
               ),
             )
@@ -610,24 +828,39 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.orange.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.orange.withValues(alpha: 0.5)),
+                      border: Border.all(
+                        color: Colors.orange.withValues(alpha: 0.5),
+                      ),
                     ),
                     child: Text(
                       state.translate('exclusive_offer'),
-                      style: const TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                      style: const TextStyle(
+                        color: Colors.orange,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     state.translate('talk_to_owner_title').toUpperCase(),
-                    style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, height: 1.2),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
+                    ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Form Fields
                   TextFormField(
                     initialValue: _name,
@@ -637,9 +870,13 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                       labelStyle: const TextStyle(color: Colors.grey),
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.1),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
-                    validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                    validator: (val) =>
+                        val == null || val.isEmpty ? 'Required' : null,
                     onSaved: (val) => _name = val ?? '',
                   ),
                   const SizedBox(height: 16),
@@ -653,10 +890,15 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                       labelStyle: const TextStyle(color: Colors.grey),
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.1),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                       counterText: '',
                     ),
-                    validator: (val) => val == null || val.length != 10 ? 'Enter 10 digit number' : null,
+                    validator: (val) => val == null || val.length != 10
+                        ? 'Enter 10 digit number'
+                        : null,
                     onSaved: (val) => _phone = val ?? '',
                   ),
                   const SizedBox(height: 16),
@@ -664,14 +906,19 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                     onTap: () async {
                       final date = await showDatePicker(
                         context: context,
-                        initialDate: DateTime.now().add(const Duration(days: 1)),
+                        initialDate: DateTime.now().add(
+                          const Duration(days: 1),
+                        ),
                         firstDate: DateTime.now(),
                         lastDate: DateTime.now().add(const Duration(days: 7)),
                       );
                       if (date != null) setState(() => _visitDate = date);
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -680,12 +927,23 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            _visitDate == null 
-                                ? state.translate('deployment_date') 
-                                : DateFormat('MMM dd, yyyy').format(_visitDate!),
-                            style: TextStyle(color: _visitDate == null ? Colors.grey : Colors.white, fontSize: 16),
+                            _visitDate == null
+                                ? state.translate('deployment_date')
+                                : DateFormat(
+                                    'MMM dd, yyyy',
+                                  ).format(_visitDate!),
+                            style: TextStyle(
+                              color: _visitDate == null
+                                  ? Colors.grey
+                                  : Colors.white,
+                              fontSize: 16,
+                            ),
                           ),
-                          const Icon(Icons.calendar_today, color: Colors.grey, size: 20),
+                          const Icon(
+                            Icons.calendar_today,
+                            color: Colors.grey,
+                            size: 20,
+                          ),
                         ],
                       ),
                     ),
@@ -695,57 +953,97 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                       padding: const EdgeInsets.only(top: 8, left: 12),
                       child: Text(
                         state.translate('date_limit_msg'),
-                        style: const TextStyle(color: Colors.orange, fontSize: 10),
+                        style: const TextStyle(
+                          color: Colors.orange,
+                          fontSize: 10,
+                        ),
                       ),
                     ),
                   const SizedBox(height: 24),
-                  
+
                   SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      onPressed: _isSubmitting ? null : () async {
-                        if (_formKey.currentState!.validate() && _visitDate != null) {
-                          final messenger = ScaffoldMessenger.of(context);
-                          _formKey.currentState!.save();
-                          setState(() => _isSubmitting = true);
-                          try {
-                            await _apiService.createLead({
-                              'name': _name,
-                              'phone': _phone,
-                              'date': _visitDate!.toIso8601String(),
-                              'source': 'App Site Visit Request',
-                              'notes': 'Requested site visit for: ${_visitDate!.toIso8601String()}',
-                            });
-                            await _apiService.trackActivity('Lead Submitted');
-                            if (mounted) setState(() => _isSubmitSuccess = true);
-                          } catch (e) {
-                            messenger.showSnackBar(
-                              const SnackBar(content: Text('Saved locally, but failed to sync to server')),
-                            );
-                          } finally {
-                            if (mounted) setState(() => _isSubmitting = false);
-                            
-                            // Always try to open WhatsApp as a fallback/notification
-                            final msg = "Hello Naresh, I have submitted a Site Visit Request.\n*Name:* $_name\n*Phone:* $_phone\n*Date:* ${DateFormat('MMM dd, yyyy').format(_visitDate!)}";
-                            final uri = Uri.parse("https://wa.me/917435808031?text=${Uri.encodeComponent(msg)}");
-                            if (await canLaunchUrl(uri)) {
-                              await launchUrl(uri, mode: LaunchMode.externalApplication);
-                            }
-                          }
-                        } else if (_visitDate == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please select a preferred date')),
-                          );
-                        }
-                      },
-                      child: _isSubmitting 
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : Text(state.translate('establish_conn').toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+                      onPressed: _isSubmitting
+                          ? null
+                          : () async {
+                              if (_formKey.currentState!.validate() &&
+                                  _visitDate != null) {
+                                final messenger = ScaffoldMessenger.of(context);
+                                _formKey.currentState!.save();
+                                setState(() => _isSubmitting = true);
+                                try {
+                                  await _apiService.createLead({
+                                    'name': _name,
+                                    'phone': _phone,
+                                    'date': _visitDate!.toIso8601String(),
+                                    'source': 'App Site Visit Request',
+                                    'notes':
+                                        'Requested site visit for: ${_visitDate!.toIso8601String()}',
+                                  });
+                                  await _apiService.trackActivity(
+                                    'Lead Submitted',
+                                  );
+                                  if (mounted)
+                                    setState(() => _isSubmitSuccess = true);
+                                } catch (e) {
+                                  messenger.showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Saved locally, but failed to sync to server',
+                                      ),
+                                    ),
+                                  );
+                                } finally {
+                                  if (mounted)
+                                    setState(() => _isSubmitting = false);
+
+                                  // Always try to open WhatsApp as a fallback/notification
+                                  final msg =
+                                      "Hello Naresh, I have submitted a Site Visit Request.\n*Name:* $_name\n*Phone:* $_phone\n*Date:* ${DateFormat('MMM dd, yyyy').format(_visitDate!)}";
+                                  final uri = Uri.parse(
+                                    "https://wa.me/917435808031?text=${Uri.encodeComponent(msg)}",
+                                  );
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(
+                                      uri,
+                                      mode: LaunchMode.externalApplication,
+                                    );
+                                  }
+                                }
+                              } else if (_visitDate == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Please select a preferred date',
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              state.translate('establish_conn').toUpperCase(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                              ),
+                            ),
                     ),
                   ),
                 ],
@@ -785,10 +1083,10 @@ class _AutoScrollingLogosState extends State<_AutoScrollingLogos> {
     while (_isScrolling && mounted) {
       await Future.delayed(const Duration(milliseconds: 50));
       if (!_scrollController.hasClients) continue;
-      
+
       final double maxScroll = _scrollController.position.maxScrollExtent;
       final double currentScroll = _scrollController.position.pixels;
-      
+
       if (currentScroll >= maxScroll - 50) {
         _scrollController.jumpTo(0);
       } else {
@@ -832,7 +1130,8 @@ class _HeroSlider extends StatefulWidget {
   State<_HeroSlider> createState() => _HeroSliderState();
 }
 
-class _HeroSliderState extends State<_HeroSlider> with SingleTickerProviderStateMixin {
+class _HeroSliderState extends State<_HeroSlider>
+    with SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
   late AnimationController _animationController;
   int _currentPage = 0;
@@ -893,7 +1192,8 @@ class _HeroSliderState extends State<_HeroSlider> with SingleTickerProviderState
                   return Image.asset(
                     _images[index],
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(color: Colors.black87),
+                    errorBuilder: (_, __, ___) =>
+                        Container(color: Colors.black87),
                   );
                 },
               ),
@@ -916,7 +1216,10 @@ class _HeroSliderState extends State<_HeroSlider> with SingleTickerProviderState
         ),
         Positioned.fill(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 40.0,
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -947,29 +1250,54 @@ class _HeroSliderState extends State<_HeroSlider> with SingleTickerProviderState
                   children: [
                     ElevatedButton.icon(
                       onPressed: () async {
-                        final uri = Uri.parse("https://wa.me/917435808031?text=Hello%20Owner");
-                        if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        final uri = Uri.parse(
+                          "https://wa.me/917435808031?text=Hello%20Owner",
+                        );
+                        if (await canLaunchUrl(uri))
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
                       ),
                       icon: const Icon(Icons.chat),
-                      label: const Text('Talk to Owner', style: TextStyle(fontWeight: FontWeight.bold)),
+                      label: const Text(
+                        'Talk to Owner',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                     const SizedBox(width: 16),
                     OutlinedButton.icon(
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProjectsPage())),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ProjectsPage()),
+                      ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: const BorderSide(color: Colors.white, width: 2),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
                       ),
                       icon: const Icon(Icons.business),
-                      label: const Text('View Projects', style: TextStyle(fontWeight: FontWeight.bold)),
+                      label: const Text(
+                        'View Projects',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),

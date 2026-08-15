@@ -242,7 +242,11 @@ class ApiService {
           await setAuthToken(authToken.toString());
         }
 
-        return {'success': true, 'user': data['user'] ?? data, 'token': authToken};
+        return {
+          'success': true,
+          'user': data['user'] ?? data,
+          'token': authToken,
+        };
       } else {
         return _handleJsonResponse(response);
       }
@@ -259,10 +263,7 @@ class ApiService {
           ? ApiConfig.meEndpoint
           : ApiConfig.userMeEndpoint;
       final response = await http
-          .get(
-            Uri.parse(endpoint),
-            headers: await _getFetchHeaders(),
-          )
+          .get(Uri.parse(endpoint), headers: await _getFetchHeaders())
           .timeout(const Duration(seconds: 15));
       return _handleJsonResponse(response, 'data');
     } catch (e) {
@@ -332,7 +333,10 @@ class ApiService {
     try {
       final token = await getAuthToken();
       if (token == null || token.isEmpty) {
-        return {'success': false, 'error': 'Your session has expired. Please sign in again.'};
+        return {
+          'success': false,
+          'error': 'Your session has expired. Please sign in again.',
+        };
       }
       final response = await http
           .delete(
@@ -597,14 +601,19 @@ class ApiService {
         .timeout(const Duration(minutes: 1));
   }
 
-  Future<Map<String, dynamic>> getUpdates([String? lang]) async {
+  /// Returns public, published updates by default. Drafts are only available
+  /// through the protected admin endpoint.
+  Future<Map<String, dynamic>> getUpdates({
+    String? lang,
+    bool includeAll = false,
+  }) async {
     try {
-      final query = lang != null ? '?all=true&lang=$lang' : '?all=true';
+      final query = lang != null ? '?lang=$lang' : '';
+      final endpoint = includeAll
+          ? '${ApiConfig.updatesEndpoint}/admin/all$query'
+          : '${ApiConfig.updatesEndpoint}$query';
       final response = await http
-          .get(
-            Uri.parse('${ApiConfig.updatesEndpoint}$query'),
-            headers: await _getFetchHeaders(),
-          )
+          .get(Uri.parse(endpoint), headers: await _getFetchHeaders())
           .timeout(const Duration(seconds: 15));
       return _handleJsonResponse(response, 'updates');
     } catch (e) {
@@ -848,20 +857,21 @@ class ApiService {
         headers['Authorization'] = 'Bearer $token';
       }
 
-      final response = await http.get(uri, headers: headers).timeout(
-        const Duration(seconds: 30),
-      );
+      final response = await http
+          .get(uri, headers: headers)
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         return response.bodyBytes;
       } else {
-        throw Exception('Failed to fetch PDF document (Status Code: ${response.statusCode})');
+        throw Exception(
+          'Failed to fetch PDF document (Status Code: ${response.statusCode})',
+        );
       }
     } catch (e) {
       throw Exception('Failed to load secure PDF document: $e');
     }
   }
-
 
   Future<Map<String, dynamic>> getSettings() async {
     try {

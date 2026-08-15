@@ -14,11 +14,14 @@ class NotificationService {
   NotificationService._internal();
 
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
   final ApiService _apiService = ApiService();
-  
-  static final _dataStreamController = StreamController<Map<String, dynamic>>.broadcast();
-  static Stream<Map<String, dynamic>> get dataStream => _dataStreamController.stream;
+
+  static final _dataStreamController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  static Stream<Map<String, dynamic>> get dataStream =>
+      _dataStreamController.stream;
 
   Future<void> initialize() async {
     // 1. Request Permission
@@ -33,8 +36,11 @@ class NotificationService {
     }
 
     // 2. Setup Local Notifications
-    const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const InitializationSettings initSettings = InitializationSettings(android: androidInit);
+    const AndroidInitializationSettings androidInit =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initSettings = InitializationSettings(
+      android: androidInit,
+    );
     await _localNotifications.initialize(
       settings: initSettings,
       onDidReceiveNotificationResponse: (details) {
@@ -45,10 +51,11 @@ class NotificationService {
     // 3. Configure FCM Callbacks
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    
-    // 4. Initial Topics
+
+    // 4. All normal app users receive published market insights.
     await _fcm.subscribeToTopic('investors');
-    
+    _fcm.onTokenRefresh.listen((_) => syncTokenWithBackend());
+
     // 5. Sync token if already logged in
     await syncTokenWithBackend();
   }
@@ -72,11 +79,13 @@ class NotificationService {
       final headers = await _apiService.getMutationHeaders();
       headers['x-lead-token'] = leadToken;
 
-      await http.post(
-        Uri.parse('${ApiConfig.apiBaseUrl}/preferences/fcm-token'),
-        headers: headers,
-        body: jsonEncode({'fcmToken': fcmToken}),
-      ).timeout(const Duration(seconds: 10));
+      await http
+          .post(
+            Uri.parse('${ApiConfig.apiBaseUrl}/preferences/fcm-token'),
+            headers: headers,
+            body: jsonEncode({'fcmToken': fcmToken}),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (kDebugMode) print('FCM Token synced successfully');
     } catch (e) {
@@ -86,26 +95,34 @@ class NotificationService {
 
   void _handleForegroundMessage(RemoteMessage message) {
     if (kDebugMode) print('Foreground Message: ${message.notification?.title}');
-    
-    final data = message.data;
+
+    final data = {
+      ...message.data,
+      if (message.notification?.title != null)
+        'title': message.notification!.title!,
+    };
     _dataStreamController.add(data);
-    
+
     _showLocalNotification(message);
   }
 
   Future<void> _showLocalNotification(RemoteMessage message) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'dholera_general_channel',
-      'General Notifications',
-      channelDescription: 'Updates on Dholera SIR infrastructure and projects',
-      importance: Importance.max,
-      priority: Priority.high,
-      showWhen: true,
-      color: Color(0xFFFF7A00),
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'dholera_general_channel',
+          'General Notifications',
+          channelDescription:
+              'Updates on Dholera SIR infrastructure and projects',
+          importance: Importance.max,
+          priority: Priority.high,
+          showWhen: true,
+          color: Color(0xFFFF7A00),
+        );
+
+    const NotificationDetails details = NotificationDetails(
+      android: androidDetails,
     );
-    
-    const NotificationDetails details = NotificationDetails(android: androidDetails);
-    
+
     await _localNotifications.show(
       id: message.hashCode,
       title: message.notification?.title ?? 'Dholera Platform',

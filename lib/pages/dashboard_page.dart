@@ -38,7 +38,7 @@ class _DashboardPageState extends State<DashboardPage> {
   List<AppUpdate> _latestUpdates = [];
   bool _isLoadingUpdates = false;
   DateTimeRange? _selectedDateRange;
-  
+
   // Notification / Approvals state
   int _pendingApprovalsCount = 0;
   Timer? _notificationTimer;
@@ -68,12 +68,17 @@ class _DashboardPageState extends State<DashboardPage> {
         if (notificationType == 'insight') {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('New update published: ${data['title'] ?? 'Latest insight'}'),
+              content: Text(
+                'New update published: ${data['title'] ?? 'Latest insight'}',
+              ),
               backgroundColor: Colors.orange,
               action: SnackBarAction(
                 label: 'OPEN',
                 textColor: Colors.white,
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UpdatesPage())),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const UpdatesPage()),
+                ),
               ),
             ),
           );
@@ -81,7 +86,9 @@ class _DashboardPageState extends State<DashboardPage> {
           return;
         }
 
-        if (notificationType != null && notificationType != 'lead' && data['lead_id'] == null) {
+        if (notificationType != null &&
+            notificationType != 'lead' &&
+            data['lead_id'] == null) {
           return;
         }
 
@@ -97,7 +104,8 @@ class _DashboardPageState extends State<DashboardPage> {
           visitCount: 1,
           isRegistered: false,
           isRead: false,
-          createdAt: DateTime.tryParse(data['createdAt'] ?? '') ?? DateTime.now(),
+          createdAt:
+              DateTime.tryParse(data['createdAt'] ?? '') ?? DateTime.now(),
         );
         context.read<LeadsBloc>().add(LeadAddedManually(lead));
       }
@@ -124,26 +132,32 @@ class _DashboardPageState extends State<DashboardPage> {
       final result = await _apiService.getPendingCount();
       if (result['success'] == true) {
         final newCount = result['count'] ?? 0;
-        
+
         if (!mounted) {
           return;
         }
 
         if (newCount > _pendingApprovalsCount) {
-           ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(
-               content: const Text('🔔 NEW PAYMENT: A user is awaiting approval!', style: TextStyle(fontWeight: FontWeight.bold)),
-               backgroundColor: AppColors.primary,
-               duration: const Duration(seconds: 10),
-               action: SnackBarAction(
-                 label: 'VIEW', 
-                 textColor: Colors.white, 
-                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ApprovalsPage()))
-               ),
-             ),
-           );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                '🔔 NEW PAYMENT: A user is awaiting approval!',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              backgroundColor: AppColors.primary,
+              duration: const Duration(seconds: 10),
+              action: SnackBarAction(
+                label: 'VIEW',
+                textColor: Colors.white,
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ApprovalsPage()),
+                ),
+              ),
+            ),
+          );
         }
-        
+
         if (mounted) {
           setState(() => _pendingApprovalsCount = newCount);
         }
@@ -161,8 +175,11 @@ class _DashboardPageState extends State<DashboardPage> {
     try {
       final result = _selectedDateRange == null
           ? await _apiService.getAnalytics()
-          : await _apiService.getDetailedAnalytics(_selectedDateRange!.start, _selectedDateRange!.end);
-          
+          : await _apiService.getDetailedAnalytics(
+              _selectedDateRange!.start,
+              _selectedDateRange!.end,
+            );
+
       if (result['success'] == true) {
         setState(() => _analytics = result['analytics']);
       }
@@ -182,10 +199,12 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() => _isLoadingUpdates = true);
     try {
       final lang = context.read<LocalizationBloc>().state.locale.languageCode;
-      final result = await _apiService.getUpdates(lang);
+      final result = await _apiService.getUpdates(lang: lang, includeAll: true);
       if (result['success'] == true) {
         setState(() {
-          _latestUpdates = AppUpdate.fromList((result['updates'] ?? []) as List<dynamic>).take(3).toList();
+          _latestUpdates = AppUpdate.fromList(
+            (result['updates'] ?? []) as List<dynamic>,
+          ).take(3).toList();
         });
       }
     } catch (e) {
@@ -229,15 +248,15 @@ class _DashboardPageState extends State<DashboardPage> {
       appBar: AppBar(
         title: Row(
           children: [
-            Image.asset(
-              AppAssets.logoPath,
-              height: 32,
-              fit: BoxFit.contain,
-            ),
+            Image.asset(AppAssets.logoPath, height: 32, fit: BoxFit.contain),
             const SizedBox(width: 12),
             const Text(
               'Master Control',
-              style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
             ),
           ],
         ),
@@ -252,8 +271,14 @@ class _DashboardPageState extends State<DashboardPage> {
           Stack(
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications_outlined, color: AppColors.primary),
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ApprovalsPage())),
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: AppColors.primary,
+                ),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ApprovalsPage()),
+                ),
               ),
               if (_pendingApprovalsCount > 0)
                 Positioned(
@@ -261,11 +286,21 @@ class _DashboardPageState extends State<DashboardPage> {
                   top: 12,
                   child: Container(
                     padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(10)),
-                    constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 14,
+                      minHeight: 14,
+                    ),
                     child: Text(
                       '$_pendingApprovalsCount',
-                      style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -284,9 +319,15 @@ class _DashboardPageState extends State<DashboardPage> {
                     value: 'profile',
                     child: Row(
                       children: [
-                        const Icon(Icons.person, color: AppColors.textSecondary),
+                        const Icon(
+                          Icons.person,
+                          color: AppColors.textSecondary,
+                        ),
                         const SizedBox(width: 8),
-                        Text(authProvider.user?['email'] ?? 'Admin', style: const TextStyle(color: AppColors.textPrimary)),
+                        Text(
+                          authProvider.user?['email'] ?? 'Admin',
+                          style: const TextStyle(color: AppColors.textPrimary),
+                        ),
                       ],
                     ),
                   ),
@@ -311,7 +352,9 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           Expanded(
             child: _isLoadingAnalytics
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  )
                 : RefreshIndicator(
                     onRefresh: () async {
                       await _loadAnalytics();
@@ -327,10 +370,14 @@ class _DashboardPageState extends State<DashboardPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                _selectedDateRange == null 
-                                  ? 'Overview' 
-                                  : '${DateFormat('MMM d').format(_selectedDateRange!.start)} - ${DateFormat('MMM d').format(_selectedDateRange!.end)}',
-                                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                _selectedDateRange == null
+                                    ? 'Overview'
+                                    : '${DateFormat('MMM d').format(_selectedDateRange!.start)} - ${DateFormat('MMM d').format(_selectedDateRange!.end)}',
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
                               if (_selectedDateRange != null)
                                 TextButton(
@@ -338,7 +385,10 @@ class _DashboardPageState extends State<DashboardPage> {
                                     setState(() => _selectedDateRange = null);
                                     _loadAnalytics();
                                   },
-                                  child: const Text('Reset', style: TextStyle(color: AppColors.primary)),
+                                  child: const Text(
+                                    'Reset',
+                                    style: TextStyle(color: AppColors.primary),
+                                  ),
                                 ),
                             ],
                           ),
@@ -352,10 +402,34 @@ class _DashboardPageState extends State<DashboardPage> {
                               physics: const NeverScrollableScrollPhysics(),
                               childAspectRatio: 1.2,
                               children: [
-                                _buildStatCard('Total Leads', _analytics?['totalLeads']?.toString() ?? '0', AppColors.primary, Icons.people, hasNew: (_analytics?['leadsToday'] ?? 0) > 0),
-                                _buildStatCard('Approvals', _pendingApprovalsCount.toString(), Colors.orange, Icons.check_circle, hasNew: _pendingApprovalsCount > 0),
-                                _buildStatCard('This Month', _analytics?['leadsThisMonth']?.toString() ?? '0', AppColors.accentSuccess, Icons.trending_up),
-                                _buildStatCard('Visitors', _analytics?['totalVisitors']?.toString() ?? '0', AppColors.accentInfo, Icons.visibility),
+                                _buildStatCard(
+                                  'Total Leads',
+                                  _analytics?['totalLeads']?.toString() ?? '0',
+                                  AppColors.primary,
+                                  Icons.people,
+                                  hasNew: (_analytics?['leadsToday'] ?? 0) > 0,
+                                ),
+                                _buildStatCard(
+                                  'Approvals',
+                                  _pendingApprovalsCount.toString(),
+                                  Colors.orange,
+                                  Icons.check_circle,
+                                  hasNew: _pendingApprovalsCount > 0,
+                                ),
+                                _buildStatCard(
+                                  'This Month',
+                                  _analytics?['leadsThisMonth']?.toString() ??
+                                      '0',
+                                  AppColors.accentSuccess,
+                                  Icons.trending_up,
+                                ),
+                                _buildStatCard(
+                                  'Visitors',
+                                  _analytics?['totalVisitors']?.toString() ??
+                                      '0',
+                                  AppColors.accentInfo,
+                                  Icons.visibility,
+                                ),
                               ],
                             ),
                           const SizedBox(height: 32),
@@ -364,24 +438,38 @@ class _DashboardPageState extends State<DashboardPage> {
                             children: [
                               const Text(
                                 'Latest Updates',
-                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
                               TextButton(
                                 onPressed: _loadLatestUpdates,
-                                child: const Text('Refresh', style: TextStyle(color: AppColors.primary)),
+                                child: const Text(
+                                  'Refresh',
+                                  style: TextStyle(color: AppColors.primary),
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 12),
                           if (_isLoadingUpdates)
-                            const Center(child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 24),
-                              child: CircularProgressIndicator(color: AppColors.primary),
-                            ))
+                            const Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 24),
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            )
                           else if (_latestUpdates.isEmpty)
                             const Text(
                               'No published updates yet.',
-                              style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w500,
+                              ),
                             )
                           else
                             Column(
@@ -389,7 +477,12 @@ class _DashboardPageState extends State<DashboardPage> {
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 12),
                                   child: InkWell(
-                                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UpdatesPage())),
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const UpdatesPage(),
+                                      ),
+                                    ),
                                     borderRadius: BorderRadius.circular(18),
                                     child: Container(
                                       width: double.infinity,
@@ -397,7 +490,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                       decoration: BoxDecoration(
                                         color: AppColors.surface,
                                         borderRadius: BorderRadius.circular(18),
-                                        border: Border.all(color: AppColors.border),
+                                        border: Border.all(
+                                          color: AppColors.border,
+                                        ),
                                       ),
                                       child: Row(
                                         children: [
@@ -405,31 +500,50 @@ class _DashboardPageState extends State<DashboardPage> {
                                             width: 52,
                                             height: 52,
                                             decoration: BoxDecoration(
-                                              color: AppColors.primary.withAlpha(20),
-                                              borderRadius: BorderRadius.circular(14),
+                                              color: AppColors.primary
+                                                  .withAlpha(20),
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
                                             ),
-                                            child: const Icon(Icons.article_outlined, color: AppColors.primary),
+                                            child: const Icon(
+                                              Icons.article_outlined,
+                                              color: AppColors.primary,
+                                            ),
                                           ),
                                           const SizedBox(width: 14),
                                           Expanded(
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Text(
                                                   update.title,
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.bold,
+                                                    color:
+                                                        AppColors.textPrimary,
+                                                  ),
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Text(
                                                   update.category,
-                                                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color:
+                                                        AppColors.textSecondary,
+                                                  ),
                                                 ),
                                               ],
                                             ),
                                           ),
-                                          const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                                          const Icon(
+                                            Icons.chevron_right,
+                                            color: AppColors.textSecondary,
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -440,7 +554,11 @@ class _DashboardPageState extends State<DashboardPage> {
                           const SizedBox(height: 24),
                           const Text(
                             'Management',
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           _buildActionGrid(),
@@ -456,15 +574,32 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, Color color, IconData icon, {bool hasNew = false}) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    Color color,
+    IconData icon, {
+    bool hasNew = false,
+  }) {
     return InkWell(
-      onTap: title == 'Approvals' ? () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ApprovalsPage())) : null,
+      onTap: title == 'Approvals'
+          ? () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ApprovalsPage()),
+            )
+          : null,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(10),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Stack(
           children: [
@@ -476,11 +611,25 @@ class _DashboardPageState extends State<DashboardPage> {
                   children: [
                     Icon(icon, color: color, size: 24),
                     const Spacer(),
-                    Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    Text(
+                      value,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(title, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
             if (hasNew)
@@ -490,7 +639,10 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: Container(
                   width: 10,
                   height: 10,
-                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
           ],
@@ -508,19 +660,88 @@ class _DashboardPageState extends State<DashboardPage> {
       physics: const NeverScrollableScrollPhysics(),
       childAspectRatio: 1.1,
       children: [
-        _buildActionTile('Approvals', Icons.fact_check, Colors.orange, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ApprovalsPage()))),
-        _buildActionTile('Analytics', Icons.analytics, AppColors.primary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AnalyticsOverviewPage()))),
-        _buildActionTile('Leads', Icons.people, AppColors.accentInfo, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeadsPage()))),
-        _buildActionTile('Updates', Icons.edit_document, AppColors.accentWarning, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UpdatesPage()))),
-        _buildActionTile('Projects', Icons.business_center, Colors.deepOrange, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProjectManagerPage()))),
-        _buildActionTile('TP Maps', Icons.map_outlined, Colors.indigo, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TpMapManagerPage()))),
-        _buildActionTile('Documents', Icons.picture_as_pdf, AppColors.accentSuccess, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PdfManagerPage()))),
-        _buildActionTile('Database', Icons.storage, Colors.indigo, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DatabaseExplorerPage()))),
+        _buildActionTile(
+          'Approvals',
+          Icons.fact_check,
+          Colors.orange,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ApprovalsPage()),
+          ),
+        ),
+        _buildActionTile(
+          'Analytics',
+          Icons.analytics,
+          AppColors.primary,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AnalyticsOverviewPage()),
+          ),
+        ),
+        _buildActionTile(
+          'Leads',
+          Icons.people,
+          AppColors.accentInfo,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const LeadsPage()),
+          ),
+        ),
+        _buildActionTile(
+          'Updates',
+          Icons.edit_document,
+          AppColors.accentWarning,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const UpdatesPage()),
+          ),
+        ),
+        _buildActionTile(
+          'Projects',
+          Icons.business_center,
+          Colors.deepOrange,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProjectManagerPage()),
+          ),
+        ),
+        _buildActionTile(
+          'TP Maps',
+          Icons.map_outlined,
+          Colors.indigo,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const TpMapManagerPage()),
+          ),
+        ),
+        _buildActionTile(
+          'Documents',
+          Icons.picture_as_pdf,
+          AppColors.accentSuccess,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PdfManagerPage()),
+          ),
+        ),
+        _buildActionTile(
+          'Database',
+          Icons.storage,
+          Colors.indigo,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const DatabaseExplorerPage()),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildActionTile(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionTile(
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -535,11 +756,21 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: color.withAlpha(25), shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: color.withAlpha(25),
+                shape: BoxShape.circle,
+              ),
               child: Icon(icon, color: color, size: 28),
             ),
             const SizedBox(height: 12),
-            Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color)),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
           ],
         ),
       ),

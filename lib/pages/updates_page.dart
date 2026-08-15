@@ -38,7 +38,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
 
     try {
       final lang = context.read<LocalizationBloc>().state.locale.languageCode;
-      final response = await _apiService.getUpdates(lang);
+      final response = await _apiService.getUpdates(lang: lang);
       if (!mounted) return;
       if (response['success'] == true) {
         final List<dynamic> updatesData = response['updates'] ?? [];
@@ -64,9 +64,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
   void _navigateToEditor([AppUpdate? update]) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => BlogEditorPage(update: update),
-      ),
+      MaterialPageRoute(builder: (context) => BlogEditorPage(update: update)),
     );
 
     if (result == true) {
@@ -80,38 +78,47 @@ class _UpdatesPageState extends State<UpdatesPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF020617) : const Color(0xFFF8FAFC),
+      backgroundColor: isDark
+          ? const Color(0xFF020617)
+          : const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: Text(
           'INTELLIGENCE',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w900, letterSpacing: 2),
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w900,
+            letterSpacing: 2,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
         actions: [
-          IconButton(onPressed: _fetchUpdates, icon: const Icon(Icons.refresh_rounded)),
+          IconButton(
+            onPressed: _fetchUpdates,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.orange))
           : _error != null
-              ? _buildErrorView()
-              : _updates.isEmpty
-                  ? _buildEmptyView()
-                  : RefreshIndicator(
-                      color: Colors.orange,
-                      onRefresh: _fetchUpdates,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.all(24),
-                        itemCount: _updates.length,
-                        separatorBuilder: (context, index) => const SizedBox(height: 24),
-                        itemBuilder: (context, index) {
-                          return _buildUpdateCard(_updates[index], isAdmin, isDark);
-                        },
-                      ),
-                    ),
+          ? _buildErrorView()
+          : _updates.isEmpty
+          ? _buildEmptyView()
+          : RefreshIndicator(
+              color: Colors.orange,
+              onRefresh: _fetchUpdates,
+              child: ListView.separated(
+                padding: const EdgeInsets.all(24),
+                itemCount: _updates.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 24),
+                itemBuilder: (context, index) {
+                  return _buildUpdateCard(_updates[index], isAdmin, isDark);
+                },
+              ),
+            ),
       floatingActionButton: isAdmin
           ? FloatingActionButton(
               onPressed: _navigateToEditor,
@@ -126,13 +133,19 @@ class _UpdatesPageState extends State<UpdatesPage> {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => UpdateDetailPage(update: update, isAdmin: isAdmin)),
+        MaterialPageRoute(
+          builder: (_) => UpdateDetailPage(update: update, isAdmin: isAdmin),
+        ),
       ),
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF0F172A) : Colors.white,
           borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.blueGrey[100]!),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.blueGrey[100]!,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
@@ -146,13 +159,18 @@ class _UpdatesPageState extends State<UpdatesPage> {
           children: [
             if (update.imageUrl != null)
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(32),
+                ),
                 child: AspectRatio(
                   aspectRatio: 16 / 9,
                   child: Image.network(
-                    update.imageUrl!.startsWith('http') ? update.imageUrl! : 'https://api.dholeraplatform.com${update.imageUrl}',
+                    update.imageUrl!.startsWith('http')
+                        ? update.imageUrl!
+                        : 'https://api.dholeraplatform.com${update.imageUrl}',
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(color: Colors.blueGrey[100]),
+                    errorBuilder: (_, __, ___) =>
+                        Container(color: Colors.blueGrey[100]),
                   ),
                 ),
               ),
@@ -175,7 +193,11 @@ class _UpdatesPageState extends State<UpdatesPage> {
                       ),
                       Text(
                         DateFormat('MMM d, yyyy').format(update.createdAt),
-                        style: GoogleFonts.inter(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.bold),
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          color: Colors.grey[500],
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -237,7 +259,9 @@ class _UpdatesPageState extends State<UpdatesPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: const Text('RETRY'),
             ),
@@ -256,13 +280,18 @@ class _UpdatesPageState extends State<UpdatesPage> {
           const SizedBox(height: 16),
           Text(
             'NO INTELLIGENCE FOUND',
-            style: GoogleFonts.inter(fontWeight: FontWeight.w900, color: Colors.grey[400]),
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w900,
+              color: Colors.grey[400],
+            ),
           ),
           const SizedBox(height: 24),
-          ElevatedButton(onPressed: _fetchUpdates, child: const Text('REFRESH')),
+          ElevatedButton(
+            onPressed: _fetchUpdates,
+            child: const Text('REFRESH'),
+          ),
         ],
       ),
     );
   }
 }
-

@@ -14,18 +14,25 @@ class AuthBloc extends HydratedBloc<AuthEvent, AuthState> {
         role: event.role.name,
         email: event.userEmail,
       );
-      emit(state.copyWith(
-        status: AuthStatus.authenticated,
-        token: event.token,
-        userName: event.userName,
-        userEmail: event.userEmail,
-        role: event.role,
-      ));
+      emit(
+        state.copyWith(
+          status: AuthStatus.authenticated,
+          token: event.token,
+          userName: event.userName,
+          userEmail: event.userEmail,
+          role: event.role,
+        ),
+      );
     });
 
     on<AuthLogoutRequested>((event, emit) async {
       await _api.clearAuthToken();
-      emit(const AuthState(status: AuthStatus.unauthenticated, role: AppRole.unknown));
+      emit(
+        const AuthState(
+          status: AuthStatus.unauthenticated,
+          role: AppRole.unknown,
+        ),
+      );
     });
 
     on<AuthCheckRequested>((event, emit) async {
@@ -35,7 +42,12 @@ class AuthBloc extends HydratedBloc<AuthEvent, AuthState> {
       }
 
       if (token == null || token.isEmpty) {
-        emit(const AuthState(status: AuthStatus.unauthenticated, role: AppRole.unknown));
+        emit(
+          const AuthState(
+            status: AuthStatus.unauthenticated,
+            role: AppRole.unknown,
+          ),
+        );
         return;
       }
 
@@ -49,34 +61,48 @@ class AuthBloc extends HydratedBloc<AuthEvent, AuthState> {
       }
 
       // Perform background session verification with backend
-      final meResult = await _api.getMe();
+      // The two account types use different /me endpoints. Passing the saved
+      // role prevents an admin session from being checked as a normal user.
+      final meResult = await _api.getMe(role: role.name);
       if (meResult['success'] == true) {
         final userData = meResult['user'] ?? meResult['data'] ?? {};
-        final name = userData['name']?.toString() ?? userData['username']?.toString() ?? savedName;
+        final name =
+            userData['name']?.toString() ??
+            userData['username']?.toString() ??
+            savedName;
         final email = userData['email']?.toString() ?? savedEmail;
-        emit(state.copyWith(
-          status: AuthStatus.authenticated,
-          token: token,
-          userName: name,
-          userEmail: email,
-          role: role,
-        ));
+        emit(
+          state.copyWith(
+            status: AuthStatus.authenticated,
+            token: token,
+            userName: name,
+            userEmail: email,
+            role: role,
+          ),
+        );
       } else if (meResult['error'] != null &&
           (meResult['error'].toString().contains('401') ||
-           meResult['error'].toString().contains('Unauthorized') ||
-           meResult['error'].toString().contains('expired'))) {
+              meResult['error'].toString().contains('Unauthorized') ||
+              meResult['error'].toString().contains('expired'))) {
         // Token explicitly expired or invalidated by server
         await _api.clearAuthToken();
-        emit(const AuthState(status: AuthStatus.unauthenticated, role: AppRole.unknown));
+        emit(
+          const AuthState(
+            status: AuthStatus.unauthenticated,
+            role: AppRole.unknown,
+          ),
+        );
       } else {
         // Network offline or timeout - preserve existing valid session locally
-        emit(state.copyWith(
-          status: AuthStatus.authenticated,
-          token: token,
-          userName: savedName,
-          userEmail: savedEmail,
-          role: role,
-        ));
+        emit(
+          state.copyWith(
+            status: AuthStatus.authenticated,
+            token: token,
+            userName: savedName,
+            userEmail: savedEmail,
+            role: role,
+          ),
+        );
       }
     });
   }
