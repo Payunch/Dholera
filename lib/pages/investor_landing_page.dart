@@ -26,6 +26,7 @@ import 'travel_lifestyle_page.dart';
 import 'privacy_policy_page.dart';
 import 'terms_page.dart';
 import 'settings_page.dart';
+import 'app_exclusive_news_page.dart';
 
 class InvestorLandingPage extends StatefulWidget {
   const InvestorLandingPage({super.key});
@@ -659,27 +660,34 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
   Widget _buildLatestNewsBanner(BuildContext context) {
     final update = _latestInsights.isNotEmpty ? _latestInsights.first : null;
 
-    return Container(
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AppExclusiveNewsPage()),
+      ),
+      child: Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      constraints: const BoxConstraints(minHeight: 220),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF10172A), Color(0xFF1F2937)],
+          colors: [Color(0xFF0B1020), Color(0xFF172554)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 30,
+            offset: const Offset(0, 14),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
@@ -696,7 +704,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                   'LATEST NEWS',
                   style: TextStyle(
                     color: Colors.orange,
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.1,
                   ),
@@ -717,7 +725,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                     'APP ONLY',
                     style: TextStyle(
                       color: Colors.amber,
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 1.1,
                     ),
@@ -728,36 +736,36 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
               Icon(
                 Icons.notifications_active_outlined,
                 color: Colors.orange.shade200,
-                size: 18,
+                size: 20,
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           Text(
             update?.title ?? 'No admin news posted yet',
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 20,
+              fontSize: 24,
               fontWeight: FontWeight.w900,
               height: 1.2,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
             update == null
                 ? 'When the admin publishes a blog or update, it will appear here first and then on the Updates screen.'
                 : update.content
                     .replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ')
                     .trim(),
-            maxLines: 3,
+            maxLines: 4,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.8),
-              fontSize: 13,
+              fontSize: 14,
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           Row(
             children: [
               if (update != null)
@@ -779,25 +787,12 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                   ),
                 ),
               const Spacer(),
-              TextButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const UpdatesPage()),
-                ),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.orangeAccent,
-                  padding: EdgeInsets.zero,
-                ),
-                child: const Text(
-                  'OPEN UPDATES',
-                  style: TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ),
+              const Icon(Icons.arrow_forward_rounded, color: Colors.orangeAccent),
             ],
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildFeaturedProjects(BuildContext context, LocalizationState state) {

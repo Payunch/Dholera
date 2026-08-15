@@ -7,8 +7,9 @@ import '../services/api_service.dart';
 
 class BlogEditorPage extends StatefulWidget {
   final AppUpdate? update;
+  final bool initialExclusive;
 
-  const BlogEditorPage({super.key, this.update});
+  const BlogEditorPage({super.key, this.update, this.initialExclusive = false});
 
   @override
   State<BlogEditorPage> createState() => _BlogEditorPageState();
@@ -50,7 +51,7 @@ class _BlogEditorPageState extends State<BlogEditorPage> with SingleTickerProvid
     _contentController = TextEditingController(text: widget.update?.content ?? '');
     _category = widget.update?.category ?? 'General';
     _published = widget.update?.published ?? true;
-    _isExclusive = widget.update?.isExclusive ?? false;
+    _isExclusive = widget.update?.isExclusive ?? widget.initialExclusive;
     _publishedAt = widget.update?.publishedAt ?? widget.update?.createdAt ?? DateTime.now();
     _imagePosition = widget.update?.imagePosition ?? 'top';
     _existingImageUrl = widget.update?.imageUrl;

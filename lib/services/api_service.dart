@@ -607,11 +607,13 @@ class ApiService {
     String? lang,
     String audience = 'web',
     bool includeAll = false,
+    bool exclusiveOnly = false,
   }) async {
     try {
       final params = <String, String>{};
       if (lang != null) params['lang'] = lang;
       if (!includeAll) params['audience'] = audience;
+      if (exclusiveOnly) params['exclusive'] = 'true';
       final query = params.isNotEmpty ? '?${Uri(queryParameters: params).query}' : '';
       final endpoint = includeAll
           ? '${ApiConfig.updatesEndpoint}/admin/all$query'
