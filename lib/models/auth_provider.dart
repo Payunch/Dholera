@@ -40,20 +40,58 @@ class AuthProvider extends ChangeNotifier {
 
     final token = await _apiService.getAuthToken();
     if (token != null) {
+      final userInfo = await _apiService.getUserInfo();
+      final savedRole = userInfo['role'];
+      final roleOrder = <String>[
+        if (savedRole == 'adminOwner') 'adminOwner',
+        if (savedRole == 'userInvestor') 'userInvestor',
+        if (savedRole != 'adminOwner' && savedRole != 'userInvestor')
+          'userInvestor',
+        if (savedRole != 'adminOwner') 'adminOwner',
+      ];
+
       try {
-        final result = await _apiService.getMe();
-        if (result['success'] == true) {
-          _user = result['data'];
+        Map<String, dynamic>? successData;
+        bool sawExplicitAuthFailure = false;
+        for (final role in roleOrder) {
+          final result = await _apiService.getMe(role: role);
+          if (result['success'] == true) {
+            successData = result['data'] as Map<String, dynamic>?;
+            break;
+          }
+
+          final errorText = result['error']?.toString() ?? '';
+          if (errorText.contains('401') ||
+              errorText.contains('Unauthorized') ||
+              errorText.contains('expired')) {
+            sawExplicitAuthFailure = true;
+          }
+        }
+
+        if (successData != null) {
+          _user = successData;
           _isAuthenticated = true;
-        } else {
-          // Token might be expired or invalid
+        } else if (sawExplicitAuthFailure) {
           await _apiService.clearAuthToken();
           _isAuthenticated = false;
           _user = null;
+        } else {
+          // Keep the session if the backend is temporarily unreachable.
+          _isAuthenticated = true;
+          _user = {
+            if (userInfo['name'] != null) 'name': userInfo['name'],
+            if (userInfo['email'] != null) 'email': userInfo['email'],
+            if (savedRole != null) 'role': savedRole,
+          };
         }
       } catch (e) {
         // Network error or other issue
-        _isAuthenticated = false;
+        _isAuthenticated = true;
+        _user = {
+          if (userInfo['name'] != null) 'name': userInfo['name'],
+          if (userInfo['email'] != null) 'email': userInfo['email'],
+          if (savedRole != null) 'role': savedRole,
+        };
       }
     } else {
       _isAuthenticated = false;

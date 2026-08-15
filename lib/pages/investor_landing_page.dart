@@ -170,6 +170,8 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildTrustBanner(context, state),
+                        const SizedBox(height: 20),
+                        _buildLatestNewsBanner(context),
                         const SizedBox(height: 32),
                         _buildSectionTitle(
                           context,
@@ -654,6 +656,128 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
     );
   }
 
+  Widget _buildLatestNewsBanner(BuildContext context) {
+    final update = _latestInsights.isNotEmpty ? _latestInsights.first : null;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF10172A), Color(0xFF1F2937)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const Text(
+                  'LATEST NEWS',
+                  style: TextStyle(
+                    color: Colors.orange,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.notifications_active_outlined,
+                color: Colors.orange.shade200,
+                size: 18,
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            update?.title ?? 'No admin news posted yet',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            update == null
+                ? 'When the admin publishes a blog or update, it will appear here first and then on the Updates screen.'
+                : update.content
+                    .replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ')
+                    .trim(),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.8),
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              if (update != null)
+                Text(
+                  DateFormat('dd MMM yyyy').format(update.createdAt),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.65),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                )
+              else
+                Text(
+                  'Admin to user news feed',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.65),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              const Spacer(),
+              TextButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const UpdatesPage()),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.orangeAccent,
+                  padding: EdgeInsets.zero,
+                ),
+                child: const Text(
+                  'OPEN UPDATES',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFeaturedProjects(BuildContext context, LocalizationState state) {
     return SizedBox(
       height: 280,
@@ -991,8 +1115,9 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                                   await _apiService.trackActivity(
                                     'Lead Submitted',
                                   );
-                                  if (mounted)
+                                  if (mounted) {
                                     setState(() => _isSubmitSuccess = true);
+                                  }
                                 } catch (e) {
                                   messenger.showSnackBar(
                                     const SnackBar(
@@ -1002,8 +1127,9 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                                     ),
                                   );
                                 } finally {
-                                  if (mounted)
+                                  if (mounted) {
                                     setState(() => _isSubmitting = false);
+                                  }
 
                                   // Always try to open WhatsApp as a fallback/notification
                                   final msg =
@@ -1253,11 +1379,12 @@ class _HeroSliderState extends State<_HeroSlider>
                         final uri = Uri.parse(
                           "https://wa.me/917435808031?text=Hello%20Owner",
                         );
-                        if (await canLaunchUrl(uri))
+                        if (await canLaunchUrl(uri)) {
                           await launchUrl(
                             uri,
                             mode: LaunchMode.externalApplication,
                           );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,

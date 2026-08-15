@@ -55,17 +55,37 @@ class AuthBloc extends HydratedBloc<AuthEvent, AuthState> {
       final savedName = userInfo['name'] ?? state.userName ?? 'User';
       final savedEmail = userInfo['email'] ?? state.userEmail;
       final savedRoleStr = userInfo['role'] ?? state.role.name;
-      AppRole role = AppRole.userInvestor;
-      if (savedRoleStr == AppRole.adminOwner.name) {
-        role = AppRole.adminOwner;
+      final candidates = <AppRole>[
+        if (savedRoleStr == AppRole.adminOwner.name) AppRole.adminOwner,
+        if (savedRoleStr == AppRole.userInvestor.name) AppRole.userInvestor,
+        if (savedRoleStr != AppRole.adminOwner.name &&
+            savedRoleStr != AppRole.userInvestor.name)
+          AppRole.userInvestor,
+        if (savedRoleStr != AppRole.adminOwner.name) AppRole.adminOwner,
+      ];
+
+      Map<String, dynamic>? successResult;
+      AppRole? resolvedRole;
+      bool sawExplicitAuthFailure = false;
+
+      for (final candidate in candidates) {
+        final meResult = await _api.getMe(role: candidate.name);
+        if (meResult['success'] == true) {
+          successResult = meResult;
+          resolvedRole = candidate;
+          break;
+        }
+
+        final errorText = meResult['error']?.toString() ?? '';
+        if (errorText.contains('401') ||
+            errorText.contains('Unauthorized') ||
+            errorText.contains('expired')) {
+          sawExplicitAuthFailure = true;
+        }
       }
 
-      // Perform background session verification with backend
-      // The two account types use different /me endpoints. Passing the saved
-      // role prevents an admin session from being checked as a normal user.
-      final meResult = await _api.getMe(role: role.name);
-      if (meResult['success'] == true) {
-        final userData = meResult['user'] ?? meResult['data'] ?? {};
+      if (successResult != null && resolvedRole != null) {
+        final userData = successResult['user'] ?? successResult['data'] ?? {};
         final name =
             userData['name']?.toString() ??
             userData['username']?.toString() ??
@@ -77,14 +97,11 @@ class AuthBloc extends HydratedBloc<AuthEvent, AuthState> {
             token: token,
             userName: name,
             userEmail: email,
-            role: role,
+            role: resolvedRole,
           ),
         );
-      } else if (meResult['error'] != null &&
-          (meResult['error'].toString().contains('401') ||
-              meResult['error'].toString().contains('Unauthorized') ||
-              meResult['error'].toString().contains('expired'))) {
-        // Token explicitly expired or invalidated by server
+      } else if (sawExplicitAuthFailure) {
+        // Token explicitly expired or invalidated by server.
         await _api.clearAuthToken();
         emit(
           const AuthState(
@@ -93,14 +110,18 @@ class AuthBloc extends HydratedBloc<AuthEvent, AuthState> {
           ),
         );
       } else {
-        // Network offline or timeout - preserve existing valid session locally
+        // Network offline, endpoint mismatch, or a temporary backend error.
+        // Keep the last known session so reopening the app does not force login.
+        final fallbackRole = savedRoleStr == AppRole.adminOwner.name
+            ? AppRole.adminOwner
+            : AppRole.userInvestor;
         emit(
           state.copyWith(
             status: AuthStatus.authenticated,
             token: token,
             userName: savedName,
             userEmail: savedEmail,
-            role: role,
+            role: fallbackRole,
           ),
         );
       }
