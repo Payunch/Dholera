@@ -66,9 +66,9 @@ class UpdateDetailPage extends StatelessWidget {
             ),
             flexibleSpace: FlexibleSpaceBar(
               stretchModes: const [StretchMode.zoomBackground],
-              background: update.imageUrl != null
+              background: update.resolvedImageUrl != null
                   ? Image.network(
-                      update.imageUrl!.startsWith('http') ? update.imageUrl! : 'https://api.dholeraplatform.com${update.imageUrl}',
+                      update.resolvedImageUrl!,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => _buildPlaceholder(),
                     )

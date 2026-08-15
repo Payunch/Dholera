@@ -55,6 +55,22 @@ class AuthBloc extends HydratedBloc<AuthEvent, AuthState> {
       final savedName = userInfo['name'] ?? state.userName ?? 'User';
       final savedEmail = userInfo['email'] ?? state.userEmail;
       final savedRoleStr = userInfo['role'] ?? state.role.name;
+      final fallbackRole = savedRoleStr == AppRole.adminOwner.name
+          ? AppRole.adminOwner
+          : AppRole.userInvestor;
+
+      // Restore the last known session immediately so the app stays open on
+      // relaunch even if the backend validation takes a moment.
+      emit(
+        state.copyWith(
+          status: AuthStatus.authenticated,
+          token: token,
+          userName: savedName,
+          userEmail: savedEmail,
+          role: fallbackRole,
+        ),
+      );
+
       final candidates = <AppRole>[
         if (savedRoleStr == AppRole.adminOwner.name) AppRole.adminOwner,
         if (savedRoleStr == AppRole.userInvestor.name) AppRole.userInvestor,
@@ -112,9 +128,6 @@ class AuthBloc extends HydratedBloc<AuthEvent, AuthState> {
       } else {
         // Network offline, endpoint mismatch, or a temporary backend error.
         // Keep the last known session so reopening the app does not force login.
-        final fallbackRole = savedRoleStr == AppRole.adminOwner.name
-            ? AppRole.adminOwner
-            : AppRole.userInvestor;
         emit(
           state.copyWith(
             status: AuthStatus.authenticated,

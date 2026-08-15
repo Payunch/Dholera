@@ -551,15 +551,13 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (update.imageUrl != null)
+            if (update.resolvedImageUrl != null)
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(20),
                 ),
                 child: Image.network(
-                  update.imageUrl!.startsWith('http')
-                      ? update.imageUrl!
-                      : 'https://api.dholeraplatform.com${update.imageUrl}',
+                  update.resolvedImageUrl!,
                   height: 150,
                   width: double.infinity,
                   fit: BoxFit.cover,

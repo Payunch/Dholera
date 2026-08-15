@@ -159,7 +159,7 @@ class _AppExclusiveNewsPageState extends State<AppExclusiveNewsPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  if (update.imageUrl != null)
+                                  if (update.resolvedImageUrl != null)
                                     ClipRRect(
                                       borderRadius: const BorderRadius.vertical(
                                         top: Radius.circular(28),
@@ -167,10 +167,14 @@ class _AppExclusiveNewsPageState extends State<AppExclusiveNewsPage> {
                                       child: AspectRatio(
                                         aspectRatio: 16 / 9,
                                         child: Image.network(
-                                          update.imageUrl!.startsWith('http')
-                                              ? update.imageUrl!
-                                              : 'https://api.dholeraplatform.com${update.imageUrl}',
+                                          update.resolvedImageUrl!,
                                           fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => Container(
+                                            color: Colors.blueGrey[50],
+                                            child: const Center(
+                                              child: Icon(Icons.image_not_supported_outlined, color: Colors.grey),
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),

@@ -87,22 +87,42 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  late final AuthBloc _authBloc;
+  late final ThemeBloc _themeBloc;
+  late final LocalizationBloc _localizationBloc;
+  late final PreferencesBloc _preferencesBloc;
+  late final LeadsBloc _leadsBloc;
 
   @override
   void initState() {
     super.initState();
+    _authBloc = AuthBloc()..add(AuthCheckRequested());
+    _themeBloc = ThemeBloc();
+    _localizationBloc = LocalizationBloc()..add(LoadTranslations());
+    _preferencesBloc = PreferencesBloc();
+    _leadsBloc = LeadsBloc()..add(const FetchLeadsRequested());
     DeepLinkService().initialize(_navigatorKey);
+  }
+
+  @override
+  void dispose() {
+    _authBloc.close();
+    _themeBloc.close();
+    _localizationBloc.close();
+    _preferencesBloc.close();
+    _leadsBloc.close();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => AuthBloc()..add(AuthCheckRequested())),
-        BlocProvider(create: (_) => ThemeBloc()),
-        BlocProvider(create: (_) => LocalizationBloc()..add(LoadTranslations())),
-        BlocProvider(create: (_) => PreferencesBloc()),
-        BlocProvider(create: (_) => LeadsBloc()..add(const FetchLeadsRequested())),
+        BlocProvider.value(value: _authBloc),
+        BlocProvider.value(value: _themeBloc),
+        BlocProvider.value(value: _localizationBloc),
+        BlocProvider.value(value: _preferencesBloc),
+        BlocProvider.value(value: _leadsBloc),
       ],
       child: BlocBuilder<LocalizationBloc, LocalizationState>(
         builder: (context, localizationState) {

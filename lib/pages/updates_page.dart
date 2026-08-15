@@ -157,7 +157,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (update.imageUrl != null)
+            if (update.resolvedImageUrl != null)
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(32),
@@ -165,9 +165,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
                 child: AspectRatio(
                   aspectRatio: 16 / 9,
                   child: Image.network(
-                    update.imageUrl!.startsWith('http')
-                        ? update.imageUrl!
-                        : 'https://api.dholeraplatform.com${update.imageUrl}',
+                    update.resolvedImageUrl!,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) =>
                         Container(color: Colors.blueGrey[100]),

@@ -1,3 +1,5 @@
+import '../config/api_config.dart';
+
 class AppUpdate {
   final int id;
   final String title;
@@ -22,6 +24,18 @@ class AppUpdate {
     this.publishedAt,
     required this.createdAt,
   });
+
+  String? get resolvedImageUrl {
+    final raw = imageUrl?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      return raw;
+    }
+
+    final baseOrigin = Uri.parse(ApiConfig.apiBaseUrl).replace(path: '').toString();
+    final normalized = raw.startsWith('/') ? raw : '/$raw';
+    return '$baseOrigin$normalized';
+  }
 
   factory AppUpdate.fromJson(Map<String, dynamic> json) {
     return AppUpdate(
