@@ -629,6 +629,30 @@ class ApiService {
 
   Future<Map<String, dynamic>> createUpdate(Map<String, dynamic> data) async {
     try {
+      final hasImage = data['imagePath'] != null &&
+          data['imagePath'].toString().isNotEmpty;
+
+      if (!hasImage) {
+        final response = await http
+            .post(
+              Uri.parse(ApiConfig.updatesEndpoint),
+              headers: await _getMutationHeaders(),
+              body: jsonEncode({
+                'title': data['title']?.toString() ?? '',
+                'content': data['content']?.toString() ?? '',
+                'category': data['category']?.toString() ?? 'General',
+                'published': data['published'] == true,
+                'isExclusive': data['isExclusive'] == true,
+                'publishedAt': data['publishedAt']?.toString(),
+                'imagePosition': data['imagePosition']?.toString() ?? 'top',
+                if (data['imageUrl'] != null) 'imageUrl': data['imageUrl'].toString(),
+              }),
+            )
+            .timeout(const Duration(minutes: 2));
+
+        return _handleJsonResponse(response, 'update');
+      }
+
       final token = await getAuthToken();
       final csrfToken = await _refreshCsrfToken();
       final uri = Uri.parse(ApiConfig.updatesEndpoint);
@@ -644,6 +668,7 @@ class ApiService {
       request.fields['content'] = data['content']?.toString() ?? '';
       request.fields['category'] = data['category']?.toString() ?? 'General';
       request.fields['published'] = (data['published'] == true).toString();
+      request.fields['isExclusive'] = (data['isExclusive'] == true).toString();
       request.fields['imagePosition'] =
           data['imagePosition']?.toString() ?? 'top';
       if (data['publishedAt'] != null) {
@@ -653,26 +678,23 @@ class ApiService {
         request.fields['imageUrl'] = data['imageUrl'].toString();
       }
 
-      if (data['imagePath'] != null &&
-          data['imagePath'].toString().isNotEmpty) {
-        final extension = data['imagePath']
-            .toString()
-            .split('.')
-            .last
-            .toLowerCase();
-        String mimeType = 'image/jpeg';
-        if (extension == 'png') mimeType = 'image/png';
-        if (extension == 'webp') mimeType = 'image/webp';
-        if (extension == 'svg') mimeType = 'image/svg+xml';
+      final extension = data['imagePath']
+          .toString()
+          .split('.')
+          .last
+          .toLowerCase();
+      String mimeType = 'image/jpeg';
+      if (extension == 'png') mimeType = 'image/png';
+      if (extension == 'webp') mimeType = 'image/webp';
+      if (extension == 'svg') mimeType = 'image/svg+xml';
 
-        request.files.add(
-          await http.MultipartFile.fromPath(
-            'image',
-            data['imagePath'],
-            contentType: MediaType.parse(mimeType),
-          ),
-        );
-      }
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          data['imagePath'],
+          contentType: MediaType.parse(mimeType),
+        ),
+      );
 
       final streamedResponse = await request.send().timeout(
         const Duration(minutes: 2),
@@ -690,6 +712,36 @@ class ApiService {
     Map<String, dynamic> data,
   ) async {
     try {
+      final hasImage = data['imagePath'] != null &&
+          data['imagePath'].toString().isNotEmpty;
+
+      if (!hasImage) {
+        final response = await http
+            .put(
+              Uri.parse('${ApiConfig.updatesEndpoint}/$id'),
+              headers: await _getMutationHeaders(),
+              body: jsonEncode({
+                if (data['title'] != null) 'title': data['title'].toString(),
+                if (data['content'] != null) 'content': data['content'].toString(),
+                if (data['category'] != null) 'category': data['category'].toString(),
+                if (data['published'] != null) 'published': data['published'] == true,
+                if (data['isApproved'] != null) 'isApproved': data['isApproved'] == true,
+                if (data['isExclusive'] != null) 'isExclusive': data['isExclusive'] == true,
+                if (data['imagePosition'] != null) 'imagePosition': data['imagePosition'].toString(),
+                if (data['publishedAt'] != null) 'publishedAt': data['publishedAt'].toString(),
+                if (data['imageUrl'] != null) 'imageUrl': data['imageUrl'].toString(),
+                if (data['author'] != null) 'author': data['author'].toString(),
+                if (data['tags'] != null) 'tags': data['tags'].toString(),
+                if (data['seoTitle'] != null) 'seoTitle': data['seoTitle'].toString(),
+                if (data['seoDescription'] != null) 'seoDescription': data['seoDescription'].toString(),
+                if (data['seoKeywords'] != null) 'seoKeywords': data['seoKeywords'].toString(),
+              }),
+            )
+            .timeout(const Duration(minutes: 2));
+
+        return _handleJsonResponse(response, 'update');
+      }
+
       final token = await getAuthToken();
       final csrfToken = await _refreshCsrfToken();
       final uri = Uri.parse('${ApiConfig.updatesEndpoint}/$id');
@@ -713,6 +765,12 @@ class ApiService {
       if (data['published'] != null) {
         request.fields['published'] = data['published'].toString();
       }
+      if (data['isApproved'] != null) {
+        request.fields['isApproved'] = data['isApproved'].toString();
+      }
+      if (data['isExclusive'] != null) {
+        request.fields['isExclusive'] = data['isExclusive'].toString();
+      }
       if (data['imagePosition'] != null) {
         request.fields['imagePosition'] = data['imagePosition'].toString();
       }
@@ -722,27 +780,39 @@ class ApiService {
       if (data['imageUrl'] != null) {
         request.fields['imageUrl'] = data['imageUrl'].toString();
       }
-
-      if (data['imagePath'] != null &&
-          data['imagePath'].toString().isNotEmpty) {
-        final extension = data['imagePath']
-            .toString()
-            .split('.')
-            .last
-            .toLowerCase();
-        String mimeType = 'image/jpeg';
-        if (extension == 'png') mimeType = 'image/png';
-        if (extension == 'webp') mimeType = 'image/webp';
-        if (extension == 'svg') mimeType = 'image/svg+xml';
-
-        request.files.add(
-          await http.MultipartFile.fromPath(
-            'image',
-            data['imagePath'],
-            contentType: MediaType.parse(mimeType),
-          ),
-        );
+      if (data['author'] != null) {
+        request.fields['author'] = data['author'].toString();
       }
+      if (data['tags'] != null) {
+        request.fields['tags'] = data['tags'].toString();
+      }
+      if (data['seoTitle'] != null) {
+        request.fields['seoTitle'] = data['seoTitle'].toString();
+      }
+      if (data['seoDescription'] != null) {
+        request.fields['seoDescription'] = data['seoDescription'].toString();
+      }
+      if (data['seoKeywords'] != null) {
+        request.fields['seoKeywords'] = data['seoKeywords'].toString();
+      }
+
+      final extension = data['imagePath']
+          .toString()
+          .split('.')
+          .last
+          .toLowerCase();
+      String mimeType = 'image/jpeg';
+      if (extension == 'png') mimeType = 'image/png';
+      if (extension == 'webp') mimeType = 'image/webp';
+      if (extension == 'svg') mimeType = 'image/svg+xml';
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          data['imagePath'],
+          contentType: MediaType.parse(mimeType),
+        ),
+      );
 
       final streamedResponse = await request.send().timeout(
         const Duration(minutes: 2),
