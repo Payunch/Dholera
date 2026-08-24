@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:file_picker/file_picker.dart';
 import '../theme/app_colors.dart';
 import '../config/api_config.dart';
 import '../services/api_service.dart';
@@ -114,6 +115,15 @@ class LeadsPage extends StatelessWidget {
               _exportData(context, ApiConfig.systemBackupEndpoint, 'dholera_full_backup.json');
             },
           ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.upload_file, color: Colors.blue),
+            title: const Text('Import Leads (CSV)'),
+            onTap: () {
+              Navigator.pop(context);
+              _importData(context);
+            },
+          ),
           const SizedBox(height: 16),
         ],
       ),
@@ -144,6 +154,38 @@ class LeadsPage extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Export failed: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _importData(BuildContext context) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Importing leads...')),
+        );
+        
+        final apiService = ApiService();
+        final response = await apiService.importLeads(result.files.single.path!);
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(response['message'] ?? 'Import successful')),
+          );
+          context.read<LeadsBloc>().add(const FetchLeadsRequested(refresh: true));
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Import failed: $e')),
         );
       }
     }
