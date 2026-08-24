@@ -26,6 +26,10 @@ class AuthBloc extends HydratedBloc<AuthEvent, AuthState> {
     });
 
     on<AuthLogoutRequested>((event, emit) async {
+      // Revoke the server-side mobile refresh token before clearing local
+      // credentials. Without this, a logged-out device can still refresh an
+      // old session until the refresh token expires.
+      await _api.logout();
       await _api.clearAuthToken();
       emit(
         const AuthState(

@@ -1299,16 +1299,29 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> importLeads(String filePath) async {
+  Future<Map<String, dynamic>> importLeads(String filePath, {Uint8List? bytes, String? fileName}) async {
     try {
+      final nameToUse = fileName ?? filePath.split('/').last;
+      final normalizedPath = nameToUse.toLowerCase();
+      final contentType = normalizedPath.endsWith('.csv')
+          ? MediaType('text', 'csv')
+          : MediaType(
+              'application',
+              'vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            );
+
       final files = <Map<String, dynamic>>[{
         'field': 'file',
-        'path': filePath,
-        'contentType': MediaType(
-            'application',
-            'vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          )
+        'contentType': contentType,
       }];
+
+      if (bytes != null) {
+        files[0]['bytes'] = bytes;
+        files[0]['filename'] = nameToUse;
+      } else {
+        files[0]['path'] = filePath;
+      }
+
       final response = await _sendMultipartRequest('POST', ApiConfig.importLeadsEndpoint, {}, files);
 
       return _handleJsonResponse(response);

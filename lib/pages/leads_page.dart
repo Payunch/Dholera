@@ -163,23 +163,45 @@ class LeadsPage extends StatelessWidget {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['csv'],
+        allowedExtensions: ['csv', 'xlsx'],
+        withData: true,
       );
 
-      if (result != null && result.files.single.path != null) {
+      if (result != null) {
+        final selectedFile = result.files.single;
+        
+        if (selectedFile.path == null && selectedFile.bytes == null) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('The selected file could not be read. Please try again.')),
+            );
+          }
+          return;
+        }
+
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Importing leads...')),
         );
         
         final apiService = ApiService();
-        final response = await apiService.importLeads(result.files.single.path!);
+        final response = await apiService.importLeads(
+          selectedFile.path ?? selectedFile.name,
+          bytes: selectedFile.bytes,
+          fileName: selectedFile.name,
+        );
         
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response['message'] ?? 'Import successful')),
-          );
-          context.read<LeadsBloc>().add(const FetchLeadsRequested(refresh: true));
+          if (response.containsKey('success') && response['success'] == true) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response['message'] ?? 'Import successful')),
+            );
+            context.read<LeadsBloc>().add(const FetchLeadsRequested(refresh: true));
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response['error'] ?? 'Import failed')),
+            );
+          }
         }
       }
     } catch (e) {
