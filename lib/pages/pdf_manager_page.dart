@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import '../services/api_service.dart';
 import '../models/pdf_document.dart';
+import 'secure_pdf_viewer_page.dart';
 
 class PdfManagerPage extends StatefulWidget {
   const PdfManagerPage({super.key});
@@ -57,26 +57,12 @@ class _PdfManagerPageState extends State<PdfManagerPage> {
     }
   }
 
-  Future<void> _viewPdf(int id) async {
-    try {
-      final url = await _apiService.getPdfViewUrl(id);
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not open PDF viewer')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
+  Future<void> _viewPdf(PdfDocument pdf) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SecurePdfViewerPage(pdfId: pdf.id, title: pdf.title),
+      ),
+    );
   }
 
   Future<void> _pickAndUploadPdf() async {
@@ -325,7 +311,7 @@ class _PdfManagerPageState extends State<PdfManagerPage> {
                               'Category: ${pdf.category}\nUploaded: ${_formatUploadedAt(pdf.createdAt)}',
                             ),
                             trailing: const Icon(Icons.open_in_new, color: Colors.blue),
-                            onTap: () => _viewPdf(pdf.id),
+                            onTap: () => _viewPdf(pdf),
                           ),
                         );
                       },

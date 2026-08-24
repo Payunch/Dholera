@@ -90,7 +90,7 @@ class LeadsPage extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Column(
+      builder: (sheetContext) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Padding(
@@ -101,7 +101,7 @@ class LeadsPage extends StatelessWidget {
             leading: const Icon(Icons.people, color: AppColors.primary),
             title: const Text('Export Leads (Excel)'),
             onTap: () {
-              Navigator.pop(context);
+              Navigator.pop(sheetContext);
               _exportData(context, ApiConfig.exportLeadsEndpoint, 'leads_export');
             },
           ),
@@ -111,16 +111,16 @@ class LeadsPage extends StatelessWidget {
             title: const Text('Full System Backup (JSON)'),
             subtitle: const Text('For complete database recovery'),
             onTap: () {
-              Navigator.pop(context);
+              Navigator.pop(sheetContext);
               _exportData(context, ApiConfig.systemBackupEndpoint, 'dholera_full_backup.json');
             },
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.upload_file, color: Colors.blue),
-            title: const Text('Import Leads (CSV)'),
+            title: const Text('Import Leads (CSV or Excel)'),
             onTap: () {
-              Navigator.pop(context);
+              Navigator.pop(sheetContext);
               _importData(context);
             },
           ),

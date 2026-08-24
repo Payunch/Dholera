@@ -8,7 +8,7 @@ class ApiConfig {
   // --- CONFIGURATION ---
   // Set this to true to use your local machine's IP (for mobile testing)
   // Set to false to use the production URL
-  static const bool useLocalBackend = true;
+  static const bool useLocalBackend = false;
 
   // Replace with your computer's local IP address (e.g., 192.168.1.5)
   // You can find this by running 'ipconfig' in your terminal

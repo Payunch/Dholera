@@ -1017,7 +1017,16 @@ class ApiService {
   }
 
   Future<String> getPdfViewUrl(int pdfId) async {
-    final token = await getAuthToken();
+    String? token = await getAuthToken();
+    if (token != null && _isTokenExpired(token)) {
+      if (!await refreshAuthToken()) {
+        throw StateError('Your session has expired. Please sign in again.');
+      }
+      token = await getAuthToken();
+    }
+    if (token == null || token.isEmpty) {
+      throw StateError('Authentication is required to view this document.');
+    }
     final baseUrl = ApiConfig.apiBaseUrl;
     return '$baseUrl/pdf/view/$pdfId?token=$token';
   }

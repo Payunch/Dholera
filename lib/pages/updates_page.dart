@@ -38,7 +38,15 @@ class _UpdatesPageState extends State<UpdatesPage> {
 
     try {
       final lang = context.read<LocalizationBloc>().state.locale.languageCode;
-      final response = await _apiService.getUpdates(lang: lang, audience: 'app');
+      final isAdmin =
+          context.read<AuthBloc>().state.role == AppRole.adminOwner;
+      // The public feed deliberately excludes drafts. Admins use the protected
+      // endpoint so drafts remain private but can be reopened and edited.
+      final response = await _apiService.getUpdates(
+        lang: lang,
+        audience: 'app',
+        includeAll: isAdmin,
+      );
       if (!mounted) return;
       if (response['success'] == true) {
         final List<dynamic> updatesData = response['updates'] ?? [];
@@ -131,12 +139,14 @@ class _UpdatesPageState extends State<UpdatesPage> {
 
   Widget _buildUpdateCard(AppUpdate update, bool isAdmin, bool isDark) {
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => UpdateDetailPage(update: update, isAdmin: isAdmin),
-        ),
-      ),
+      onTap: isAdmin
+          ? () => _navigateToEditor(update)
+          : () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => UpdateDetailPage(update: update, isAdmin: false),
+              ),
+            ),
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF0F172A) : Colors.white,
@@ -209,6 +219,28 @@ class _UpdatesPageState extends State<UpdatesPage> {
                             ),
                           ),
                         ),
+                      if (isAdmin && !update.published)
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: const Text(
+                            'DRAFT',
+                            style: TextStyle(
+                              color: Colors.blue,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                      const Spacer(),
                       Text(
                         DateFormat('MMM d, yyyy').format(update.createdAt),
                         style: GoogleFonts.inter(
@@ -242,6 +274,22 @@ class _UpdatesPageState extends State<UpdatesPage> {
                       color: Colors.grey[600],
                     ),
                   ),
+                  if (isAdmin) ...[
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _navigateToEditor(update),
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        label: Text(update.published ? 'EDIT BLOG' : 'EDIT DRAFT'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.orange[800],
+                          side: BorderSide(color: Colors.orange[300]!),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
