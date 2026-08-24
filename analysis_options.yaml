@@ -13,6 +13,13 @@ analyzer:
   exclude:
     - "../Dholera-frontend/**"
     - "../Dholera-backend/**"
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
 
 linter:
   rules:

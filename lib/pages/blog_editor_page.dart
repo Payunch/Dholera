@@ -148,12 +148,9 @@ class _BlogEditorPageState extends State<BlogEditorPage>
       if (!mounted) return;
 
       if (result['success'] == true) {
+        final message = result['message'] ?? (widget.update == null ? 'Blog created' : 'Blog updated');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.update == null ? 'Blog created' : 'Blog updated',
-            ),
-          ),
+          SnackBar(content: Text(message)),
         );
         Navigator.pop(context, true);
       } else {
@@ -226,6 +223,15 @@ class _BlogEditorPageState extends State<BlogEditorPage>
       if (_seoReview!.tags.isNotEmpty)
         _tagsController.text = _seoReview!.tags.join(', ');
     });
+  }
+
+  void _invalidateSeoReview(String _) {
+    if (_seoReview != null) {
+      setState(() {
+        _seoReview = null;
+        _published = false;
+      });
+    }
   }
 
   void _insertFaq(String question) {
@@ -338,7 +344,7 @@ class _BlogEditorPageState extends State<BlogEditorPage>
               ),
               validator: (v) =>
                   v == null || v.isEmpty ? 'Title required' : null,
-              onChanged: (_) => setState(() {}),
+              onChanged: _invalidateSeoReview,
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
@@ -351,7 +357,10 @@ class _BlogEditorPageState extends State<BlogEditorPage>
               items: _categories
                   .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                   .toList(),
-              onChanged: (v) => setState(() => _category = v!),
+              onChanged: (v) {
+                _invalidateSeoReview('');
+                setState(() => _category = v!);
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -366,7 +375,7 @@ class _BlogEditorPageState extends State<BlogEditorPage>
               minLines: 5,
               validator: (v) =>
                   v == null || v.isEmpty ? 'Content required' : null,
-              onChanged: (_) => setState(() {}),
+              onChanged: _invalidateSeoReview,
             ),
             const SizedBox(height: 16),
             const Text(
@@ -464,14 +473,16 @@ class _BlogEditorPageState extends State<BlogEditorPage>
                 labelText: 'Focus Keyword',
                 border: OutlineInputBorder(),
               ),
+              onChanged: _invalidateSeoReview,
             ),
             const SizedBox(height: 8),
             TextFormField(
               controller: _slugController,
               decoration: const InputDecoration(
-                labelText: 'Slug (URL)',
+                labelText: 'Slug (URL path)',
                 border: OutlineInputBorder(),
               ),
+              onChanged: _invalidateSeoReview,
             ),
             const SizedBox(height: 8),
             TextFormField(
@@ -480,6 +491,7 @@ class _BlogEditorPageState extends State<BlogEditorPage>
                 labelText: 'SEO Title (50-60 chars)',
                 border: OutlineInputBorder(),
               ),
+              onChanged: _invalidateSeoReview,
             ),
             const SizedBox(height: 8),
             TextFormField(
@@ -489,6 +501,7 @@ class _BlogEditorPageState extends State<BlogEditorPage>
                 border: OutlineInputBorder(),
               ),
               maxLines: 2,
+              onChanged: _invalidateSeoReview,
             ),
             const SizedBox(height: 8),
             TextFormField(
@@ -497,6 +510,7 @@ class _BlogEditorPageState extends State<BlogEditorPage>
                 labelText: 'Image ALT Text',
                 border: OutlineInputBorder(),
               ),
+              onChanged: _invalidateSeoReview,
             ),
             const SizedBox(height: 8),
             TextFormField(
@@ -505,6 +519,7 @@ class _BlogEditorPageState extends State<BlogEditorPage>
                 labelText: 'Image Title',
                 border: OutlineInputBorder(),
               ),
+              onChanged: _invalidateSeoReview,
             ),
             const SizedBox(height: 8),
             TextFormField(
@@ -513,6 +528,7 @@ class _BlogEditorPageState extends State<BlogEditorPage>
                 labelText: 'Tags (comma separated)',
                 border: OutlineInputBorder(),
               ),
+              onChanged: _invalidateSeoReview,
             ),
             const SizedBox(height: 16),
 

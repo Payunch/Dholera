@@ -25,7 +25,9 @@ class ApiConfig {
   // ---------------------
 
   // API Endpoints
-  static String get loginEndpoint => '$apiBaseUrl/auth/login';
+  static String get loginEndpoint => '$apiBaseUrl/auth/mobile-login';
+  static String get mobileRefreshEndpoint => '$apiBaseUrl/auth/mobile-refresh';
+  static String get mobileLogoutEndpoint => '$apiBaseUrl/auth/mobile-logout';
   static String get logoutEndpoint => '$apiBaseUrl/auth/logout';
   static String get meEndpoint => '$apiBaseUrl/auth/me';
   static String get csrfTokenEndpoint => '$apiBaseUrl/auth/csrf-token';

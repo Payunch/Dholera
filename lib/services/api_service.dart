@@ -152,10 +152,132 @@ class ApiService {
     return token;
   }
 
+  bool _isTokenExpired(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return true;
+      final String normalized = base64Url.normalize(parts[1]);
+      final payload = utf8.decode(base64Url.decode(normalized));
+      final payloadMap = jsonDecode(payload);
+      if (payloadMap['exp'] == null) return false;
+      final exp = DateTime.fromMillisecondsSinceEpoch(payloadMap['exp'] * 1000);
+      return DateTime.now().isAfter(exp.subtract(const Duration(minutes: 1)));
+    } catch (e) {
+      return false; // Let network 401 handle unparseable tokens
+    }
+  }
+
+  Future<bool>? _refreshInFlight;
+
+  Future<bool> refreshAuthToken() async {
+    if (_refreshInFlight != null) {
+      return await _refreshInFlight!;
+    }
+    _refreshInFlight = _doRefreshAuthToken();
+    try {
+      return await _refreshInFlight!;
+    } finally {
+      _refreshInFlight = null;
+    }
+  }
+
+  Future<bool> _doRefreshAuthToken() async {
+    try {
+      final refreshToken = await _secureStorage.read(key: 'refresh_token');
+      if (refreshToken == null) return false;
+      
+      final response = await http.post(
+        Uri.parse(ApiConfig.mobileRefreshEndpoint),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'User-Agent': 'DholeraAdminApp/1.0',
+        },
+        body: jsonEncode({'refreshToken': refreshToken}),
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['accessToken'] != null) {
+          await setAuthToken(data['accessToken'].toString());
+        }
+        if (data['refreshToken'] != null) {
+          await _secureStorage.write(key: 'refresh_token', value: data['refreshToken'].toString());
+        }
+        return true;
+      } else {
+        await clearAuthToken();
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<http.Response> _retryIfUnauthorized(Future<http.Response> Function() requestFn) async {
+    var response = await requestFn();
+    if (response.statusCode == 401) {
+      if (await refreshAuthToken()) {
+        response = await requestFn();
+      }
+    }
+    return response;
+  }
+
+  Future<http.Response> _sendMultipartRequest(
+      String method,
+      String url,
+      Map<String, String> fields,
+      List<Map<String, dynamic>> files,
+  ) async {
+    http.Response response = await _buildAndSendMultipart(method, url, fields, files);
+    if (response.statusCode == 401 && await refreshAuthToken()) {
+      response = await _buildAndSendMultipart(method, url, fields, files);
+    }
+    return response;
+  }
+
+  Future<http.Response> _buildAndSendMultipart(
+      String method, String url, Map<String, String> fields, List<Map<String, dynamic>> files) async {
+    final uri = Uri.parse(url);
+    final request = http.MultipartRequest(method, uri);
+    
+    final headers = await getMutationHeaders();
+    request.headers.addAll(headers);
+    request.fields.addAll(fields);
+    
+    for (final file in files) {
+      if (file['path'] != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          file['field'] as String,
+          file['path'] as String,
+          contentType: file['contentType'],
+        ));
+      } else if (file['bytes'] != null) {
+        request.files.add(http.MultipartFile.fromBytes(
+          file['field'] as String,
+          file['bytes'] as List<int>,
+          filename: file['filename'] as String?,
+          contentType: file['contentType'],
+        ));
+      }
+    }
+    
+    final streamedResponse = await request.send().timeout(const Duration(minutes: 2));
+    return await http.Response.fromStream(streamedResponse);
+  }
+
   // Header builder for GET requests
   Future<Map<String, String>> _getFetchHeaders() async {
-    final token =
-        await getAuthToken(); // This also loads _sessionCookie if null
+    String? token = await getAuthToken(); // This also loads _sessionCookie if null
+    if (token != null && _isTokenExpired(token)) {
+      final refreshed = await refreshAuthToken();
+      if (refreshed) {
+        token = await getAuthToken();
+      } else {
+        token = null;
+      }
+    }
     final appCheckToken = await _getAppCheckToken();
     final Map<String, String> headers = {
       'Accept': 'application/json',
@@ -172,15 +294,17 @@ class ApiService {
     return headers;
   }
 
-  // Backwards-compatible alias for existing call sites.
-  Future<Map<String, String>> _getHeaders({bool requiresAuth = false}) async {
-    return _getFetchHeaders();
-  }
-
   // Header builder for POST/PUT/DELETE requests (Includes CSRF)
   Future<Map<String, String>> getMutationHeaders() async {
-    final token =
-        await getAuthToken(); // This also loads _sessionCookie if null
+    String? token = await getAuthToken(); // This also loads _sessionCookie if null
+    if (token != null && _isTokenExpired(token)) {
+      final refreshed = await refreshAuthToken();
+      if (refreshed) {
+        token = await getAuthToken();
+      } else {
+        token = null;
+      }
+    }
     final csrfToken = await _refreshCsrfToken();
     final appCheckToken = await _getAppCheckToken();
     final Map<String, String> headers = {
@@ -236,10 +360,12 @@ class ApiService {
           );
         }
 
-        // Capture JWT token from response body (Backend now returns 'token')
         final authToken = data['token'] ?? data['accessToken'];
         if (authToken != null) {
           await setAuthToken(authToken.toString());
+        }
+        if (data['refreshToken'] != null) {
+          await _secureStorage.write(key: 'refresh_token', value: data['refreshToken'].toString());
         }
 
         return {
@@ -262,9 +388,9 @@ class ApiService {
       final endpoint = (userRole == 'adminOwner' || userRole == 'admin')
           ? ApiConfig.meEndpoint
           : ApiConfig.userMeEndpoint;
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(Uri.parse(endpoint), headers: await _getFetchHeaders())
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       return _handleJsonResponse(response, 'data');
     } catch (e) {
       return _handleRequestError(e);
@@ -317,12 +443,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> getAppInfo() async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse(ApiConfig.appInfoEndpoint),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 10)));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -485,12 +611,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> getLeads({int page = 1, int limit = 20}) async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse('${ApiConfig.leadsEndpoint}?page=$page&limit=$limit'),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       return _handleJsonResponse(response, 'leads');
     } catch (e) {
       throw Exception('Failed to get leads: $e');
@@ -514,13 +640,13 @@ class ApiService {
 
   Future<Map<String, dynamic>> updateLeadStatus(int id, String status) async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .put(
             Uri.parse('${ApiConfig.leadsEndpoint}/$id/status'),
             headers: await _getMutationHeaders(),
             body: jsonEncode({'status': status}),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -529,12 +655,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> getAnalytics() async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse(ApiConfig.analyticsEndpoint),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
 
       return _handleJsonResponse(response, 'analytics');
     } catch (e) {
@@ -549,14 +675,14 @@ class ApiService {
     try {
       final startStr = start.toIso8601String();
       final endStr = end.toIso8601String();
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse(
               '${ApiConfig.detailedAnalyticsEndpoint}?start=$startStr&end=$endStr',
             ),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
 
       return _handleJsonResponse(response, 'analytics');
     } catch (e) {
@@ -566,12 +692,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> getBiOverview() async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse('${ApiConfig.apiBaseUrl}/bi/overview'),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -620,9 +746,9 @@ class ApiService {
       final endpoint = includeAll
           ? '${ApiConfig.updatesEndpoint}/admin/all$query'
           : '${ApiConfig.updatesEndpoint}$query';
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(Uri.parse(endpoint), headers: await _getFetchHeaders())
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       return _handleJsonResponse(response, 'updates');
     } catch (e) {
       return _handleRequestError(e);
@@ -635,7 +761,7 @@ class ApiService {
           data['imagePath'] != null && data['imagePath'].toString().isNotEmpty;
 
       if (!hasImage) {
-        final response = await http
+        final response = await _retryIfUnauthorized(() async => await http
             .post(
               Uri.parse(ApiConfig.updatesEndpoint),
               headers: await _getMutationHeaders(),
@@ -663,72 +789,42 @@ class ApiService {
                 if (data['tags'] != null) 'tags': data['tags'].toString(),
               }),
             )
-            .timeout(const Duration(minutes: 2));
+            .timeout(const Duration(minutes: 2)));
 
         return _handleJsonResponse(response, 'update');
       }
 
-      final token = await getAuthToken();
-      final csrfToken = await _refreshCsrfToken();
-      final uri = Uri.parse(ApiConfig.updatesEndpoint);
-      final request = http.MultipartRequest('POST', uri);
+      final fields = <String, String>{
+        'title': data['title']?.toString() ?? '',
+        'content': data['content']?.toString() ?? '',
+        'category': data['category']?.toString() ?? 'General',
+        'published': (data['published'] == true).toString(),
+        'isExclusive': (data['isExclusive'] == true).toString(),
+        'imagePosition': data['imagePosition']?.toString() ?? 'top',
+      };
+      if (data['publishedAt'] != null) fields['publishedAt'] = data['publishedAt'].toString();
+      if (data['imageUrl'] != null) fields['imageUrl'] = data['imageUrl'].toString();
+      if (data['seoTitle'] != null) fields['seoTitle'] = data['seoTitle'].toString();
+      if (data['seoDescription'] != null) fields['seoDescription'] = data['seoDescription'].toString();
+      if (data['seoKeywords'] != null) fields['seoKeywords'] = data['seoKeywords'].toString();
+      if (data['slug'] != null) fields['slug'] = data['slug'].toString();
+      if (data['imageAltText'] != null) fields['imageAltText'] = data['imageAltText'].toString();
+      if (data['imageTitle'] != null) fields['imageTitle'] = data['imageTitle'].toString();
+      if (data['tags'] != null) fields['tags'] = data['tags'].toString();
 
-      request.headers['User-Agent'] = 'DholeraAdminApp/1.0';
-      request.headers['Accept'] = 'application/json';
-      if (token != null) request.headers['Authorization'] = 'Bearer $token';
-      if (_sessionCookie != null) request.headers['cookie'] = _sessionCookie!;
-      if (csrfToken != null) request.headers['X-CSRF-Token'] = csrfToken;
-
-      request.fields['title'] = data['title']?.toString() ?? '';
-      request.fields['content'] = data['content']?.toString() ?? '';
-      request.fields['category'] = data['category']?.toString() ?? 'General';
-      request.fields['published'] = (data['published'] == true).toString();
-      request.fields['isExclusive'] = (data['isExclusive'] == true).toString();
-      request.fields['imagePosition'] =
-          data['imagePosition']?.toString() ?? 'top';
-      if (data['publishedAt'] != null) {
-        request.fields['publishedAt'] = data['publishedAt'].toString();
-      }
-      if (data['imageUrl'] != null) {
-        request.fields['imageUrl'] = data['imageUrl'].toString();
-      }
-      if (data['seoTitle'] != null)
-        request.fields['seoTitle'] = data['seoTitle'].toString();
-      if (data['seoDescription'] != null)
-        request.fields['seoDescription'] = data['seoDescription'].toString();
-      if (data['seoKeywords'] != null)
-        request.fields['seoKeywords'] = data['seoKeywords'].toString();
-      if (data['slug'] != null)
-        request.fields['slug'] = data['slug'].toString();
-      if (data['imageAltText'] != null)
-        request.fields['imageAltText'] = data['imageAltText'].toString();
-      if (data['imageTitle'] != null)
-        request.fields['imageTitle'] = data['imageTitle'].toString();
-      if (data['tags'] != null)
-        request.fields['tags'] = data['tags'].toString();
-
-      final extension = data['imagePath']
-          .toString()
-          .split('.')
-          .last
-          .toLowerCase();
+      final extension = data['imagePath'].toString().split('.').last.toLowerCase();
       String mimeType = 'image/jpeg';
       if (extension == 'png') mimeType = 'image/png';
       if (extension == 'webp') mimeType = 'image/webp';
       if (extension == 'svg') mimeType = 'image/svg+xml';
-
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'image',
-          data['imagePath'],
-          contentType: MediaType.parse(mimeType),
-        ),
-      );
-
-      final streamedResponse = await request.send().timeout(
-        const Duration(minutes: 2),
-      );
-      final response = await http.Response.fromStream(streamedResponse);
+      
+      final files = <Map<String, dynamic>>[{
+        'field': 'image', 
+        'path': data['imagePath'],
+        'contentType': MediaType.parse(mimeType)
+      }];
+      
+      final response = await _sendMultipartRequest('POST', ApiConfig.updatesEndpoint, fields, files);
 
       return _handleJsonResponse(response, 'update');
     } catch (e) {
@@ -745,7 +841,7 @@ class ApiService {
           data['imagePath'] != null && data['imagePath'].toString().isNotEmpty;
 
       if (!hasImage) {
-        final response = await http
+        final response = await _retryIfUnauthorized(() async => await http
             .put(
               Uri.parse('${ApiConfig.updatesEndpoint}/$id'),
               headers: await _getMutationHeaders(),
@@ -782,96 +878,45 @@ class ApiService {
                   'imageTitle': data['imageTitle'].toString(),
               }),
             )
-            .timeout(const Duration(minutes: 2));
-
+            .timeout(const Duration(minutes: 2)));
         return _handleJsonResponse(response, 'update');
       }
 
-      final token = await getAuthToken();
-      final csrfToken = await _refreshCsrfToken();
-      final uri = Uri.parse('${ApiConfig.updatesEndpoint}/$id');
-      final request = http.MultipartRequest('PUT', uri);
+      final fields = <String, String>{};
+      if (data['title'] != null) fields['title'] = data['title'].toString();
+      if (data['content'] != null) fields['content'] = data['content'].toString();
+      if (data['category'] != null) fields['category'] = data['category'].toString();
+      if (data['published'] != null) fields['published'] = data['published'].toString();
+      if (data['isApproved'] != null) fields['isApproved'] = data['isApproved'].toString();
+      if (data['isExclusive'] != null) fields['isExclusive'] = data['isExclusive'].toString();
+      if (data['imagePosition'] != null) fields['imagePosition'] = data['imagePosition'].toString();
+      if (data['publishedAt'] != null) fields['publishedAt'] = data['publishedAt'].toString();
+      if (data['imageUrl'] != null) fields['imageUrl'] = data['imageUrl'].toString();
+      if (data['author'] != null) fields['author'] = data['author'].toString();
+      if (data['tags'] != null) fields['tags'] = data['tags'].toString();
+      if (data['seoTitle'] != null) fields['seoTitle'] = data['seoTitle'].toString();
+      if (data['seoDescription'] != null) fields['seoDescription'] = data['seoDescription'].toString();
+      if (data['seoKeywords'] != null) fields['seoKeywords'] = data['seoKeywords'].toString();
+      if (data['slug'] != null) fields['slug'] = data['slug'].toString();
+      if (data['imageAltText'] != null) fields['imageAltText'] = data['imageAltText'].toString();
+      if (data['imageTitle'] != null) fields['imageTitle'] = data['imageTitle'].toString();
 
-      request.headers['User-Agent'] = 'DholeraAdminApp/1.0';
-      request.headers['Accept'] = 'application/json';
-      if (token != null) request.headers['Authorization'] = 'Bearer $token';
-      if (_sessionCookie != null) request.headers['cookie'] = _sessionCookie!;
-      if (csrfToken != null) request.headers['X-CSRF-Token'] = csrfToken;
-
-      if (data['title'] != null) {
-        request.fields['title'] = data['title'].toString();
+      final files = <Map<String, dynamic>>[];
+      if (data['imagePath'] != null) {
+        final extension = data['imagePath'].toString().split('.').last.toLowerCase();
+        String mimeType = 'image/jpeg';
+        if (extension == 'png') mimeType = 'image/png';
+        if (extension == 'webp') mimeType = 'image/webp';
+        if (extension == 'svg') mimeType = 'image/svg+xml';
+        
+        files.add({
+          'field': 'image', 
+          'path': data['imagePath'],
+          'contentType': MediaType.parse(mimeType)
+        });
       }
-      if (data['content'] != null) {
-        request.fields['content'] = data['content'].toString();
-      }
-      if (data['category'] != null) {
-        request.fields['category'] = data['category'].toString();
-      }
-      if (data['published'] != null) {
-        request.fields['published'] = data['published'].toString();
-      }
-      if (data['isApproved'] != null) {
-        request.fields['isApproved'] = data['isApproved'].toString();
-      }
-      if (data['isExclusive'] != null) {
-        request.fields['isExclusive'] = data['isExclusive'].toString();
-      }
-      if (data['imagePosition'] != null) {
-        request.fields['imagePosition'] = data['imagePosition'].toString();
-      }
-      if (data['publishedAt'] != null) {
-        request.fields['publishedAt'] = data['publishedAt'].toString();
-      }
-      if (data['imageUrl'] != null) {
-        request.fields['imageUrl'] = data['imageUrl'].toString();
-      }
-      if (data['author'] != null) {
-        request.fields['author'] = data['author'].toString();
-      }
-      if (data['tags'] != null) {
-        request.fields['tags'] = data['tags'].toString();
-      }
-      if (data['seoTitle'] != null) {
-        request.fields['seoTitle'] = data['seoTitle'].toString();
-      }
-      if (data['seoDescription'] != null) {
-        request.fields['seoDescription'] = data['seoDescription'].toString();
-      }
-      if (data['seoKeywords'] != null) {
-        request.fields['seoKeywords'] = data['seoKeywords'].toString();
-      }
-      if (data['slug'] != null) {
-        request.fields['slug'] = data['slug'].toString();
-      }
-      if (data['imageAltText'] != null) {
-        request.fields['imageAltText'] = data['imageAltText'].toString();
-      }
-      if (data['imageTitle'] != null) {
-        request.fields['imageTitle'] = data['imageTitle'].toString();
-      }
-
-      final extension = data['imagePath']
-          .toString()
-          .split('.')
-          .last
-          .toLowerCase();
-      String mimeType = 'image/jpeg';
-      if (extension == 'png') mimeType = 'image/png';
-      if (extension == 'webp') mimeType = 'image/webp';
-      if (extension == 'svg') mimeType = 'image/svg+xml';
-
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'image',
-          data['imagePath'],
-          contentType: MediaType.parse(mimeType),
-        ),
-      );
-
-      final streamedResponse = await request.send().timeout(
-        const Duration(minutes: 2),
-      );
-      final response = await http.Response.fromStream(streamedResponse);
+      
+      final response = await _sendMultipartRequest('PUT', '${ApiConfig.updatesEndpoint}/$id', fields, files);
 
       return _handleJsonResponse(response, 'update');
     } catch (e) {
@@ -881,13 +926,13 @@ class ApiService {
 
   Future<Map<String, dynamic>> reviewBlogSeo(Map<String, dynamic> data) async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .post(
             Uri.parse('${ApiConfig.updatesEndpoint}/seo-review'),
             headers: await _getMutationHeaders(),
             body: jsonEncode(data),
           )
-          .timeout(const Duration(minutes: 1));
+          .timeout(const Duration(minutes: 1)));
       return _handleJsonResponse(response, 'SEO Review');
     } catch (e) {
       return _handleRequestError(e);
@@ -896,10 +941,10 @@ class ApiService {
 
   Future<Map<String, dynamic>> deleteUpdate(int id) async {
     try {
-      final response = await http.delete(
+      final response = await _retryIfUnauthorized(() async => await http.delete(
         Uri.parse('${ApiConfig.updatesEndpoint}/$id'),
         headers: await _getMutationHeaders(),
-      );
+      ));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -908,12 +953,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> getPdfs() async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse('${ApiConfig.apiBaseUrl}/pdf/list'),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       final result = _handleJsonResponse(response, 'pdfs');
       if (result['success'] == true &&
           result['pdfs'] is List &&
@@ -928,12 +973,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> getMyVaultPdfs() async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse('${ApiConfig.apiBaseUrl}/pdf/my-vault'),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       final result = _handleJsonResponse(response, 'pdfs');
       if (result['success'] == true &&
           result['pdfs'] is List &&
@@ -948,36 +993,22 @@ class ApiService {
 
   Future<Map<String, dynamic>> uploadPdf(Map<String, dynamic> data) async {
     try {
-      final token = await getAuthToken();
-      final csrfToken = await _refreshCsrfToken();
-      final uri = Uri.parse('${ApiConfig.apiBaseUrl}/pdf/upload');
-      final request = http.MultipartRequest('POST', uri);
-
-      request.headers['User-Agent'] = 'DholeraAdminApp/1.0';
-      request.headers['Accept'] = 'application/json';
-      if (token != null) request.headers['Authorization'] = 'Bearer $token';
-      if (_sessionCookie != null) request.headers['cookie'] = _sessionCookie!;
-      if (csrfToken != null) request.headers['X-CSRF-Token'] = csrfToken;
-
-      request.fields['title'] = data['title']?.toString() ?? '';
-      request.fields['category'] = data['category']?.toString() ?? 'Brochure';
-      request.fields['is_protected'] = (data['is_protected'] ?? true)
-          .toString();
-
+      final fields = <String, String>{
+        'title': data['title']?.toString() ?? '',
+        'category': data['category']?.toString() ?? 'Brochure',
+        'is_protected': (data['is_protected'] ?? true).toString(),
+      };
+      
+      final files = <Map<String, dynamic>>[];
       if (data['pdfPath'] != null) {
-        request.files.add(
-          await http.MultipartFile.fromPath(
-            'pdf',
-            data['pdfPath'],
-            contentType: MediaType('application', 'pdf'),
-          ),
-        );
+        files.add({
+          'field': 'pdf', 
+          'path': data['pdfPath'], 
+          'contentType': MediaType('application', 'pdf')
+        });
       }
-
-      final streamedResponse = await request.send().timeout(
-        const Duration(minutes: 5),
-      );
-      final response = await http.Response.fromStream(streamedResponse);
+      
+      final response = await _sendMultipartRequest('POST', '${ApiConfig.apiBaseUrl}/pdf/upload', fields, files);
 
       return _handleJsonResponse(response, 'pdf');
     } catch (e) {
@@ -993,18 +1024,12 @@ class ApiService {
 
   Future<Uint8List> getPdfBytes(int pdfId) async {
     try {
-      final token = await getAuthToken();
-      final baseUrl = ApiConfig.apiBaseUrl;
-      final uri = Uri.parse('$baseUrl/pdf/view/$pdfId');
-
-      final headers = await _getHeaders(requiresAuth: true);
-      if (token != null && token.isNotEmpty) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-
-      final response = await http
-          .get(uri, headers: headers)
-          .timeout(const Duration(seconds: 30));
+      final response = await _retryIfUnauthorized(() async => await http
+          .get(
+            Uri.parse('${ApiConfig.apiBaseUrl}/pdf/view/$pdfId'),
+            headers: await _getFetchHeaders(),
+          )
+          .timeout(const Duration(seconds: 30)));
 
       if (response.statusCode == 200) {
         return response.bodyBytes;
@@ -1020,12 +1045,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> getSettings() async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse('${ApiConfig.apiBaseUrl}/settings'),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       return _handleJsonResponse(response, 'settings');
     } catch (e) {
       return _handleRequestError(e);
@@ -1078,13 +1103,13 @@ class ApiService {
 
   Future<Map<String, dynamic>> updateSettings(Map<String, dynamic> data) async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .post(
             Uri.parse('${ApiConfig.apiBaseUrl}/settings'),
             headers: await _getMutationHeaders(),
             body: jsonEncode(data),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -1118,12 +1143,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> getProjects() async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse('${ApiConfig.apiBaseUrl}/content/projects'),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       final result = _handleJsonResponse(response, 'projects');
       if (result['success'] != true ||
           (result['projects'] as List?)?.isEmpty == true ||
@@ -1138,12 +1163,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> getTpMaps() async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse('${ApiConfig.apiBaseUrl}/content/tp-maps'),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       final result = _handleJsonResponse(response, 'tpMaps');
       if (result['success'] != true ||
           (result['tpMaps'] as List?)?.isEmpty == true ||
@@ -1167,17 +1192,19 @@ class ApiService {
           ? '${ApiConfig.apiBaseUrl}/content/projects'
           : '${ApiConfig.apiBaseUrl}/content/projects/$id';
 
-      final response = id == null
-          ? await http.post(
-              Uri.parse(url),
-              headers: await _getMutationHeaders(),
-              body: jsonEncode(data),
-            )
-          : await http.put(
-              Uri.parse(url),
-              headers: await _getMutationHeaders(),
-              body: jsonEncode(data),
-            );
+      final response = await _retryIfUnauthorized(() async {
+        return id == null
+            ? await http.post(
+                Uri.parse(url),
+                headers: await _getMutationHeaders(),
+                body: jsonEncode(data),
+              )
+            : await http.put(
+                Uri.parse(url),
+                headers: await _getMutationHeaders(),
+                body: jsonEncode(data),
+              );
+      });
 
       return _handleJsonResponse(response);
     } catch (e) {
@@ -1187,10 +1214,10 @@ class ApiService {
 
   Future<Map<String, dynamic>> deleteProject(int id) async {
     try {
-      final response = await http.delete(
+      final response = await _retryIfUnauthorized(() async => await http.delete(
         Uri.parse('${ApiConfig.apiBaseUrl}/content/projects/$id'),
         headers: await _getMutationHeaders(),
-      );
+      ));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -1206,17 +1233,19 @@ class ApiService {
           ? '${ApiConfig.apiBaseUrl}/content/tp-maps'
           : '${ApiConfig.apiBaseUrl}/content/tp-maps/$id';
 
-      final response = id == null
-          ? await http.post(
-              Uri.parse(url),
-              headers: await _getMutationHeaders(),
-              body: jsonEncode(data),
-            )
-          : await http.put(
-              Uri.parse(url),
-              headers: await _getMutationHeaders(),
-              body: jsonEncode(data),
-            );
+      final response = await _retryIfUnauthorized(() async {
+        return id == null
+            ? await http.post(
+                Uri.parse(url),
+                headers: await _getMutationHeaders(),
+                body: jsonEncode(data),
+              )
+            : await http.put(
+                Uri.parse(url),
+                headers: await _getMutationHeaders(),
+                body: jsonEncode(data),
+              );
+      });
 
       return _handleJsonResponse(response);
     } catch (e) {
@@ -1226,10 +1255,10 @@ class ApiService {
 
   Future<Map<String, dynamic>> deleteTpMap(int id) async {
     try {
-      final response = await http.delete(
+      final response = await _retryIfUnauthorized(() async => await http.delete(
         Uri.parse('${ApiConfig.apiBaseUrl}/content/tp-maps/$id'),
         headers: await _getMutationHeaders(),
-      );
+      ));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -1238,12 +1267,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> getPortals() async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse('${ApiConfig.apiBaseUrl}/content/portals'),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       final result = _handleJsonResponse(response, 'portals');
       if (result['success'] != true ||
           (result['portals'] as List?)?.isEmpty == true ||
@@ -1258,12 +1287,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> getUserSessions() async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse(ApiConfig.sessionsEndpoint),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       return _handleJsonResponse(response, 'sessions');
     } catch (e) {
       return _handleRequestError(e);
@@ -1272,32 +1301,15 @@ class ApiService {
 
   Future<Map<String, dynamic>> importLeads(String filePath) async {
     try {
-      final token = await getAuthToken();
-      final csrfToken = await _refreshCsrfToken();
-      final uri = Uri.parse(ApiConfig.importLeadsEndpoint);
-      final request = http.MultipartRequest('POST', uri);
-
-      request.headers['User-Agent'] = 'DholeraAdminApp/1.0';
-      request.headers['Accept'] = 'application/json';
-      if (token != null) request.headers['Authorization'] = 'Bearer $token';
-      if (_sessionCookie != null) request.headers['cookie'] = _sessionCookie!;
-      if (csrfToken != null) request.headers['X-CSRF-Token'] = csrfToken;
-
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'file',
-          filePath,
-          contentType: MediaType(
+      final files = <Map<String, dynamic>>[{
+        'field': 'file',
+        'path': filePath,
+        'contentType': MediaType(
             'application',
             'vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          ),
-        ),
-      );
-
-      final streamedResponse = await request.send().timeout(
-        const Duration(minutes: 5),
-      );
-      final response = await http.Response.fromStream(streamedResponse);
+          )
+      }];
+      final response = await _sendMultipartRequest('POST', ApiConfig.importLeadsEndpoint, {}, files);
 
       return _handleJsonResponse(response);
     } catch (e) {
@@ -1307,12 +1319,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> markLeadAsRead(int id) async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .put(
             Uri.parse('${ApiConfig.markAsReadEndpoint}/$id/read'),
             headers: await _getMutationHeaders(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -1320,36 +1332,19 @@ class ApiService {
   }
 
   Future<http.Response> downloadExport(String endpoint) async {
-    return await http
+    return await _retryIfUnauthorized(() async => await http
         .get(Uri.parse(endpoint), headers: await _getFetchHeaders())
-        .timeout(const Duration(minutes: 2));
+        .timeout(const Duration(minutes: 2)));
   }
 
   Future<Map<String, dynamic>> restoreSystem(String filePath) async {
     try {
-      final token = await getAuthToken();
-      final csrfToken = await _refreshCsrfToken();
-      final uri = Uri.parse(ApiConfig.systemRestoreEndpoint);
-      final request = http.MultipartRequest('POST', uri);
-
-      request.headers['User-Agent'] = 'DholeraAdminApp/1.0';
-      request.headers['Accept'] = 'application/json';
-      if (token != null) request.headers['Authorization'] = 'Bearer $token';
-      if (_sessionCookie != null) request.headers['cookie'] = _sessionCookie!;
-      if (csrfToken != null) request.headers['X-CSRF-Token'] = csrfToken;
-
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'file',
-          filePath,
-          contentType: MediaType('application', 'json'),
-        ),
-      );
-
-      final streamedResponse = await request.send().timeout(
-        const Duration(minutes: 5),
-      );
-      final response = await http.Response.fromStream(streamedResponse);
+      final files = <Map<String, dynamic>>[{
+        'field': 'file',
+        'path': filePath,
+        'contentType': MediaType('application', 'json')
+      }];
+      final response = await _sendMultipartRequest('POST', ApiConfig.systemRestoreEndpoint, {}, files);
 
       return _handleJsonResponse(response);
     } catch (e) {
@@ -1359,12 +1354,20 @@ class ApiService {
 
   Future<Map<String, dynamic>> logout() async {
     try {
-      await http
+      final refreshToken = await _secureStorage.read(key: 'refresh_token');
+      if (refreshToken != null) {
+        await http.post(
+          Uri.parse(ApiConfig.mobileLogoutEndpoint),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'refreshToken': refreshToken}),
+        ).timeout(const Duration(seconds: 10));
+      }
+      await _retryIfUnauthorized(() async => await http
           .post(
             Uri.parse(ApiConfig.logoutEndpoint),
             headers: await _getMutationHeaders(),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 10)));
     } catch (e) {
       // Ignore
     } finally {
@@ -1377,12 +1380,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> getPendingApprovals() async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse('${ApiConfig.apiBaseUrl}/payment/admin/pending'),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -1391,12 +1394,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> getPendingCount() async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse('${ApiConfig.apiBaseUrl}/payment/admin/count-pending'),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 10)));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -1405,14 +1408,14 @@ class ApiService {
 
   Future<Map<String, dynamic>> approvePayment(String transactionId) async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .post(
             Uri.parse(
               '${ApiConfig.apiBaseUrl}/payment/admin/approve/$transactionId',
             ),
             headers: await _getMutationHeaders(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -1423,12 +1426,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> getDatabaseTables() async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse('${ApiConfig.apiBaseUrl}/admin/db/tables'),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15)));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -1437,12 +1440,12 @@ class ApiService {
 
   Future<Map<String, dynamic>> getTableRawData(String tableName) async {
     try {
-      final response = await http
+      final response = await _retryIfUnauthorized(() async => await http
           .get(
             Uri.parse('${ApiConfig.apiBaseUrl}/admin/db/raw/$tableName'),
             headers: await _getFetchHeaders(),
           )
-          .timeout(const Duration(seconds: 20));
+          .timeout(const Duration(seconds: 20)));
       return _handleJsonResponse(response);
     } catch (e) {
       return _handleRequestError(e);
@@ -1475,7 +1478,11 @@ class ApiService {
             return {'success': true, arrayKey: data[arrayKey]};
           }
           if (data is Map && data.containsKey('data')) {
-            return {'success': true, arrayKey: data['data']};
+            final result = <String, dynamic>{'success': true, arrayKey: data['data']};
+            if (data.containsKey('message')) result['message'] = data['message'];
+            if (data.containsKey('published')) result['published'] = data['published'];
+            if (data.containsKey('seoScore')) result['seoScore'] = data['seoScore'];
+            return result;
           }
           if (data is Map && data.containsKey('analytics')) {
             return {'success': true, arrayKey: data['analytics']};
