@@ -11,6 +11,13 @@ class AppUpdate {
   final bool isExclusive;
   final DateTime? publishedAt;
   final DateTime createdAt;
+  final String? seoTitle;
+  final String? seoDescription;
+  final String? seoKeywords;
+  final String? slug;
+  final String? imageAltText;
+  final String? imageTitle;
+  final String? tags;
 
   AppUpdate({
     required this.id,
@@ -23,6 +30,13 @@ class AppUpdate {
     this.isExclusive = false,
     this.publishedAt,
     required this.createdAt,
+    this.seoTitle,
+    this.seoDescription,
+    this.seoKeywords,
+    this.slug,
+    this.imageAltText,
+    this.imageTitle,
+    this.tags,
   });
 
   String? get resolvedImageUrl {
@@ -32,7 +46,9 @@ class AppUpdate {
       return raw;
     }
 
-    final baseOrigin = Uri.parse(ApiConfig.apiBaseUrl).replace(path: '').toString();
+    final baseOrigin = Uri.parse(
+      ApiConfig.apiBaseUrl,
+    ).replace(path: '').toString();
     final normalized = raw.startsWith('/') ? raw : '/$raw';
     return '$baseOrigin$normalized';
   }
@@ -47,8 +63,17 @@ class AppUpdate {
       imagePosition: json['imagePosition'] ?? 'top',
       published: _asBool(json['published'], fallback: true),
       isExclusive: _asBool(json['isExclusive']),
-      publishedAt: json['publishedAt'] != null ? DateTime.parse(json['publishedAt']) : null,
+      publishedAt: json['publishedAt'] != null
+          ? DateTime.parse(json['publishedAt'])
+          : null,
       createdAt: DateTime.parse(json['createdAt']),
+      seoTitle: json['seoTitle'],
+      seoDescription: json['seoDescription'],
+      seoKeywords: json['seoKeywords'],
+      slug: json['slug'],
+      imageAltText: json['imageAltText'],
+      imageTitle: json['imageTitle'],
+      tags: json['tags'],
     );
   }
 

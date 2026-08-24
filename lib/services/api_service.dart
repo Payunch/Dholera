@@ -614,7 +614,9 @@ class ApiService {
       if (lang != null) params['lang'] = lang;
       if (!includeAll) params['audience'] = audience;
       if (exclusiveOnly) params['exclusive'] = 'true';
-      final query = params.isNotEmpty ? '?${Uri(queryParameters: params).query}' : '';
+      final query = params.isNotEmpty
+          ? '?${Uri(queryParameters: params).query}'
+          : '';
       final endpoint = includeAll
           ? '${ApiConfig.updatesEndpoint}/admin/all$query'
           : '${ApiConfig.updatesEndpoint}$query';
@@ -629,8 +631,8 @@ class ApiService {
 
   Future<Map<String, dynamic>> createUpdate(Map<String, dynamic> data) async {
     try {
-      final hasImage = data['imagePath'] != null &&
-          data['imagePath'].toString().isNotEmpty;
+      final hasImage =
+          data['imagePath'] != null && data['imagePath'].toString().isNotEmpty;
 
       if (!hasImage) {
         final response = await http
@@ -645,7 +647,20 @@ class ApiService {
                 'isExclusive': data['isExclusive'] == true,
                 'publishedAt': data['publishedAt']?.toString(),
                 'imagePosition': data['imagePosition']?.toString() ?? 'top',
-                if (data['imageUrl'] != null) 'imageUrl': data['imageUrl'].toString(),
+                if (data['imageUrl'] != null)
+                  'imageUrl': data['imageUrl'].toString(),
+                if (data['seoTitle'] != null)
+                  'seoTitle': data['seoTitle'].toString(),
+                if (data['seoDescription'] != null)
+                  'seoDescription': data['seoDescription'].toString(),
+                if (data['seoKeywords'] != null)
+                  'seoKeywords': data['seoKeywords'].toString(),
+                if (data['slug'] != null) 'slug': data['slug'].toString(),
+                if (data['imageAltText'] != null)
+                  'imageAltText': data['imageAltText'].toString(),
+                if (data['imageTitle'] != null)
+                  'imageTitle': data['imageTitle'].toString(),
+                if (data['tags'] != null) 'tags': data['tags'].toString(),
               }),
             )
             .timeout(const Duration(minutes: 2));
@@ -677,6 +692,20 @@ class ApiService {
       if (data['imageUrl'] != null) {
         request.fields['imageUrl'] = data['imageUrl'].toString();
       }
+      if (data['seoTitle'] != null)
+        request.fields['seoTitle'] = data['seoTitle'].toString();
+      if (data['seoDescription'] != null)
+        request.fields['seoDescription'] = data['seoDescription'].toString();
+      if (data['seoKeywords'] != null)
+        request.fields['seoKeywords'] = data['seoKeywords'].toString();
+      if (data['slug'] != null)
+        request.fields['slug'] = data['slug'].toString();
+      if (data['imageAltText'] != null)
+        request.fields['imageAltText'] = data['imageAltText'].toString();
+      if (data['imageTitle'] != null)
+        request.fields['imageTitle'] = data['imageTitle'].toString();
+      if (data['tags'] != null)
+        request.fields['tags'] = data['tags'].toString();
 
       final extension = data['imagePath']
           .toString()
@@ -712,8 +741,8 @@ class ApiService {
     Map<String, dynamic> data,
   ) async {
     try {
-      final hasImage = data['imagePath'] != null &&
-          data['imagePath'].toString().isNotEmpty;
+      final hasImage =
+          data['imagePath'] != null && data['imagePath'].toString().isNotEmpty;
 
       if (!hasImage) {
         final response = await http
@@ -722,19 +751,35 @@ class ApiService {
               headers: await _getMutationHeaders(),
               body: jsonEncode({
                 if (data['title'] != null) 'title': data['title'].toString(),
-                if (data['content'] != null) 'content': data['content'].toString(),
-                if (data['category'] != null) 'category': data['category'].toString(),
-                if (data['published'] != null) 'published': data['published'] == true,
-                if (data['isApproved'] != null) 'isApproved': data['isApproved'] == true,
-                if (data['isExclusive'] != null) 'isExclusive': data['isExclusive'] == true,
-                if (data['imagePosition'] != null) 'imagePosition': data['imagePosition'].toString(),
-                if (data['publishedAt'] != null) 'publishedAt': data['publishedAt'].toString(),
-                if (data['imageUrl'] != null) 'imageUrl': data['imageUrl'].toString(),
+                if (data['content'] != null)
+                  'content': data['content'].toString(),
+                if (data['category'] != null)
+                  'category': data['category'].toString(),
+                if (data['published'] != null)
+                  'published': data['published'] == true,
+                if (data['isApproved'] != null)
+                  'isApproved': data['isApproved'] == true,
+                if (data['isExclusive'] != null)
+                  'isExclusive': data['isExclusive'] == true,
+                if (data['imagePosition'] != null)
+                  'imagePosition': data['imagePosition'].toString(),
+                if (data['publishedAt'] != null)
+                  'publishedAt': data['publishedAt'].toString(),
+                if (data['imageUrl'] != null)
+                  'imageUrl': data['imageUrl'].toString(),
                 if (data['author'] != null) 'author': data['author'].toString(),
                 if (data['tags'] != null) 'tags': data['tags'].toString(),
-                if (data['seoTitle'] != null) 'seoTitle': data['seoTitle'].toString(),
-                if (data['seoDescription'] != null) 'seoDescription': data['seoDescription'].toString(),
-                if (data['seoKeywords'] != null) 'seoKeywords': data['seoKeywords'].toString(),
+                if (data['seoTitle'] != null)
+                  'seoTitle': data['seoTitle'].toString(),
+                if (data['seoDescription'] != null)
+                  'seoDescription': data['seoDescription'].toString(),
+                if (data['seoKeywords'] != null)
+                  'seoKeywords': data['seoKeywords'].toString(),
+                if (data['slug'] != null) 'slug': data['slug'].toString(),
+                if (data['imageAltText'] != null)
+                  'imageAltText': data['imageAltText'].toString(),
+                if (data['imageTitle'] != null)
+                  'imageTitle': data['imageTitle'].toString(),
               }),
             )
             .timeout(const Duration(minutes: 2));
@@ -795,6 +840,15 @@ class ApiService {
       if (data['seoKeywords'] != null) {
         request.fields['seoKeywords'] = data['seoKeywords'].toString();
       }
+      if (data['slug'] != null) {
+        request.fields['slug'] = data['slug'].toString();
+      }
+      if (data['imageAltText'] != null) {
+        request.fields['imageAltText'] = data['imageAltText'].toString();
+      }
+      if (data['imageTitle'] != null) {
+        request.fields['imageTitle'] = data['imageTitle'].toString();
+      }
 
       final extension = data['imagePath']
           .toString()
@@ -820,6 +874,21 @@ class ApiService {
       final response = await http.Response.fromStream(streamedResponse);
 
       return _handleJsonResponse(response, 'update');
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> reviewBlogSeo(Map<String, dynamic> data) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('${ApiConfig.updatesEndpoint}/seo-review'),
+            headers: await _getMutationHeaders(),
+            body: jsonEncode(data),
+          )
+          .timeout(const Duration(minutes: 1));
+      return _handleJsonResponse(response, 'SEO Review');
     } catch (e) {
       return _handleRequestError(e);
     }
