@@ -58,47 +58,69 @@ class Lead {
     }
 
     return Lead(
-      id: json['id'],
-      name: json['name'] ?? 'Unknown',
-      phone: json['phone'] ?? '',
-      email: json['email'],
-      source: json['source'] ?? 'Website',
-      timeSpent: json['totalTimeSpent'] ?? json['timeSpent'] ?? 0,
-      status: json['status'] ?? 'New',
-      visitedPages: json['visited_pages'],
-      notes: json['notes'],
+      id: json['id'] is int ? json['id'] : (int.tryParse(json['id']?.toString() ?? '0') ?? 0),
+      name: json['name']?.toString() ?? 'Unknown',
+      phone: json['phone']?.toString() ?? '',
+      email: json['email']?.toString(),
+      source: json['source']?.toString() ?? 'Website',
+      timeSpent: (json['totalTimeSpent'] is num
+          ? (json['totalTimeSpent'] as num).toInt()
+          : (json['timeSpent'] is num
+              ? (json['timeSpent'] as num).toInt()
+              : (int.tryParse(json['totalTimeSpent']?.toString() ?? json['timeSpent']?.toString() ?? '0') ?? 0))),
+      status: json['status']?.toString() ?? 'New',
+      visitedPages: json['visited_pages']?.toString(),
+      notes: json['notes']?.toString(),
       lastContacted: json['last_contacted'] != null 
-          ? DateTime.parse(json['last_contacted']) 
+          ? DateTime.tryParse(json['last_contacted'].toString()) 
           : null,
-      verified: json['verified'] ?? false,
-      returningVisitor: json['returning_visitor'] ?? false,
-      visitCount: json['visit_count'] ?? 1,
-      otpRaw: json['otp_raw'],
-      passcodeRaw: json['passcode_raw'],
-      isRegistered: json['is_registered'] ?? false,
-      isRead: json['isRead'] ?? false,
-      createdAt: DateTime.parse(json['createdAt']),
-      isPro: json['is_pro'] ?? false,
-      browserFingerprint: json['browserFingerprint'],
-      sessions: json['sessions'],
+      verified: _asBool(json['verified']),
+      returningVisitor: _asBool(json['returning_visitor']),
+      visitCount: json['visit_count'] is num
+          ? (json['visit_count'] as num).toInt()
+          : (int.tryParse(json['visit_count']?.toString() ?? '1') ?? 1),
+      otpRaw: json['otp_raw']?.toString(),
+      passcodeRaw: json['passcode_raw']?.toString(),
+      isRegistered: _asBool(json['is_registered']),
+      isRead: _asBool(json['isRead']),
+      createdAt: json['createdAt'] != null
+          ? (DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now())
+          : DateTime.now(),
+      isPro: _asBool(json['is_pro']),
+      browserFingerprint: json['browserFingerprint']?.toString(),
+      sessions: json['sessions'] is List ? json['sessions'] : null,
       visitedPagesList: pages,
     );
   }
 
+  static bool _asBool(dynamic value, {bool fallback = false}) {
+    if (value == null) return fallback;
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final normalized = value.toLowerCase().trim();
+      if (normalized == 'true' || normalized == '1') return true;
+      if (normalized == 'false' || normalized == '0') return false;
+    }
+    return fallback;
+  }
+
   factory Lead.fromLocalMap(Map<String, dynamic> map) {
     return Lead(
-      id: map['id'] ?? 0,
-      name: map['name'] ?? 'Unknown',
-      phone: map['phone'] ?? '',
-      source: map['source'] ?? 'Push',
+      id: map['id'] is int ? map['id'] : (int.tryParse(map['id']?.toString() ?? '0') ?? 0),
+      name: map['name']?.toString() ?? 'Unknown',
+      phone: map['phone']?.toString() ?? '',
+      source: map['source']?.toString() ?? 'Push',
       timeSpent: 0,
-      status: map['status'] ?? 'New',
+      status: map['status']?.toString() ?? 'New',
       verified: true,
       returningVisitor: false,
       visitCount: 1,
       isRegistered: false,
       isRead: false,
-      createdAt: DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: map['createdAt'] != null
+          ? (DateTime.tryParse(map['createdAt'].toString()) ?? DateTime.now())
+          : DateTime.now(),
     );
   }
 
