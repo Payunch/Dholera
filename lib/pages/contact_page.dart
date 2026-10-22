@@ -134,7 +134,7 @@ class _ContactPageState extends State<ContactPage> {
       children: [
         _buildInfoTile(Icons.mail_outline, 'Direct Intelligence', 'gohelnaresh7707@gmail.com', onTap: () => _launchUrl('mailto:gohelnaresh7707@gmail.com')),
         const SizedBox(height: 16),
-        _buildInfoTile(Icons.phone_outlined, 'Consultation Hotline', '+91 7435808031', onTap: () => _launchUrl('tel:+917435808031')),
+        _buildInfoTile(Icons.phone_outlined, 'Consultation Hotline', '+91 8200448270', onTap: () => _launchUrl('tel:+918200448270')),
         const SizedBox(height: 16),
         _buildInfoTile(Icons.location_on_outlined, 'Regional HQ', 'DSIR, Gujarat, India'),
       ],

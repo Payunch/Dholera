@@ -205,7 +205,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
 
   Future<void> _launchWhatsapp() async {
     final text = Uri.encodeComponent(widget.project.whatsappText ?? 'Hi, I am interested in ${widget.project.name}');
-    final url = Uri.parse('https://wa.me/917435808031?text=$text');
+    final url = Uri.parse('https://wa.me/918200448270?text=$text');
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     }

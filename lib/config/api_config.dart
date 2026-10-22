@@ -18,7 +18,7 @@ class ApiConfig {
   static const String productionUrl = 'https://api.dholeraplatform.com/api';
 
   // Admin WhatsApp Number for contact
-  static const String adminWhatsApp = '917435808031';
+  static const String adminWhatsApp = '918200448270';
 
   static String get apiBaseUrl =>
       useLocalBackend ? 'http://$localIp:3001/api' : productionUrl;

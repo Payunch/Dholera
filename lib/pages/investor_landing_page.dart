@@ -1150,7 +1150,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                                   final msg =
                                       "Hello Naresh, I have submitted a Site Visit Request.\n*Name:* $_name\n*Phone:* $_phone\n*Date:* ${DateFormat('MMM dd, yyyy').format(_visitDate!)}";
                                   final uri = Uri.parse(
-                                    "https://wa.me/917435808031?text=${Uri.encodeComponent(msg)}",
+                                    "https://wa.me/918200448270?text=${Uri.encodeComponent(msg)}",
                                   );
                                   if (await canLaunchUrl(uri)) {
                                     await launchUrl(
@@ -1392,7 +1392,7 @@ class _HeroSliderState extends State<_HeroSlider>
                     ElevatedButton.icon(
                       onPressed: () async {
                         final uri = Uri.parse(
-                          "https://wa.me/917435808031?text=Hello%20Owner",
+                          "https://wa.me/918200448270?text=Hello%20Owner",
                         );
                         if (await canLaunchUrl(uri)) {
                           await launchUrl(
