@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../blocs/localization/localization_bloc.dart';
@@ -98,6 +99,71 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
   void dispose() {
     _notificationSubscription?.cancel();
     super.dispose();
+  }
+
+  Future<void> _checkAndNotifyNewInsight(AppUpdate newest) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastId = prefs.getInt('last_notified_blog_id') ?? 0;
+      if (lastId != 0 && newest.id > lastId) {
+        await prefs.setInt('last_notified_blog_id', newest.id);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.bolt, color: Colors.amber, size: 22),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'NEW INTELLIGENCE UPDATE',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.0,
+                          color: Colors.amber,
+                        ),
+                      ),
+                      Text(
+                        newest.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF1E293B),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Color(0xFFFF7A00), width: 1.5),
+            ),
+            duration: const Duration(seconds: 8),
+            action: SnackBarAction(
+              label: 'READ',
+              textColor: const Color(0xFFFF7A00),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => UpdateDetailPage(update: newest)),
+              ),
+            ),
+          ),
+        );
+      } else if (lastId == 0) {
+        await prefs.setInt('last_notified_blog_id', newest.id);
+      }
+    } catch (_) {}
   }
 
   Future<void> _fetchInsights() async {
