@@ -8,6 +8,7 @@ import '../models/app_update.dart';
 import '../models/project.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
+import '../services/app_update_service.dart';
 import 'projects_page.dart';
 import 'project_detail_page.dart';
 import 'tp_maps_page.dart';
@@ -56,6 +57,11 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
     _fetchInsights();
     _setupNotificationListener();
     _apiService.trackActivity('Investor Home');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        AppUpdateService().checkForUpdates(context, silent: true);
+      }
+    });
   }
 
   void _setupNotificationListener() {

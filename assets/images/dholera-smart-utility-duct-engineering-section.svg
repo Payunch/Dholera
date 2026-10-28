@@ -1,0 +1,191 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="100%" height="100%" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b1120;">
+  <defs>
+    <!-- Grid Pattern for CAD Blueprint -->
+    <pattern id="cadGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" stroke-width="0.5" opacity="0.6"/>
+    </pattern>
+    <pattern id="majorCadGrid" width="100" height="100" patternUnits="userSpaceOnUse">
+      <rect width="100" height="100" fill="url(#cadGrid)" />
+      <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#334155" stroke-width="1" opacity="0.4"/>
+    </pattern>
+    
+    <!-- Linear Gradients for Pipes & Ducts -->
+    <linearGradient id="waterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="recycledGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#7e22ce"/>
+    </linearGradient>
+    <linearGradient id="powerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f87171"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+    <linearGradient id="gasGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#facc15"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+    <linearGradient id="telecomGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4ade80"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+    <linearGradient id="trenchWall" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background CAD Grid -->
+  <rect width="1200" height="680" fill="#0b1120" />
+  <rect width="1200" height="680" fill="url(#majorCadGrid)" />
+
+  <!-- Drawing Border & Title Block -->
+  <rect x="25" y="25" width="1150" height="630" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-opacity="0.6"/>
+  <rect x="30" y="30" width="1140" height="620" fill="none" stroke="#1e3a8a" stroke-width="1" stroke-dasharray="4 4" stroke-opacity="0.8"/>
+
+  <!-- Engineering Header Banner -->
+  <rect x="30" y="30" width="1140" height="58" fill="#0f172a" fill-opacity="0.95" stroke="#1e293b" stroke-width="1"/>
+  <text x="50" y="55" fill="#38bdf8" font-size="11" font-weight="900" letter-spacing="2">DICDL / DHOLERA SPECIAL INVESTMENT REGION (SIR)</text>
+  <text x="50" y="74" fill="#ffffff" font-size="16" font-weight="900" letter-spacing="1">TYPICAL MULTI-SERVICES UTILITY DUCT CROSS-SECTION (TP1 &amp; TP2 ARTERIAL CORRIDORS)</text>
+  
+  <!-- Drawing Metadata Tag (Right) -->
+  <text x="1150" y="54" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="end" letter-spacing="1">CAD REF: DICDL-SIR-UTD-2026-REV04</text>
+  <text x="1150" y="72" fill="#ea580c" font-size="11" font-weight="800" text-anchor="end" letter-spacing="1">STANDARDS: IRC / CPHEEO / DICDL SMART CITY SPEC</text>
+
+  <!-- ================= SURFACE STREET CROSS-SECTION ================= -->
+  <!-- Surface Level Line -->
+  <line x1="50" y1="210" x2="1150" y2="210" stroke="#64748b" stroke-width="2"/>
+  <text x="60" y="202" fill="#94a3b8" font-size="10" font-weight="800" letter-spacing="1">SURFACE FINISHED ROAD LEVEL (FRL: +0.00m)</text>
+
+  <!-- Pavement / Road Section (Left) -->
+  <rect x="60" y="210" width="360" height="26" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="240" y="228" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="middle">ARTERIAL CARRIAGEWAY (ASPHALT / CONCRETE)</text>
+  <!-- Road Surface marking -->
+  <line x1="60" y1="211" x2="420" y2="211" stroke="#facc15" stroke-width="3" stroke-dasharray="16 12"/>
+
+  <!-- Kerb & Cycle Track / Pedestrian Walkway (Center) -->
+  <rect x="420" y="206" width="320" height="30" fill="#334155" stroke="#475569" stroke-width="1"/>
+  <text x="580" y="226" fill="#f1f5f9" font-size="11" font-weight="800" text-anchor="middle">SMART PEDESTRIAN WALKWAY &amp; UTILITY RESERVE ZONE</text>
+  <!-- Paver block pattern lines -->
+  <line x1="420" y1="206" x2="740" y2="206" stroke="#ea580c" stroke-width="2"/>
+
+  <!-- Private Plot Boundary Handover (Right) -->
+  <rect x="740" y="210" width="410" height="26" fill="#0f172a" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="945" y="228" fill="#fb923c" font-size="11" font-weight="900" text-anchor="middle">PRIVATE PLOT BOUNDARY (PLUG-AND-PLAY HANDOVER)</text>
+
+  <!-- Plot Boundary Marker Flag -->
+  <line x1="740" y1="130" x2="740" y2="210" stroke="#ea580c" stroke-width="2"/>
+  <polygon points="740,130 810,145 740,160" fill="#ea580c"/>
+  <text x="748" y="148" fill="#ffffff" font-size="9" font-weight="900">DEMARCATION</text>
+  <text x="748" y="180" fill="#ea580c" font-size="10" font-weight="800">ZERO ROAD EXCAVATION</text>
+
+  <!-- ================= SUBTERRANEAN CONCRETE TRENCH (RCC BOX) ================= -->
+  <!-- Outer RCC Structural Concrete Box (H: 270, W: 480) -->
+  <rect x="340" y="245" width="490" height="295" rx="8" fill="url(#trenchWall)" stroke="#38bdf8" stroke-width="2"/>
+  <rect x="355" y="260" width="460" height="265" rx="4" fill="#090d16" stroke="#1e293b" stroke-width="1"/>
+
+  <!-- Structural Hatch / Reinforcement Indicators -->
+  <rect x="340" y="245" width="15" height="295" fill="#1e293b" stroke="#334155" stroke-width="0.5"/>
+  <rect x="815" y="245" width="15" height="295" fill="#1e293b" stroke="#334155" stroke-width="0.5"/>
+  <rect x="340" y="525" width="490" height="15" fill="#1e293b" stroke="#334155" stroke-width="0.5"/>
+  <rect x="340" y="245" width="490" height="15" fill="#1e293b" stroke="#334155" stroke-width="0.5"/>
+
+  <!-- Internal Divider Wall (Separating Dry vs Wet Compartments) -->
+  <rect x="585" y="260" width="14" height="265" fill="#334155" stroke="#475569" stroke-width="1"/>
+  
+  <!-- Compartment Labels -->
+  <rect x="365" y="270" width="210" height="22" rx="4" fill="#1e293b" stroke="#475569" stroke-width="0.5"/>
+  <text x="470" y="285" fill="#f87171" font-size="9" font-weight="900" text-anchor="middle" letter-spacing="1">COMPARTMENT A: DRY UTILITIES</text>
+
+  <rect x="610" y="270" width="195" height="22" rx="4" fill="#1e293b" stroke="#475569" stroke-width="0.5"/>
+  <text x="707" y="285" fill="#38bdf8" font-size="9" font-weight="900" text-anchor="middle" letter-spacing="1">COMPARTMENT B: WET UTILITIES</text>
+
+  <!-- DRY COMPARTMENT UTILITIES (LEFT SIDE OF DIVIDER) -->
+  <!-- 1. Electrical Cable Trays (66kV & 11kV) -->
+  <rect x="375" y="315" width="90" height="10" fill="#475569"/>
+  <circle cx="395" cy="310" r="8" fill="url(#powerGrad)" stroke="#fca5a5" stroke-width="1"/>
+  <circle cx="420" cy="310" r="8" fill="url(#powerGrad)" stroke="#fca5a5" stroke-width="1"/>
+  <circle cx="445" cy="310" r="8" fill="url(#powerGrad)" stroke="#fca5a5" stroke-width="1"/>
+  <text x="375" y="342" fill="#fca5a5" font-size="9" font-weight="800">66kV/11kV DUAL POWER GRID</text>
+
+  <!-- 2. Telecom & SCADA Fiber Conduit -->
+  <rect x="375" y="375" width="90" height="10" fill="#475569"/>
+  <circle cx="390" cy="370" r="5" fill="url(#telecomGrad)" stroke="#86efac" stroke-width="0.5"/>
+  <circle cx="405" cy="370" r="5" fill="url(#telecomGrad)" stroke="#86efac" stroke-width="0.5"/>
+  <circle cx="420" cy="370" r="5" fill="url(#telecomGrad)" stroke="#86efac" stroke-width="0.5"/>
+  <circle cx="435" cy="370" r="5" fill="url(#telecomGrad)" stroke="#86efac" stroke-width="0.5"/>
+  <text x="375" y="402" fill="#86efac" font-size="9" font-weight="800">96-CORE FIBER &amp; SCADA DUCT</text>
+
+  <!-- 3. City Gas Distribution (CGD Pipe) -->
+  <circle cx="435" cy="455" r="22" fill="url(#gasGrad)" stroke="#fef08a" stroke-width="2"/>
+  <text x="435" y="459" fill="#713f12" font-size="9" font-weight="900" text-anchor="middle">GAS</text>
+  <text x="435" y="492" fill="#fef08a" font-size="9" font-weight="800" text-anchor="middle">PNG / INDUSTRIAL GAS MAIN</text>
+
+  <!-- Inspection Walkway in Duct -->
+  <rect x="510" y="320" width="60" height="190" fill="#111827" stroke="#374151" stroke-width="0.5" stroke-dasharray="3 3"/>
+  <text x="540" y="420" fill="#64748b" font-size="9" font-weight="700" text-anchor="middle" transform="rotate(-90 540 420)">SERVICE CORRIDOR (1.2m WALKWAY)</text>
+
+  <!-- WET COMPARTMENT UTILITIES (RIGHT SIDE OF DIVIDER) -->
+  <!-- 4. Potable Water Transmission Main (DI K-9) -->
+  <circle cx="665" cy="360" r="34" fill="url(#waterGrad)" stroke="#bae6fd" stroke-width="2"/>
+  <text x="665" y="364" fill="#082f49" font-size="10" font-weight="900" text-anchor="middle">POTABLE</text>
+  <text x="665" y="410" fill="#bae6fd" font-size="9" font-weight="800" text-anchor="middle">POTABLE WATER MAIN (500mm)</text>
+
+  <!-- 5. Recycled Tertiary Water Line -->
+  <circle cx="750" cy="460" r="28" fill="url(#recycledGrad)" stroke="#f5d0fe" stroke-width="2"/>
+  <text x="750" y="464" fill="#3b0764" font-size="9" font-weight="900" text-anchor="middle">RECYCLED</text>
+  <text x="750" y="504" fill="#e9d5ff" font-size="9" font-weight="800" text-anchor="middle">TERTIARY TREATED (350mm)</text>
+
+  <!-- ================= PLUG & PLAY STUB TO PLOT BOUNDARY ================= -->
+  <!-- Leader Pipe branching from Duct to Plot Boundary -->
+  <path d="M 700 360 L 780 360 L 880 290 L 960 290" fill="none" stroke="#38bdf8" stroke-width="3" stroke-dasharray="4 2"/>
+  <circle cx="960" cy="290" r="6" fill="#38bdf8"/>
+  
+  <path d="M 450 310 L 480 310 L 500 250 L 900 250 L 960 270" fill="none" stroke="#f87171" stroke-width="2" stroke-dasharray="4 2"/>
+  <circle cx="960" cy="270" r="5" fill="#f87171"/>
+
+  <!-- Tapping Valve Terminal Box -->
+  <rect x="940" y="240" width="180" height="95" rx="6" fill="#1e293b" stroke="#ea580c" stroke-width="1.5"/>
+  <text x="955" y="260" fill="#ea580c" font-size="10" font-weight="900">PLUG-AND-PLAY STUB</text>
+  <text x="955" y="278" fill="#f1f5f9" font-size="9" font-weight="700">• Instant Metered Water Tap</text>
+  <text x="955" y="295" fill="#f1f5f9" font-size="9" font-weight="700">• Dual Underground 11kV Feeder</text>
+  <text x="955" y="312" fill="#f1f5f9" font-size="9" font-weight="700">• High-Speed Fiber Optical Loop</text>
+  <text x="955" y="327" fill="#22c55e" font-size="8" font-weight="800">STATUS: ACTIVE POSSESSION READY</text>
+
+  <!-- Connector Arrow from Stub to Plot -->
+  <path d="M 1030 335 L 1030 375 L 1060 375" fill="none" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="1030" y="395" fill="#ea580c" font-size="9" font-weight="800">CONNECTS WITHIN 48 HOURS</text>
+
+  <!-- ================= ENGINEERING DIMENSION CALLOUTS ================= -->
+  <!-- Duct Width Dimension (4.50 m) -->
+  <line x1="340" y1="560" x2="830" y2="560" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="340" y1="550" x2="340" y2="570" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="830" y1="550" x2="830" y2="570" stroke="#94a3b8" stroke-width="1"/>
+  <text x="585" y="575" fill="#94a3b8" font-size="10" font-weight="800" text-anchor="middle">OVERALL CORRIDOR WIDTH: 4.50 METERS</text>
+
+  <!-- Duct Depth Dimension (3.20 m) -->
+  <line x1="310" y1="245" x2="310" y2="540" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="300" y1="245" x2="320" y2="245" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="300" y1="540" x2="320" y2="540" stroke="#94a3b8" stroke-width="1"/>
+  <text x="290" y="395" fill="#94a3b8" font-size="10" font-weight="800" text-anchor="middle" transform="rotate(-90 290 395)">DEPTH: 3.20m</text>
+
+  <!-- ================= BOTTOM TECHNICAL SPECIFICATIONS LEGEND ================= -->
+  <rect x="50" y="595" width="1100" height="42" rx="4" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  
+  <circle cx="80" cy="616" r="6" fill="#f87171"/>
+  <text x="95" y="620" fill="#cbd5e1" font-size="10" font-weight="700">Power: 66kV/11kV Subterranean</text>
+
+  <circle cx="310" cy="616" r="6" fill="#38bdf8"/>
+  <text x="325" y="620" fill="#cbd5e1" font-size="10" font-weight="700">Potable: DI K-9 (100 MLD Balancing)</text>
+
+  <circle cx="560" cy="616" r="6" fill="#c084fc"/>
+  <text x="575" y="620" fill="#cbd5e1" font-size="10" font-weight="700">Recycled: Tertiary SCADA Monitored</text>
+
+  <circle cx="800" cy="616" r="6" fill="#facc15"/>
+  <text x="815" y="620" fill="#cbd5e1" font-size="10" font-weight="700">Gas: PNG City Grid</text>
+
+  <circle cx="970" cy="616" r="6" fill="#4ade80"/>
+  <text x="985" y="620" fill="#cbd5e1" font-size="10" font-weight="700">Telecom: 96C Dark Fiber</text>
+
+</svg>

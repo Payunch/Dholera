@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:package_info_plus/package_info_plus.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
 import '../blocs/auth/auth_state.dart';
@@ -11,6 +12,7 @@ import '../blocs/theme/theme_bloc.dart';
 import '../blocs/theme/theme_event.dart';
 import '../blocs/theme/theme_state.dart';
 import '../services/api_service.dart';
+import '../services/app_update_service.dart';
 import '../theme/board_theme.dart';
 import 'login_page.dart';
 
@@ -23,11 +25,20 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final ApiService _apiService = ApiService();
+  String _currentVersion = '1.0.3+6';
+  bool _isCheckingUpdate = false;
 
   @override
   void initState() {
     super.initState();
     _apiService.trackActivity('Settings Page');
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) {
+        setState(() {
+          _currentVersion = '${info.version}+${info.buildNumber}';
+        });
+      }
+    }).catchError((_) {});
   }
 
   void _handleLogout() {
@@ -161,6 +172,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 _buildThemeToggle(localState),
                 const SizedBox(height: 12),
                 _buildLanguageSelector(context, localState),
+                const SizedBox(height: 12),
+                _buildUpdateTile(context, localState),
                 const SizedBox(height: 32),
                 if (isAdmin) ...[
                   _buildSectionHeader(localState.translate('admin_controls')),
@@ -427,6 +440,44 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Widget _buildUpdateTile(
+    BuildContext context,
+    LocalizationState labels,
+  ) {
+    return InkWell(
+      onTap: _isCheckingUpdate
+          ? null
+          : () async {
+              setState(() => _isCheckingUpdate = true);
+              try {
+                await AppUpdateService().checkForUpdates(
+                  context,
+                  silent: false,
+                  forcePrompt: true,
+                );
+              } finally {
+                if (mounted) setState(() => _isCheckingUpdate = false);
+              }
+            },
+      borderRadius: BorderRadius.circular(20),
+      child: _buildPreferenceTile(
+        'App Version & Updates',
+        'Version $_currentVersion • Tap to check for updates',
+        Icons.system_update_rounded,
+        trailing: _isCheckingUpdate
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(
+                Icons.arrow_forward_ios,
+                size: 12,
+                color: Colors.grey,
+              ),
+      ),
+    );
+  }
 }
 
 class AdminBusinessSettingsPage extends StatefulWidget {

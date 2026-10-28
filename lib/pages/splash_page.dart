@@ -6,6 +6,7 @@ import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_state.dart';
 import '../blocs/preferences/preferences_bloc.dart';
 import '../services/api_service.dart';
+import '../services/app_update_service.dart';
 import 'language_page.dart';
 import 'onboarding_page.dart';
 import 'login_page.dart';
@@ -38,10 +39,8 @@ class _SplashPageState extends State<SplashPage> {
 
       if (!_updateGateChecked) {
         _updateGateChecked = true;
-        final mustStop = await _checkForRequiredUpdate();
-        if (mustStop || !mounted) {
-          return;
-        }
+        await AppUpdateService().checkForUpdates(context, silent: true, forcePrompt: true);
+        if (!mounted) return;
       }
 
       // Wait if auth is still loading (up to 3 seconds max)
@@ -88,83 +87,7 @@ class _SplashPageState extends State<SplashPage> {
     }
   }
 
-  Future<bool> _checkForRequiredUpdate() async {
-    try {
-      final appInfo = await _apiService.getAppInfo();
-      if (appInfo['success'] != true) {
-        return false;
-      }
 
-      final requiredBuild = int.tryParse(appInfo['requiredBuildNumber']?.toString() ?? '');
-      final apkUrl = appInfo['apkUrl']?.toString().trim() ?? '';
-      final updateTitle = appInfo['updateTitle']?.toString().trim().isNotEmpty == true
-          ? appInfo['updateTitle'].toString().trim()
-          : 'Update Required';
-      final updateMessage = appInfo['updateMessage']?.toString().trim().isNotEmpty == true
-          ? appInfo['updateMessage'].toString().trim()
-          : 'A newer APK is available. Please update to continue.';
-      final releaseNotes = appInfo['releaseNotes']?.toString().trim() ?? '';
-
-      if (requiredBuild == null) {
-        return false;
-      }
-
-      final packageInfo = await PackageInfo.fromPlatform();
-      final currentBuild = int.tryParse(packageInfo.buildNumber) ?? 0;
-
-      if (currentBuild >= requiredBuild) {
-        return false;
-      }
-
-      if (!mounted) {
-        return true;
-      }
-
-      await showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (dialogContext) {
-          return AlertDialog(
-            title: Text(updateTitle),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(updateMessage),
-                  if (releaseNotes.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      releaseNotes,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            actions: [
-              FilledButton(
-                onPressed: apkUrl.isEmpty
-                    ? null
-                    : () async {
-                        Navigator.of(dialogContext).pop();
-                        final uri = Uri.tryParse(apkUrl);
-                        if (uri != null) {
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
-                        }
-                      },
-                child: const Text('Update Now'),
-              ),
-            ],
-          );
-        },
-      );
-      return true;
-    } catch (e) {
-      debugPrint('Update gate error: $e');
-      return false;
-    }
-  }
 
   void _replacePage(Widget page) {
     Navigator.of(context).pushReplacement(
