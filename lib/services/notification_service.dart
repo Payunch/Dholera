@@ -35,7 +35,7 @@ class NotificationService {
       if (kDebugMode) print('Notification Permission Granted');
     }
 
-    // 2. Setup Local Notifications
+    // 2. Setup Local Notifications & Channel
     const AndroidInitializationSettings androidInit =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const InitializationSettings initSettings = InitializationSettings(
@@ -47,6 +47,21 @@ class NotificationService {
         // Handle notification click
       },
     );
+
+    // Register high-priority notification channel for Android 8.0+
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'dholera_general_channel',
+      'General Notifications',
+      description: 'Updates on Dholera SIR infrastructure and projects',
+      importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
 
     // 3. Configure FCM Callbacks
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);

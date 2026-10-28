@@ -55,16 +55,25 @@ Future<void> _initFirebase() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+  } catch (e) {
+    debugPrint('Firebase core init error: $e');
+  }
 
-    // Don't wait forever for App Check
+  // App Check (optional - do not let it block notifications)
+  try {
     await FirebaseAppCheck.instance.activate(
-      androidProvider: AndroidProvider.playIntegrity,
+      androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
       appleProvider: AppleProvider.deviceCheck,
-    ).timeout(const Duration(seconds: 5), onTimeout: () => null);
+    ).timeout(const Duration(seconds: 3), onTimeout: () => null);
+  } catch (e) {
+    debugPrint('FirebaseAppCheck error (ignored): $e');
+  }
 
+  // Always initialize notifications independently
+  try {
     await NotificationService().initialize();
   } catch (e) {
-    debugPrint('Firebase initialization error: $e');
+    debugPrint('NotificationService init error: $e');
   }
 }
 

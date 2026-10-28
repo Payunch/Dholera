@@ -1,11 +1,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application
         android:label="Dholera Platform"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="false">
+        <!-- FCM Default Notification Channel -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="dholera_general_channel" />
         <!-- AdMob application id is provided from Gradle manifestPlaceholder per build flavor. -->
         <!-- The placeholder key is com.google.android.gms.ads.APPLICATION_ID -->
         <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="${com.google.android.gms.ads.APPLICATION_ID}"/>
