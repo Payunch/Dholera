@@ -8,7 +8,8 @@ import '../blocs/localization/localization_state.dart';
 import 'vault_page.dart';
 
 class TpMapsPage extends StatefulWidget {
-  const TpMapsPage({super.key});
+  final bool hideAppBar;
+  const TpMapsPage({super.key, this.hideAppBar = false});
 
   @override
   State<TpMapsPage> createState() => _TpMapsPageState();
@@ -55,7 +56,7 @@ class _TpMapsPageState extends State<TpMapsPage> {
       builder: (context, state) {
         return Scaffold(
           backgroundColor: isDark ? const Color(0xFF0B132B) : const Color(0xFFF8FAFC),
-          appBar: AppBar(
+          appBar: widget.hideAppBar ? null : AppBar(
             centerTitle: true,
             title: Text(
               state.translate('tp_maps_title'),

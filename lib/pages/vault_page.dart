@@ -10,7 +10,8 @@ import 'secure_pdf_viewer_page.dart';
 import 'tp_maps_page.dart';
 
 class VaultPage extends StatefulWidget {
-  const VaultPage({super.key});
+  final bool hideAppBar;
+  const VaultPage({super.key, this.hideAppBar = false});
 
   @override
   State<VaultPage> createState() => _VaultPageState();
@@ -73,7 +74,7 @@ class _VaultPageState extends State<VaultPage> {
       builder: (context, state) {
         return Scaffold(
           backgroundColor: isDark ? const Color(0xFF0B132B) : const Color(0xFFF8FAFC),
-          appBar: AppBar(
+          appBar: widget.hideAppBar ? null : AppBar(
             centerTitle: true,
             title: Text(
               state.translate('nav_vault'),

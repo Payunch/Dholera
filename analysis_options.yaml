@@ -29,7 +29,7 @@ linter:
     - comment_references
     - one_member_abstracts
     - only_throw_errors
-        - prefer_final_locals
+    - prefer_final_locals
     - prefer_interpolation_to_compose_strings
     - unawaited_futures
     - unnecessary_lambdas
