@@ -111,6 +111,7 @@ class _MyAppState extends State<MyApp> {
     _preferencesBloc = PreferencesBloc();
     _leadsBloc = LeadsBloc()..add(const FetchLeadsRequested());
     DeepLinkService().initialize(_navigatorKey);
+    NotificationService.navigatorKey = _navigatorKey;
   }
 
   @override

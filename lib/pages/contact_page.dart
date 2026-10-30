@@ -26,6 +26,14 @@ class _ContactPageState extends State<ContactPage> {
     _apiService.trackActivity('Contact Us');
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -34,7 +42,7 @@ class _ContactPageState extends State<ContactPage> {
     final message = _messageController.text.trim();
 
     setState(() => _isSubmitting = true);
-    
+
     try {
       await _apiService.createLead({
         'name': name,
@@ -44,10 +52,13 @@ class _ContactPageState extends State<ContactPage> {
         'status': 'new',
         'source': 'flutter_app',
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Inquiry submitted successfully! Our experts will contact you soon.')),
+          const SnackBar(
+            content: Text('Inquiry submitted successfully! Our Dholera SIR investment desk will contact you shortly.'),
+            backgroundColor: Color(0xFF10B981),
+          ),
         );
         _nameController.clear();
         _phoneController.clear();
@@ -56,7 +67,10 @@ class _ContactPageState extends State<ContactPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit: ${e.toString()}')),
+          SnackBar(
+            content: Text('Failed to submit: ${e.toString()}'),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
     } finally {
@@ -68,16 +82,22 @@ class _ContactPageState extends State<ContactPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return BlocBuilder<LocalizationBloc, LocalizationState>(
       builder: (context, state) {
         return Scaffold(
           body: CustomScrollView(
             slivers: [
               SliverAppBar(
-                expandedHeight: 250,
+                expandedHeight: 220,
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
-                  title: const Text('CONTACT US', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  title: const Text(
+                    'CONTACT US',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                   centerTitle: true,
                   background: Stack(
                     fit: StackFit.expand,
@@ -85,18 +105,33 @@ class _ContactPageState extends State<ContactPage> {
                       Image.asset(
                         'assets/images/free-visit.png',
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
+                        errorBuilder: (_, __, ___) => Container(
+                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFF1E293B),
+                        ),
                       ),
-                      Container(color: Colors.black.withValues(alpha: 0.6)),
+                      Container(color: Colors.black.withValues(alpha: 0.65)),
                       const Center(
-                        child: Text(
-                          'GET IN TOUCH',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 2,
-                          ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'GET IN TOUCH',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 26,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              'Direct Investor Desk & TP Intelligence',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -105,18 +140,32 @@ class _ContactPageState extends State<ContactPage> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildInfoCards(),
-                      const SizedBox(height: 40),
-                      const Text(
-                        'SEND AN INQUIRY',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: Colors.grey),
+                      _buildInfoCards(isDark),
+                      const SizedBox(height: 36),
+                      Text(
+                        'SCHEDULE SITE VISIT & CONSULTATION',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                          color: isDark ? Colors.amber.shade300 : const Color(0xFFD97706),
+                        ),
                       ),
-                      const SizedBox(height: 24),
-                      _buildForm(),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Leave your details below. An authorized Dholera SIR specialist will share verified plot catalogs and land records.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      _buildForm(isDark),
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -129,91 +178,192 @@ class _ContactPageState extends State<ContactPage> {
     );
   }
 
-  Widget _buildInfoCards() {
+  Widget _buildInfoCards(bool isDark) {
     return Column(
       children: [
-        _buildInfoTile(Icons.mail_outline, 'Direct Intelligence', 'gohelnaresh7707@gmail.com', onTap: () => _launchUrl('mailto:gohelnaresh7707@gmail.com')),
-        const SizedBox(height: 16),
-        _buildInfoTile(Icons.phone_outlined, 'Consultation Hotline', '+91 8200448270', onTap: () => _launchUrl('tel:+918200448270')),
-        const SizedBox(height: 16),
-        _buildInfoTile(Icons.location_on_outlined, 'Regional HQ', 'DSIR, Gujarat, India'),
+        _buildInfoTile(
+          icon: Icons.phone_in_talk,
+          label: 'Direct Consultation Helpline',
+          value: '+91 8200448270',
+          isDark: isDark,
+          iconColor: Colors.green,
+          onTap: () => _launchUrl('tel:+918200448270'),
+        ),
+        const SizedBox(height: 12),
+        _buildInfoTile(
+          icon: Icons.chat_bubble_outline,
+          label: 'WhatsApp Investor Desk',
+          value: 'Chat with Senior Advisor',
+          isDark: isDark,
+          iconColor: const Color(0xFF25D366),
+          onTap: () => _launchUrl('https://wa.me/918200448270?text=Hello%20Dholera%20Desk%2C%20I%20would%20like%20to%20know%20more%20about%20investment%20opportunities%20in%20Dholera%20SIR.'),
+        ),
+        const SizedBox(height: 12),
+        _buildInfoTile(
+          icon: Icons.mail_outline,
+          label: 'Official Inquiries',
+          value: 'gohelnaresh7707@gmail.com',
+          isDark: isDark,
+          iconColor: Colors.blueAccent,
+          onTap: () => _launchUrl('mailto:gohelnaresh7707@gmail.com'),
+        ),
+        const SizedBox(height: 12),
+        _buildInfoTile(
+          icon: Icons.location_on_outlined,
+          label: 'Regional Office',
+          value: 'Dholera SIR, Ahmedabad District, Gujarat, India',
+          isDark: isDark,
+          iconColor: Colors.orange,
+        ),
       ],
     );
   }
 
-  Widget _buildInfoTile(IconData icon, String label, String value, {VoidCallback? onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey[100]!),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)]),
-              child: Icon(icon, color: Colors.orange, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label.toUpperCase(), style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
-                  const SizedBox(height: 4),
-                  Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                ],
+  Widget _buildInfoTile({
+    required IconData icon,
+    required String label,
+    required String value,
+    required bool isDark,
+    required Color iconColor,
+    VoidCallback? onTap,
+  }) {
+    final bgColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor),
+            boxShadow: isDark
+                ? null
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
               ),
-            ),
-            if (onTap != null) const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
-          ],
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      value,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (onTap != null)
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 13,
+                  color: isDark ? Colors.grey[500] : Colors.grey[400],
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildForm() {
+  Widget _buildForm(bool isDark) {
     return Form(
       key: _formKey,
       child: Column(
         children: [
-          _buildTextField(_nameController, 'Full Name', Icons.person_outline),
-          const SizedBox(height: 16),
           _buildTextField(
-            _phoneController, 
-            'Phone Number', 
-            Icons.phone_android_outlined, 
+            controller: _nameController,
+            hint: 'Your Full Name',
+            icon: Icons.person_outline,
+            isDark: isDark,
+          ),
+          const SizedBox(height: 14),
+          _buildTextField(
+            controller: _phoneController,
+            hint: 'Mobile Number (10 Digits)',
+            icon: Icons.phone_android_outlined,
             keyboardType: TextInputType.phone,
             maxLength: 10,
+            isDark: isDark,
             validator: (v) {
-              if (v == null || v.isEmpty) return 'Required';
+              if (v == null || v.isEmpty) return 'Phone number is required';
               if (!RegExp(r'^[6-9]\d{9}$').hasMatch(v)) {
                 return 'Please enter a valid 10-digit mobile number';
               }
               return null;
-            }
+            },
           ),
-          const SizedBox(height: 16),
-          _buildTextField(_messageController, 'How can we help?', Icons.chat_bubble_outline, maxLines: 4),
-          const SizedBox(height: 32),
+          const SizedBox(height: 14),
+          _buildTextField(
+            controller: _messageController,
+            hint: 'Describe your requirement (e.g. Residential plot in TP2, Industrial plot, Budget)',
+            icon: Icons.chat_bubble_outline,
+            maxLines: 4,
+            isDark: isDark,
+          ),
+          const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
+            height: 52,
             child: ElevatedButton(
               onPressed: _isSubmitting ? null : _submitForm,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                backgroundColor: isDark ? const Color(0xFFF59E0B) : const Color(0xFF0F172A),
+                foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
               ),
-              child: _isSubmitting 
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : const Text('SUBMIT CONSULTATION REQUEST', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              child: _isSubmitting
+                  ? SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text(
+                      'REQUEST FREE SITE VISIT & CALLBACK',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -221,19 +371,54 @@ class _ContactPageState extends State<ContactPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, IconData icon, {TextInputType? keyboardType, int maxLines = 1, int? maxLength, String? Function(String?)? validator}) {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    required bool isDark,
+    TextInputType? keyboardType,
+    int maxLines = 1,
+    int? maxLength,
+    String? Function(String?)? validator,
+  }) {
+    final fillColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
+    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
       maxLength: maxLength,
+      style: TextStyle(
+        color: isDark ? Colors.white : const Color(0xFF0F172A),
+        fontSize: 14,
+      ),
       decoration: InputDecoration(
         hintText: hint,
-        prefixIcon: Icon(icon, size: 20, color: Colors.grey),
+        hintStyle: TextStyle(
+          color: isDark ? Colors.grey[500] : Colors.grey[400],
+          fontSize: 13.5,
+        ),
+        prefixIcon: Icon(icon, size: 20, color: isDark ? Colors.grey[400] : Colors.grey[500]),
         filled: true,
-        fillColor: Colors.grey[50],
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-        contentPadding: const EdgeInsets.all(20),
+        fillColor: fillColor,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: borderColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: isDark ? const Color(0xFFF59E0B) : const Color(0xFF0F172A), width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Colors.redAccent),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         counterText: '',
       ),
       validator: validator ?? ((v) => (v == null || v.isEmpty) ? 'Required' : null),
@@ -243,7 +428,7 @@ class _ContactPageState extends State<ContactPage> {
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 }

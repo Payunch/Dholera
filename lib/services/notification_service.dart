@@ -7,11 +7,16 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'api_service.dart';
 import '../config/api_config.dart';
+import '../models/app_update.dart';
+import '../pages/update_detail_page.dart';
+import '../pages/updates_page.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
+
+  static GlobalKey<NavigatorState>? navigatorKey;
 
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications =
@@ -23,7 +28,11 @@ class NotificationService {
   static Stream<Map<String, dynamic>> get dataStream =>
       _dataStreamController.stream;
 
-  Future<void> initialize() async {
+  Future<void> initialize({GlobalKey<NavigatorState>? navKey}) async {
+    if (navKey != null) {
+      navigatorKey = navKey;
+    }
+
     // 1. Request Permission
     final NotificationSettings settings = await _fcm.requestPermission(
       alert: true,
@@ -43,8 +52,15 @@ class NotificationService {
     );
     await _localNotifications.initialize(
       settings: initSettings,
-      onDidReceiveNotificationResponse: (details) {
-        // Handle notification click
+      onDidReceiveNotificationResponse: (NotificationResponse details) {
+        if (details.payload != null && details.payload!.isNotEmpty) {
+          try {
+            final data = jsonDecode(details.payload!);
+            _handleNotificationClick(Map<String, dynamic>.from(data));
+          } catch (e) {
+            if (kDebugMode) print('Local notification payload parse error: $e');
+          }
+        }
       },
     );
 
@@ -67,12 +83,69 @@ class NotificationService {
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
+    // Foreground / Background click listeners
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      if (kDebugMode) print('App opened from notification: ${message.data}');
+      _handleNotificationClick(message.data);
+    });
+
+    // Cold start click check
+    unawaited(_fcm.getInitialMessage().then((RemoteMessage? message) {
+      if (message != null) {
+        if (kDebugMode) print('Initial notification message: ${message.data}');
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          _handleNotificationClick(message.data);
+        });
+      }
+    }));
+
     // 4. All normal app users receive published market insights.
-    await _fcm.subscribeToTopic('investors');
+    try {
+      await _fcm.subscribeToTopic('investors');
+    } catch (e) {
+      if (kDebugMode) print('Subscribe to topic error: $e');
+    }
     _fcm.onTokenRefresh.listen((_) => syncTokenWithBackend());
 
     // 5. Sync token if already logged in
     await syncTokenWithBackend();
+  }
+
+  void _handleNotificationClick(Map<String, dynamic> data) {
+    if (kDebugMode) print('Handling notification click: $data');
+    _dataStreamController.add(data);
+
+    final nav = navigatorKey?.currentState;
+    if (nav == null) {
+      if (kDebugMode) print('NavigatorKey not ready yet for notification click');
+      return;
+    }
+
+    final idStr = data['id']?.toString();
+    final slug = data['slug']?.toString();
+    final title = data['title']?.toString() ?? 'Intelligence Report';
+    final imageUrl = data['imageUrl']?.toString();
+
+    if (idStr != null && int.tryParse(idStr) != null) {
+      final update = AppUpdate(
+        id: int.parse(idStr),
+        title: title,
+        content: '',
+        category: data['category']?.toString() ?? 'Industrial',
+        published: true,
+        publishedAt: DateTime.now(),
+        createdAt: DateTime.now(),
+        slug: slug,
+        imageUrl: imageUrl,
+      );
+      nav.push(
+        MaterialPageRoute(builder: (_) => UpdateDetailPage(update: update)),
+      );
+    } else {
+      nav.push(
+        MaterialPageRoute(builder: (_) => const UpdatesPage()),
+      );
+    }
   }
 
   Future<String?> getToken() async {

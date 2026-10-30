@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/project.dart';
 import '../services/api_service.dart';
 import '../blocs/localization/localization_bloc.dart';
@@ -29,16 +30,23 @@ class _ProjectsPageState extends State<ProjectsPage> {
   }
 
   Future<void> _fetchProjects() async {
-    final response = await _apiService.getProjects();
-    if (response['success'] == true) {
-      setState(() {
-        _projects = (response['projects'] as List)
+    setState(() => _isLoading = true);
+    try {
+      final response = await _apiService.getProjects();
+      if (mounted && response['success'] == true) {
+        final list = (response['projects'] as List)
             .map((json) => Project.fromJson(json))
             .toList();
-        _filteredProjects = _projects;
-        _isLoading = false;
-      });
-    } else {
+        setState(() {
+          _projects = list;
+          _filteredProjects = list;
+          _isLoading = false;
+        });
+        return;
+      }
+    } catch (_) {}
+
+    if (mounted) {
       setState(() => _isLoading = false);
     }
   }
@@ -49,34 +57,55 @@ class _ProjectsPageState extends State<ProjectsPage> {
       if (category == 'All') {
         _filteredProjects = _projects;
       } else {
-        _filteredProjects = _projects.where((p) => p.category == category).toList();
+        _filteredProjects = _projects.where((p) => p.category.toLowerCase() == category.toLowerCase()).toList();
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return BlocBuilder<LocalizationBloc, LocalizationState>(
       builder: (context, state) {
         return Scaffold(
+          backgroundColor: isDark ? const Color(0xFF0B132B) : const Color(0xFFF8FAFC),
           appBar: AppBar(
             centerTitle: true,
-            title: Text(state.translate('nav_projects'), style: const TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(
+              state.translate('nav_projects'),
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+                fontSize: 16,
+              ),
+            ),
             elevation: 0,
             backgroundColor: Colors.transparent,
+            foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
           ),
           body: Column(
             children: [
-              _buildCategoryFilter(),
+              _buildCategoryFilter(isDark),
               Expanded(
                 child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF7A00)))
                     : _filteredProjects.isEmpty
-                        ? const Center(child: Text('No projects found'))
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _filteredProjects.length,
-                            itemBuilder: (context, index) => _buildProjectCard(_filteredProjects[index], state),
+                        ? Center(
+                            child: Text(
+                              'No projects found for $_selectedCategory',
+                              style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                            ),
+                          )
+                        : RefreshIndicator(
+                            color: const Color(0xFFFF7A00),
+                            onRefresh: _fetchProjects,
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              itemCount: _filteredProjects.length,
+                              itemBuilder: (context, index) =>
+                                  _buildProjectCard(_filteredProjects[index], state, isDark),
+                            ),
                           ),
               ),
             ],
@@ -86,26 +115,40 @@ class _ProjectsPageState extends State<ProjectsPage> {
     );
   }
 
-  Widget _buildCategoryFilter() {
+  Widget _buildCategoryFilter(bool isDark) {
     return Container(
-      height: 50,
+      height: 48,
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: _categories.length,
         itemBuilder: (context, index) {
           final cat = _categories[index];
           final isSelected = _selectedCategory == cat;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(cat, style: TextStyle(color: isSelected ? Colors.white : Colors.black)),
+            child: FilterChip(
+              label: Text(
+                cat,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
               selected: isSelected,
-              selectedColor: Theme.of(context).primaryColor,
-              onSelected: (selected) {
-                if (selected) _filterProjects(cat);
-              },
+              selectedColor: const Color(0xFFFF7A00),
+              backgroundColor: isDark ? const Color(0xFF1C2541) : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: isSelected
+                      ? const Color(0xFFFF7A00)
+                      : (isDark ? const Color(0xFF3A506B) : Colors.grey[300]!),
+                ),
+              ),
+              onSelected: (_) => _filterProjects(cat),
             ),
           );
         },
@@ -113,42 +156,54 @@ class _ProjectsPageState extends State<ProjectsPage> {
     );
   }
 
-  Widget _buildProjectCard(Project project, LocalizationState state) {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => ProjectDetailPage(project: project)),
+  Widget _buildProjectCard(Project project, LocalizationState state, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 22),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1C2541) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: isDark ? const Color(0xFF3A506B) : Colors.grey[200]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        clipBehavior: Clip.antiAlias,
-        elevation: 4,
-        shadowColor: Colors.black12,
+      child: InkWell(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ProjectDetailPage(project: project)),
+        ),
+        borderRadius: BorderRadius.circular(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Stack(
               children: [
-                Image.network(
-                  project.image != null && project.image!.startsWith('http')
-                      ? project.image!
-                      : 'https://api.dholeraplatform.com${project.image}',
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Image.asset(
-                    'assets/images/ui_blueprint.png',
-                    height: 200,
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  child: Image.network(
+                    project.image != null && project.image!.startsWith('http')
+                        ? project.image!
+                        : 'https://api.dholeraplatform.com${project.image}',
+                    height: 180,
                     width: double.infinity,
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Image.asset(
+                      'assets/images/ui_blueprint.png',
+                      height: 180,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
                 Positioned(
-                  top: 16,
-                  left: 16,
+                  top: 14,
+                  left: 14,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: Colors.black87,
                       borderRadius: BorderRadius.circular(8),
@@ -161,17 +216,24 @@ class _ProjectsPageState extends State<ProjectsPage> {
                 ),
                 if (project.reraApproved)
                   Positioned(
-                    top: 16,
-                    right: 16,
+                    top: 14,
+                    right: 14,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: Colors.green,
+                        color: const Color(0xFF16A34A),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
-                        'RERA',
-                        style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.verified, color: Colors.white, size: 12),
+                          SizedBox(width: 4),
+                          Text(
+                            'RERA',
+                            style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -184,36 +246,50 @@ class _ProjectsPageState extends State<ProjectsPage> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.location_on, size: 14, color: Theme.of(context).primaryColor),
+                      const Icon(Icons.location_on, size: 14, color: Color(0xFFFF7A00)),
                       const SizedBox(width: 4),
-                      Text(
-                        project.location?.split(',')[0] ?? '',
-                        style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 12, fontWeight: FontWeight.bold),
+                      Expanded(
+                        child: Text(
+                          project.location?.split(',')[0] ?? 'Dholera SIR',
+                          style: const TextStyle(
+                            color: Color(0xFFFF7A00),
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
                     project.name,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.inter(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w900,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     state.translate(project.taglineKey),
-                    style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                    style: TextStyle(color: isDark ? Colors.blueGrey[200] : Colors.grey[600], fontSize: 12),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 16),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: Colors.black,
+                      color: const Color(0xFFFF7A00),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Center(
                       child: Text(
-                        'VIEW DETAILS',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                        'VIEW SPECIFICATIONS',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 0.5),
                       ),
                     ),
                   ),

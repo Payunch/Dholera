@@ -755,6 +755,27 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getUpdateById(
+    int id, {
+    String? lang,
+    String audience = 'app',
+  }) async {
+    try {
+      final params = <String, String>{'audience': audience};
+      if (lang != null) params['lang'] = lang;
+      final query = '?${Uri(queryParameters: params).query}';
+      final response = await _retryIfUnauthorized(() async => await http
+          .get(
+            Uri.parse('${ApiConfig.updatesEndpoint}/$id$query'),
+            headers: await _getFetchHeaders(),
+          )
+          .timeout(const Duration(seconds: 15)));
+      return _handleJsonResponse(response, 'update');
+    } catch (e) {
+      return _handleRequestError(e);
+    }
+  }
+
   Future<Map<String, dynamic>> createUpdate(Map<String, dynamic> data) async {
     try {
       final hasImage =

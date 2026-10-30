@@ -180,6 +180,9 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                 .where((u) => u.published)
                 .take(3)
                 .toList();
+            if (_latestInsights.isNotEmpty) {
+              _checkAndNotifyNewInsight(_latestInsights.first);
+            }
           }
           if (projectsResponse['success'] == true) {
             final allProjects = (projectsResponse['projects'] as List)
@@ -211,7 +214,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
             child: CustomScrollView(
               slivers: [
                 SliverAppBar(
-                  expandedHeight: 500.0,
+                  expandedHeight: (MediaQuery.sizeOf(context).height * 0.44).clamp(280.0, 480.0),
                   floating: false,
                   pinned: true,
                   actions: [
@@ -578,25 +581,40 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
     String title, {
     VoidCallback? onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1C2541) : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey[200]!),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3A506B) : Colors.grey[200]!,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: Colors.orange, size: 28),
-            const SizedBox(height: 12),
+            Icon(icon, color: Colors.orange, size: 26),
+            const SizedBox(height: 10),
             Text(
               title.toUpperCase(),
-              style: const TextStyle(
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
-                letterSpacing: 1,
+                letterSpacing: 0.8,
+                color: isDark ? Colors.white : Colors.black87,
               ),
             ),
           ],
@@ -606,6 +624,7 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
   }
 
   Widget _buildInsightCard(BuildContext context, AppUpdate update) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -616,9 +635,18 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1C2541) : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey[100]!),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3A506B) : Colors.grey[100]!,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1219,8 +1247,10 @@ class _InvestorLandingPageState extends State<InvestorLandingPage> {
                                   }
 
                                   // Always try to open WhatsApp as a fallback/notification
-                                  final msg =
-                                      "Hello Naresh, I have submitted a Site Visit Request.\n*Name:* $_name\n*Phone:* $_phone\n*Date:* ${DateFormat('MMM dd, yyyy').format(_visitDate!)}";
+                                  final msg = """Hello Naresh, I have submitted a Site Visit Request.
+*Name:* $_name
+*Phone:* $_phone
+*Date:* ${DateFormat('MMM dd, yyyy').format(_visitDate!)}""";
                                   final uri = Uri.parse(
                                     "https://wa.me/918200448270?text=${Uri.encodeComponent(msg)}",
                                   );

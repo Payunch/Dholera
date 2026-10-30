@@ -18,6 +18,7 @@ class AppUpdate {
   final String? imageAltText;
   final String? imageTitle;
   final String? tags;
+  final String? author;
 
   AppUpdate({
     required this.id,
@@ -37,6 +38,7 @@ class AppUpdate {
     this.imageAltText,
     this.imageTitle,
     this.tags,
+    this.author,
   });
 
   String? get resolvedImageUrl {
@@ -66,7 +68,9 @@ class AppUpdate {
       publishedAt: json['publishedAt'] != null
           ? DateTime.parse(json['publishedAt'])
           : null,
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.now(),
       seoTitle: json['seoTitle'],
       seoDescription: json['seoDescription'],
       seoKeywords: json['seoKeywords'],
@@ -74,6 +78,7 @@ class AppUpdate {
       imageAltText: json['imageAltText'],
       imageTitle: json['imageTitle'],
       tags: json['tags'],
+      author: json['author'] ?? 'Dholera Growth Platform',
     );
   }
 
